@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}} - Blog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/lucide@latest/dist/umd/lucide.js">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: {
+                            50: '#fefcf3',
+                            100: '#fdf6e3',
+                            200: '#f9ecc2',
+                            300: '#f4dc97',
+                            400: '#edca6a',
+                            500: '#e8bb49',
+                            600: '#d89c37',
+                            700: '#b57c30',
+                            800: '#92632f',
+                            900: '#775129'
+                        },
+                        coffee: {
+                            50: '#f7f5f3',
+                            100: '#ede8e3',
+                            200: '#d9cfc5',
+                            300: '#c0b1a1',
+                            400: '#a39080',
+                            500: '#8f7969',
+                            600: '#7a685d',
+                            700: '#65554e',
+                            800: '#544843',
+                            900: '#473d3a'
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+</head>
+<body class="bg-cream-50 text-coffee-900 min-h-screen">
+    <nav class="bg-white/80 backdrop-blur-sm border-b border-cream-200 sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="/" class="text-2xl font-bold text-coffee-800 hover:text-coffee-600 transition-colors">
+                    Blog
+                </a>
+                <div class="flex gap-4 items-center">
+                    <a href="/" class="text-coffee-700 hover:text-coffee-500 transition-colors">Ana Sayfa</a>
+                    <a href="/admin" class="bg-coffee-100 hover:bg-coffee-200 px-4 py-2 rounded-lg transition-colors">
+                        Admin
+                    </a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container mx-auto px-4 py-8">
+        {{template "content" .}}
+    </main>
+
+    <footer class="bg-white/50 border-t border-cream-200 mt-16 py-8">
+        <div class="container mx-auto px-4 text-center text-coffee-600">
+            <p>&copy; 2024 Blog. Tüm hakları saklıdır.</p>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+    </script>
+</body>
+</html>

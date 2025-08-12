@@ -1,0 +1,77 @@
+{{define "content"}}
+<div class="max-w-4xl mx-auto">
+    <div id="post-container">
+        <!-- Post will be loaded here -->
+    </div>
+
+    <div id="loading" class="text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-coffee-600 mx-auto"></div>
+        <p class="mt-4 text-coffee-600">Yazı yükleniyor...</p>
+    </div>
+</div>
+
+<script>
+async function loadPost() {
+    const slug = window.location.pathname.split('/').pop();
+    
+    try {
+        const response = await fetch(`/api/posts/slug/${slug}`);
+        
+        if (!response.ok) {
+            throw new Error('Post not found');
+        }
+        
+        const post = await response.json();
+        
+        const container = document.getElementById('post-container');
+        const loading = document.getElementById('loading');
+        
+        container.innerHTML = `
+            <article class="bg-white rounded-xl shadow-sm p-8 border border-cream-200">
+                <div class="mb-8">
+                    <div class="flex items-center mb-6 text-sm text-coffee-500">
+                        <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                        ${new Date(post.created_at).toLocaleDateString('tr-TR')}
+                        <span class="mx-2">•</span>
+                        <i data-lucide="user" class="w-4 h-4 mr-2"></i>
+                        ${post.author.username}
+                    </div>
+                    
+                    <h1 class="text-4xl font-bold text-coffee-800 mb-6 leading-tight">${post.title}</h1>
+                </div>
+                
+                <div class="prose prose-lg max-w-none prose-coffee">
+                    <div class="text-coffee-700 leading-relaxed whitespace-pre-wrap">${post.content}</div>
+                </div>
+                
+                <div class="mt-12 pt-8 border-t border-cream-200">
+                    <a href="/" class="inline-flex items-center text-coffee-700 hover:text-coffee-500 transition-colors font-medium">
+                        <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                        Tüm yazılara dön
+                    </a>
+                </div>
+            </article>
+        `;
+        
+        loading.style.display = 'none';
+        lucide.createIcons();
+        
+    } catch (error) {
+        document.getElementById('loading').innerHTML = `
+            <div class="text-center py-12">
+                <i data-lucide="alert-circle" class="w-16 h-16 mx-auto text-red-400 mb-4"></i>
+                <h3 class="text-xl font-semibold text-red-600 mb-2">Yazı bulunamadı</h3>
+                <p class="text-red-500 mb-6">Aradığınız yazı mevcut değil veya yayından kaldırılmış.</p>
+                <a href="/" class="inline-flex items-center bg-coffee-100 hover:bg-coffee-200 px-6 py-3 rounded-lg transition-colors font-medium text-coffee-700">
+                    <i data-lucide="home" class="w-4 h-4 mr-2"></i>
+                    Ana sayfaya dön
+                </a>
+            </div>
+        `;
+        lucide.createIcons();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadPost);
+</script>
+{{end}}

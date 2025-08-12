@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(go run:*)",
+      "Bash(go mod:*)",
+      "Bash(set CGO_ENABLED=1)",
+      "Bash(CGO_ENABLED=1 go run cmd/blog/main.go)",
+      "Bash(CGO_ENABLED=1 go build -o blog.exe cmd/blog/main.go)",
+      "Bash(CGO_ENABLED=1 go build -o blog.exe ./cmd/blog)",
+      "Bash(go env:*)",
+      "Bash(choco install:*)"
+    ],
+    "deny": []
+  }
+}

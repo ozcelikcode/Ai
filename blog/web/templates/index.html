@@ -1,0 +1,76 @@
+{{define "content"}}
+<div class="max-w-4xl mx-auto">
+    <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-coffee-800 mb-4">Hoş Geldiniz</h1>
+        <p class="text-xl text-coffee-600">En son yazılar ve güncellemeler</p>
+    </div>
+
+    <div id="posts-container" class="space-y-8">
+        <!-- Posts will be loaded here -->
+    </div>
+
+    <div id="loading" class="text-center py-8">
+        <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-coffee-600 mx-auto"></div>
+        <p class="mt-4 text-coffee-600">Yazılar yükleniyor...</p>
+    </div>
+</div>
+
+<script>
+async function loadPosts() {
+    try {
+        const response = await fetch('/api/posts?published=true');
+        const posts = await response.json();
+        
+        const container = document.getElementById('posts-container');
+        const loading = document.getElementById('loading');
+        
+        if (posts.length === 0) {
+            container.innerHTML = \`
+                <div class="text-center py-12">
+                    <i data-lucide="file-text" class="w-16 h-16 mx-auto text-coffee-300 mb-4"></i>
+                    <h3 class="text-xl font-semibold text-coffee-600 mb-2">Henüz yazı yok</h3>
+                    <p class="text-coffee-500">İlk yazı için admin panelini kullanın.</p>
+                </div>
+            \`;
+        } else {
+            container.innerHTML = posts.map(post => \`
+                <article class="bg-white rounded-xl shadow-sm hover:shadow-md transition-all duration-300 p-8 border border-cream-200">
+                    <div class="flex items-center mb-4 text-sm text-coffee-500">
+                        <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                        \${new Date(post.created_at).toLocaleDateString('tr-TR')}
+                        <span class="mx-2">•</span>
+                        <i data-lucide="user" class="w-4 h-4 mr-2"></i>
+                        \${post.author.username}
+                    </div>
+                    
+                    <h2 class="text-2xl font-bold text-coffee-800 mb-4 hover:text-coffee-600 transition-colors">
+                        <a href="/post/\${post.slug}">\${post.title}</a>
+                    </h2>
+                    
+                    \${post.excerpt ? \`<p class="text-coffee-600 mb-4 leading-relaxed">\${post.excerpt}</p>\` : ''}
+                    
+                    <a href="/post/\${post.slug}" class="inline-flex items-center text-coffee-700 hover:text-coffee-500 transition-colors font-medium">
+                        Devamını oku
+                        <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+                    </a>
+                </article>
+            \`).join('');
+        }
+        
+        loading.style.display = 'none';
+        lucide.createIcons();
+        
+    } catch (error) {
+        document.getElementById('loading').innerHTML = \`
+            <div class="text-center py-8">
+                <i data-lucide="alert-circle" class="w-12 h-12 mx-auto text-red-400 mb-4"></i>
+                <p class="text-red-600">Yazılar yüklenirken bir hata oluştu.</p>
+            </div>
+        \`;
+        lucide.createIcons();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', loadPosts);
+</script>
+{{end}}
