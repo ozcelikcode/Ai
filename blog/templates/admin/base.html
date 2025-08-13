@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ self.page_title() }} - AI Blog Admin{% endblock %}</title>
+    <meta name="description" content="{% block description %}Admin yönetim paneli{% endblock %}">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: {
+                            50: '#fefdfb', 100: '#fdf8f0', 200: '#faf0e0', 300: '#f5e6c8', 
+                            400: '#efcd9e', 500: '#e7b474', 600: '#d89c4a', 700: '#c48832', 
+                            800: '#a06d2a', 900: '#825726',
+                        },
+                        brown: {
+                            50: '#f7f3f0', 100: '#ede4db', 200: '#dbc5b7', 300: '#c7a088', 
+                            400: '#b67c5f', 500: '#a96142', 600: '#944f37', 700: '#7b4030', 
+                            800: '#64342b', 900: '#522c26',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .transition-smooth { transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .hover-lift:hover { transform: translateY(-2px); box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.2); }
+        .stat-card { background: linear-gradient(135deg, #f7f3f0 0%, #ede4db 100%); }
+    </style>
+    
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="bg-cream-50">
+    <div class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="w-64 bg-brown-800 text-white">
+            <div class="p-6">
+                <h1 class="text-2xl font-bold">AI Blog Admin</h1>
+            </div>
+            
+            <nav class="mt-6">
+                <div class="px-4 space-y-2">
+                    <a href="/admin" data-menu="dashboard" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
+                        <i data-lucide="layout-dashboard" class="w-5 h-5 mr-3"></i>
+                        Dashboard
+                    </a>
+                    
+                    <a href="/admin/posts" data-menu="posts" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
+                        <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
+                        İçerik Yönetimi
+                    </a>
+                    
+                    <a href="/admin/posts/new" data-menu="posts-new" class="flex items-center px-3 py-2 ml-6 rounded-lg transition-smooth text-sm">
+                        <i data-lucide="plus" class="w-4 h-4 mr-3"></i>
+                        Yeni Yazı
+                    </a>
+                    
+                    <a href="/admin/pages" data-menu="pages" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
+                        <i data-lucide="file" class="w-5 h-5 mr-3"></i>
+                        Sayfa Yönetimi
+                    </a>
+                    
+                    <a href="/admin/categories" data-menu="categories" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
+                        <i data-lucide="folder" class="w-5 h-5 mr-3"></i>
+                        Kategoriler
+                    </a>
+                    
+                    <a href="/admin/tags" data-menu="tags" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
+                        <i data-lucide="tag" class="w-5 h-5 mr-3"></i>
+                        Etiketler
+                    </a>
+                    
+                    <a href="/admin/media" data-menu="media" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
+                        <i data-lucide="image" class="w-5 h-5 mr-3"></i>
+                        Medya Galerisi
+                    </a>
+                    
+                    <a href="/admin/comments" data-menu="comments" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
+                        <i data-lucide="message-circle" class="w-5 h-5 mr-3"></i>
+                        Yorumlar
+                    </a>
+                    
+                    <a href="/admin/settings" data-menu="settings" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
+                        <i data-lucide="settings" class="w-5 h-5 mr-3"></i>
+                        Ayarlar
+                    </a>
+                    
+                    <div class="border-t border-brown-700 pt-4 mt-4">
+                        <a href="/" target="_blank" class="flex items-center px-4 py-3 text-cream-200 hover:bg-brown-700 hover:text-white rounded-lg transition-smooth">
+                            <i data-lucide="external-link" class="w-5 h-5 mr-3"></i>
+                            Siteyi Görüntüle
+                        </a>
+                        <a href="/logout" class="flex items-center px-4 py-3 text-cream-200 hover:bg-red-600 hover:text-white rounded-lg transition-smooth">
+                            <i data-lucide="log-out" class="w-5 h-5 mr-3"></i>
+                            Çıkış Yap
+                        </a>
+                    </div>
+                </div>
+            </nav>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 flex flex-col overflow-hidden">
+            <!-- Header -->
+            <header class="bg-white shadow-sm border-b border-cream-200">
+                <div class="px-6 py-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-2xl font-bold text-brown-900">{% block page_title %}Dashboard{% endblock %}</h2>
+                            <p class="text-brown-600 mt-1">{% block page_description %}Yönetim paneli{% endblock %}</p>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <div class="text-right">
+                                <p class="text-sm text-brown-600">Hoş geldin,</p>
+                                <p class="font-semibold text-brown-900">{{ admin_user.username if admin_user else 'Admin' }}</p>
+                            </div>
+                            <div class="w-10 h-10 bg-brown-600 rounded-full flex items-center justify-center">
+                                <i data-lucide="user" class="w-5 h-5 text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Page Content -->
+            <main class="flex-1 overflow-y-auto">
+                <div class="p-6">
+                    {% block content %}{% endblock %}
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <script src="/static/js/admin-menu.js"></script>
+    <script>
+        lucide.createIcons();
+    </script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+
+{% block title %}Hakkında - {{ site_settings.site_title if site_settings else 'AI Blog' }}{% endblock %}
+
+{% block content %}
+<section class="py-16">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-brown-900 mb-4">Hakkımızda</h1>
+            <p class="text-xl text-brown-700">{{ site_settings.site_title if site_settings else 'AI Blog' }} hakkında bilmeniz gerekenler</p>
+        </div>
+
+        <!-- Main Content -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <div class="prose prose-lg prose-brown max-w-none">
+                <h2>Biz Kimiz?</h2>
+                <p>{{ site_settings.site_title if site_settings else 'AI Blog' }}, modern teknoloji ve yapay zeka destekli içerik üretimi konularında uzmanlaşmış bir blog platformudur. Amacımız, okuyucularımıza en güncel ve kaliteli içerikleri sunmaktır.</p>
+
+                <h2>Misyonumuz</h2>
+                <p>Teknolojinin hızla geliştiği bu çağda, doğru ve güvenilir bilgiye erişim her zamankinden daha önemli. Bizim misyonumuz:</p>
+                <ul>
+                    <li>Kaliteli ve güncel içerik üretmek</li>
+                    <li>Yapay zeka teknolojilerini etkili bir şekilde kullanmak</li>
+                    <li>Okuyucularımıza değer katacak bilgiler sunmak</li>
+                    <li>Sürekli öğrenme ve gelişim kültürünü desteklemek</li>
+                </ul>
+
+                <h2>Teknolojimiz</h2>
+                <p>Blog platformumuz modern web teknolojileri kullanılarak geliştirilmiştir:</p>
+                <ul>
+                    <li><strong>FastAPI</strong> - Hızlı ve güvenli backend</li>
+                    <li><strong>SQLite</strong> - Güvenilir veri depolama</li>
+                    <li><strong>Tailwind CSS</strong> - Modern ve responsive tasarım</li>
+                    <li><strong>Gemini AI</strong> - Yapay zeka destekli içerik üretimi</li>
+                </ul>
+
+                <h2>İçerik Politikamız</h2>
+                <p>Tüm içeriklerimiz dikkatli bir şekilde hazırlanır ve incelenir. Yazılarımızda:</p>
+                <ul>
+                    <li>Doğru ve güncel bilgi paylaşımına önem veririz</li>
+                    <li>Kaynak gösterme prensibini benimseriz</li>
+                    <li>Objektif ve tarafsız yaklaşım sergileriz</li>
+                    <li>Okuyucu deneyimini ön planda tutarız</li>
+                </ul>
+
+                <h2>Topluluk</h2>
+                <p>Okuyucularımızın görüş ve önerilerine değer veririz. Yorumlarınız ve geri bildirimleriniz bizim için çok önemli. Birlikte öğrenen ve gelişen bir topluluk oluşturmayı hedefliyoruz.</p>
+            </div>
+        </div>
+
+        <!-- Features -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center hover-lift transition-smooth">
+                <div class="w-16 h-16 bg-brown-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="brain" class="w-8 h-8 text-brown-600"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-brown-900 mb-2">AI Destekli İçerik</h3>
+                <p class="text-brown-700">Yapay zeka teknolojileri ile desteklenen kaliteli içerik üretimi</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center hover-lift transition-smooth">
+                <div class="w-16 h-16 bg-brown-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="users" class="w-8 h-8 text-brown-600"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-brown-900 mb-2">Topluluk Odaklı</h3>
+                <p class="text-brown-700">Okuyucu yorumları ve etkileşimi destekleyen platform</p>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-lg p-6 text-center hover-lift transition-smooth">
+                <div class="w-16 h-16 bg-brown-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="search" class="w-8 h-8 text-brown-600"></i>
+                </div>
+                <h3 class="text-lg font-semibold text-brown-900 mb-2">SEO Dostu</h3>
+                <p class="text-brown-700">Arama motorları için optimize edilmiş yapı</p>
+            </div>
+        </div>
+
+        <!-- Contact Info -->
+        <div class="bg-brown-50 rounded-xl p-8 text-center">
+            <h3 class="text-2xl font-semibold text-brown-900 mb-4">İletişim</h3>
+            <p class="text-brown-700 mb-6">Sorularınız, önerileriniz veya işbirliği teklifleriniz için bizimle iletişime geçebilirsiniz.</p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                <a href="/contact" class="bg-brown-600 text-white px-6 py-3 rounded-lg hover:bg-brown-700 transition-smooth">
+                    İletişime Geç
+                </a>
+                <a href="/" class="bg-white text-brown-600 px-6 py-3 rounded-lg border border-brown-300 hover:bg-brown-50 transition-smooth">
+                    Blog Ana Sayfa
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

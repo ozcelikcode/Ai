@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ site_settings.site_title if site_settings else 'AI Blog' }}{% endblock %}</title>
+    <meta name="description" content="{% block description %}{{ site_settings.meta_description if site_settings else 'Modern AI destekli blog platformu' }}{% endblock %}">
+    
+    {% if site_settings and site_settings.favicon %}
+    <link rel="icon" href="{{ site_settings.favicon }}" type="image/x-icon">
+    {% endif %}
+    
+    {% if site_settings and site_settings.meta_keywords %}
+    <meta name="keywords" content="{{ site_settings.meta_keywords }}">
+    {% endif %}
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        cream: {
+                            50: '#fefdfb',
+                            100: '#fdf8f0',
+                            200: '#faf0e0',
+                            300: '#f5e6c8',
+                            400: '#efcd9e',
+                            500: '#e7b474',
+                            600: '#d89c4a',
+                            700: '#c48832',
+                            800: '#a06d2a',
+                            900: '#825726',
+                        },
+                        brown: {
+                            50: '#f7f3f0',
+                            100: '#ede4db',
+                            200: '#dbc5b7',
+                            300: '#c7a088',
+                            400: '#b67c5f',
+                            500: '#a96142',
+                            600: '#944f37',
+                            700: '#7b4030',
+                            800: '#64342b',
+                            900: '#522c26',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        .transition-smooth {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.2);
+        }
+        
+        #search-bar {
+            animation: slideDown 0.3s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Search input focus animation */
+        #navbar-search-input:focus {
+            box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-cream-50 text-brown-900 min-h-screen">
+    <nav class="bg-white/80 backdrop-blur-sm border-b border-cream-200 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="/" class="flex items-center text-2xl font-bold text-brown-800 hover:text-brown-600 transition-smooth">
+                        {% if site_settings and site_settings.site_logo %}
+                        <img src="{{ site_settings.site_logo }}" alt="{{ site_settings.site_title if site_settings else 'AI Blog' }}" class="h-8 w-8 mr-2">
+                        {% endif %}
+                        {{ site_settings.site_title if site_settings else 'AI Blog' }}
+                    </a>
+                </div>
+                
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="/" class="text-brown-700 hover:text-brown-900 transition-smooth">Ana Sayfa</a>
+                    <a href="/categories" class="text-brown-700 hover:text-brown-900 transition-smooth">Kategoriler</a>
+                    <a href="/about" class="text-brown-700 hover:text-brown-900 transition-smooth">Hakkında</a>
+                </div>
+                
+                <div class="flex items-center space-x-4">
+                    <!-- Search Toggle Button -->
+                    <button id="search-toggle-btn" class="p-2 text-brown-700 hover:text-brown-900 transition-smooth relative">
+                        <i data-lucide="search" class="w-5 h-5"></i>
+                    </button>
+                    
+                    {% if current_user %}
+                        <div class="flex items-center space-x-4">
+                            {% if current_user.is_admin %}
+                            <a href="/admin" class="text-brown-700 hover:text-brown-900 transition-smooth">
+                                Admin Panel
+                            </a>
+                            {% endif %}
+                            <div class="flex items-center space-x-2">
+                                <div class="w-8 h-8 bg-brown-200 rounded-full flex items-center justify-center">
+                                    <i data-lucide="user" class="w-4 h-4 text-brown-600"></i>
+                                </div>
+                                <span class="text-brown-700">{{ current_user.username }}</span>
+                            </div>
+                            <a href="/logout" class="text-brown-700 hover:text-brown-900 transition-smooth">
+                                Çıkış
+                            </a>
+                        </div>
+                    {% else %}
+                        <div class="flex items-center space-x-2">
+                            <a href="/login" class="text-brown-700 hover:text-brown-900 transition-smooth">
+                                Giriş Yap
+                            </a>
+                            <a href="/register" class="bg-brown-600 text-white px-4 py-2 rounded-lg hover:bg-brown-700 transition-smooth">
+                                Kayıt Ol
+                            </a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Expandable Search Bar -->
+        <div id="search-bar" class="hidden border-t border-cream-200 bg-white/95 backdrop-blur-sm">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+                <form action="/search" method="get" class="relative max-w-2xl mx-auto">
+                    <div class="relative">
+                        <input type="text" 
+                               name="q" 
+                               id="navbar-search-input"
+                               placeholder="Ne aramak istiyorsunuz? (Ctrl+K ile aç)"
+                               class="w-full px-6 py-3 pr-12 text-lg border border-cream-300 rounded-xl focus:ring-2 focus:ring-brown-500 focus:border-brown-500 bg-white/90"
+                               autocomplete="off">
+                        <button type="submit" 
+                                class="absolute right-3 top-1/2 transform -translate-y-1/2 p-2 text-brown-600 hover:text-brown-800 transition-smooth">
+                            <i data-lucide="search" class="w-5 h-5"></i>
+                        </button>
+                    </div>
+                    
+                    <!-- Quick suggestions -->
+                    <div id="navbar-search-suggestions" class="hidden absolute top-full left-0 right-0 bg-white border border-cream-200 rounded-lg shadow-lg mt-1 max-h-60 overflow-y-auto z-50">
+                        <!-- Suggestions will be populated here -->
+                    </div>
+                    
+                    <!-- Quick actions -->
+                    <div class="flex items-center justify-between mt-3 text-sm text-brown-600">
+                        <div class="flex items-center space-x-4">
+                            <a href="/search" class="hover:text-brown-800 transition-smooth">
+                                <i data-lucide="arrow-right" class="w-4 h-4 inline mr-1"></i>
+                                Gelişmiş Arama
+                            </a>
+                        </div>
+                        <button type="button" id="close-search" class="hover:text-brown-800 transition-smooth">
+                            <i data-lucide="x" class="w-4 h-4 inline mr-1"></i>
+                            Kapat
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </nav>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="bg-brown-800 text-cream-100 mt-16">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div class="col-span-2">
+                    <h3 class="text-xl font-bold mb-4">{{ site_settings.site_title if site_settings else 'AI Blog' }}</h3>
+                    <p class="text-cream-200 mb-4">Modern yapay zeka destekli blog platformu. En güncel içerikler ve teknoloji haberleri için bizi takip edin.</p>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">Hızlı Linkler</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-cream-200 hover:text-white transition-smooth">Ana Sayfa</a></li>
+                        <li><a href="/categories" class="text-cream-200 hover:text-white transition-smooth">Kategoriler</a></li>
+                        <li><a href="/about" class="text-cream-200 hover:text-white transition-smooth">Hakkında</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="font-semibold mb-4">İletişim</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/contact" class="text-cream-200 hover:text-white transition-smooth">İletişim</a></li>
+                        <li><a href="/privacy" class="text-cream-200 hover:text-white transition-smooth">Gizlilik</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="border-t border-brown-700 mt-8 pt-8 text-center text-cream-300">
+                <p>&copy; 2024 {{ site_settings.site_title if site_settings else 'AI Blog' }}. Tüm hakları saklıdır.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        lucide.createIcons();
+        
+        // Enhanced Search functionality
+        const searchToggleBtn = document.getElementById('search-toggle-btn');
+        const searchBar = document.getElementById('search-bar');
+        const navbarSearchInput = document.getElementById('navbar-search-input');
+        const closeSearchBtn = document.getElementById('close-search');
+        const navbarSuggestions = document.getElementById('navbar-search-suggestions');
+        
+        let searchTimeout;
+        let isSearchOpen = false;
+        
+        function toggleSearch(focus = true) {
+            isSearchOpen = !isSearchOpen;
+            
+            if (isSearchOpen) {
+                searchBar.classList.remove('hidden');
+                if (focus) {
+                    setTimeout(() => navbarSearchInput.focus(), 100);
+                }
+                // Add smooth slide animation
+                searchBar.style.opacity = '0';
+                searchBar.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    searchBar.style.transition = 'all 0.3s ease-out';
+                    searchBar.style.opacity = '1';
+                    searchBar.style.transform = 'translateY(0)';
+                }, 10);
+            } else {
+                searchBar.style.opacity = '0';
+                searchBar.style.transform = 'translateY(-10px)';
+                setTimeout(() => {
+                    searchBar.classList.add('hidden');
+                    navbarSuggestions.classList.add('hidden');
+                }, 300);
+            }
+        }
+        
+        // Toggle search on button click
+        searchToggleBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            toggleSearch();
+        });
+        
+        // Close search button
+        closeSearchBtn.addEventListener('click', function() {
+            toggleSearch(false);
+        });
+        
+        // Close search when clicking outside
+        document.addEventListener('click', function(e) {
+            if (isSearchOpen && !searchBar.contains(e.target) && !searchToggleBtn.contains(e.target)) {
+                toggleSearch(false);
+            }
+        });
+        
+        // Prevent search bar from closing when clicking inside it
+        searchBar.addEventListener('click', function(e) {
+            e.stopPropagation();
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Ctrl/Cmd + K to toggle search
+            if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+                e.preventDefault();
+                toggleSearch();
+            }
+            
+            // Escape to close search
+            if (e.key === 'Escape' && isSearchOpen) {
+                toggleSearch(false);
+            }
+        });
+        
+        // Search suggestions for navbar
+        navbarSearchInput.addEventListener('input', function() {
+            clearTimeout(searchTimeout);
+            const query = this.value.trim();
+            
+            if (query.length < 2) {
+                navbarSuggestions.classList.add('hidden');
+                return;
+            }
+            
+            searchTimeout = setTimeout(async function() {
+                try {
+                    const response = await fetch(`/api/search/suggestions?q=${encodeURIComponent(query)}`);
+                    const data = await response.json();
+                    
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        navbarSuggestions.innerHTML = data.suggestions.map(suggestion => `
+                            <div class="p-3 hover:bg-cream-50 cursor-pointer border-b border-cream-100 last:border-b-0 transition-smooth" 
+                                 onclick="selectNavbarSuggestion('${suggestion.text}')">
+                                <div class="flex items-center gap-3">
+                                    <i data-lucide="${suggestion.type === 'post' ? 'file-text' : 'folder'}" class="w-4 h-4 text-brown-500"></i>
+                                    <span class="text-brown-900">${suggestion.text}</span>
+                                    <span class="text-xs text-brown-500 ml-auto">${suggestion.type === 'post' ? 'Yazı' : 'Kategori'}</span>
+                                </div>
+                            </div>
+                        `).join('');
+                        
+                        navbarSuggestions.classList.remove('hidden');
+                        lucide.createIcons();
+                    } else {
+                        navbarSuggestions.classList.add('hidden');
+                    }
+                } catch (error) {
+                    console.error('Suggestions error:', error);
+                    navbarSuggestions.classList.add('hidden');
+                }
+            }, 200);
+        });
+        
+        // Select navbar suggestion
+        function selectNavbarSuggestion(text) {
+            navbarSearchInput.value = text;
+            navbarSuggestions.classList.add('hidden');
+            navbarSearchInput.form.submit();
+        }
+        
+        // Hide suggestions when input loses focus (with delay for click handling)
+        navbarSearchInput.addEventListener('blur', function() {
+            setTimeout(() => {
+                navbarSuggestions.classList.add('hidden');
+            }, 200);
+        });
+    </script>
+</body>
+</html>

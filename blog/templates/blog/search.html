@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}{% if query %}{{ query }} - Arama Sonuçları{% else %}Arama{% endif %} - AI Blog{% endblock %}
+
+{% block content %}
+<section class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Search Header -->
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-brown-900 mb-4">
+                {% if query %}
+                "{{ query }}" Arama Sonuçları
+                {% else %}
+                Arama
+                {% endif %}
+            </h1>
+            {% if query and result_count > 0 %}
+            <p class="text-brown-700">{{ result_count }} sonuç bulundu</p>
+            {% endif %}
+        </div>
+
+        <!-- Search Form -->
+        <div class="max-w-2xl mx-auto mb-12">
+            <form action="/search" method="get" class="relative">
+                <div class="relative">
+                    <input type="text" 
+                           name="q" 
+                           value="{{ query }}"
+                           placeholder="Ne aramak istiyorsunuz?"
+                           class="w-full px-6 py-4 pr-12 text-lg border border-cream-300 rounded-xl focus:ring-2 focus:ring-brown-500 focus:border-brown-500"
+                           autocomplete="off"
+                           id="search-input">
+                    <button type="submit" 
+                            class="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-brown-600 hover:text-brown-800 transition-smooth">
+                        <i data-lucide="search" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                
+                <!-- Search suggestions dropdown -->
+                <div id="search-suggestions" class="hidden absolute top-full left-0 right-0 bg-white border border-cream-200 rounded-lg shadow-lg mt-1 max-h-80 overflow-y-auto z-10">
+                    <!-- Suggestions will be populated here -->
+                </div>
+                
+                <!-- Category filter -->
+                {% if categories %}
+                <div class="flex flex-wrap gap-2 mt-4">
+                    <a href="/search?q={{ query }}" 
+                       class="px-3 py-1 rounded-full text-sm {% if not category_filter %}bg-brown-600 text-white{% else %}bg-cream-200 text-brown-700 hover:bg-cream-300{% endif %} transition-smooth">
+                        Tümü
+                    </a>
+                    {% for category in categories %}
+                    <a href="/search?q={{ query }}&category={{ category.slug }}" 
+                       class="px-3 py-1 rounded-full text-sm {% if category_filter == category.slug %}bg-brown-600 text-white{% else %}bg-cream-200 text-brown-700 hover:bg-cream-300{% endif %} transition-smooth">
+                        {{ category.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- Search Results -->
+        {% if query %}
+            {% if results %}
+            <div class="space-y-6">
+                {% for post in results %}
+                <article class="bg-white rounded-xl shadow-lg p-6 hover-lift transition-smooth">
+                    <div class="flex items-start gap-6">
+                        {% if post.featured_image %}
+                        <div class="w-32 h-24 flex-shrink-0">
+                            <img src="{{ post.featured_image }}" alt="{{ post.title }}" 
+                                 class="w-full h-full object-cover rounded-lg">
+                        </div>
+                        {% else %}
+                        <div class="w-32 h-24 bg-gradient-to-br from-cream-200 to-brown-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="file-text" class="w-8 h-8 text-brown-500"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                {% if post.category %}
+                                <span class="px-2 py-1 text-xs font-medium bg-brown-100 text-brown-800 rounded-full">
+                                    {{ post.category.name }}
+                                </span>
+                                {% endif %}
+                                <div class="flex items-center gap-4 text-sm text-brown-600">
+                                    <span>{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                                    {% if post.reading_time %}
+                                    <span>{{ post.reading_time }} dk okuma</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <h2 class="text-xl font-bold text-brown-900 mb-3 hover:text-brown-700 transition-smooth">
+                                <a href="/post/{{ post.slug }}">{{ post.title }}</a>
+                            </h2>
+                            
+                            {% if post.excerpt %}
+                            <p class="text-brown-700 mb-4 line-clamp-2">{{ post.excerpt|strip_html }}</p>
+                            {% else %}
+                            <p class="text-brown-700 mb-4 line-clamp-2">{{ post.content|excerpt(120) }}</p>
+                            {% endif %}
+                            
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <div class="w-6 h-6 bg-brown-200 rounded-full flex items-center justify-center">
+                                        <i data-lucide="user" class="w-3 h-3 text-brown-600"></i>
+                                    </div>
+                                    <span class="text-sm text-brown-600">{{ post.author.username }}</span>
+                                </div>
+                                
+                                <a href="/post/{{ post.slug }}" 
+                                   class="text-brown-600 hover:text-brown-800 transition-smooth font-medium text-sm">
+                                    Devamını Oku →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="text-center py-16">
+                <i data-lucide="search" class="w-24 h-24 text-brown-300 mx-auto mb-6"></i>
+                <h3 class="text-xl font-semibold text-brown-700 mb-2">Sonuç bulunamadı</h3>
+                <p class="text-brown-600 mb-6">"{{ query }}" için herhangi bir içerik bulunamadı.</p>
+                <div class="max-w-md mx-auto">
+                    <p class="text-sm text-brown-600 mb-4">Öneriler:</p>
+                    <ul class="text-sm text-brown-700 space-y-1">
+                        <li>• Arama terimlerinizi kontrol edin</li>
+                        <li>• Daha genel kelimeler kullanmayı deneyin</li>
+                        <li>• Farklı kategori filtrelerini deneyin</li>
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        {% else %}
+        <div class="text-center py-16">
+            <i data-lucide="search" class="w-24 h-24 text-brown-300 mx-auto mb-6"></i>
+            <h3 class="text-xl font-semibold text-brown-700 mb-2">Ne aramak istiyorsunuz?</h3>
+            <p class="text-brown-600">Yukarıdaki arama kutusuna aradığınız konuyu yazın.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+    // Search suggestions functionality
+    let searchTimeout;
+    const searchInput = document.getElementById('search-input');
+    const suggestionsDiv = document.getElementById('search-suggestions');
+    
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            suggestionsDiv.classList.add('hidden');
+            return;
+        }
+        
+        searchTimeout = setTimeout(async function() {
+            try {
+                const response = await fetch(`/api/search/suggestions?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (data.suggestions && data.suggestions.length > 0) {
+                    suggestionsDiv.innerHTML = data.suggestions.map(suggestion => `
+                        <div class="p-3 hover:bg-cream-50 cursor-pointer border-b border-cream-100 last:border-b-0" 
+                             onclick="selectSuggestion('${suggestion.text}')">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="${suggestion.type === 'post' ? 'file-text' : 'folder'}" class="w-4 h-4 text-brown-500"></i>
+                                <span class="text-brown-900">${suggestion.text}</span>
+                                <span class="text-xs text-brown-500 ml-auto">${suggestion.type === 'post' ? 'Yazı' : 'Kategori'}</span>
+                            </div>
+                        </div>
+                    `).join('');
+                    
+                    suggestionsDiv.classList.remove('hidden');
+                    lucide.createIcons();
+                } else {
+                    suggestionsDiv.classList.add('hidden');
+                }
+            } catch (error) {
+                console.error('Suggestions error:', error);
+                suggestionsDiv.classList.add('hidden');
+            }
+        }, 300);
+    });
+    
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+            suggestionsDiv.classList.add('hidden');
+        }
+    });
+    
+    // Select suggestion
+    function selectSuggestion(text) {
+        searchInput.value = text;
+        suggestionsDiv.classList.add('hidden');
+        // Optionally trigger search
+        searchInput.form.submit();
+    }
+    
+    // Focus search input on page load if no results
+    {% if not query %}
+    searchInput.focus();
+    {% endif %}
+</script>
+{% endblock %}

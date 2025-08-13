@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page.meta_title or page.title }} - {{ site_settings.site_title if site_settings else 'AI Blog' }}{% endblock %}
+{% block description %}{{ page.meta_description or page.content[:160] }}{% endblock %}
+
+{% block content %}
+<section class="py-16">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="mb-8">
+            <h1 class="text-4xl font-bold text-brown-900 mb-4">{{ page.title }}</h1>
+            
+            <div class="flex items-center text-brown-600 text-sm space-x-4">
+                <div class="flex items-center">
+                    <i data-lucide="calendar" class="w-4 h-4 mr-1"></i>
+                    <span>{{ page.created_at.strftime('%d %B %Y') }}</span>
+                </div>
+                
+                {% if page.show_updated_date and page.updated_at %}
+                <div class="flex items-center">
+                    <i data-lucide="edit" class="w-4 h-4 mr-1"></i>
+                    <span>Güncellendi: {{ page.updated_at.strftime('%d %B %Y') }}</span>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Page Content -->
+        <article class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <div class="prose prose-lg text-brown-800 leading-relaxed">
+                {{ page.content | safe }}
+            </div>
+        </article>
+
+        <!-- Back to Home -->
+        <div class="text-center">
+            <a href="/" class="inline-flex items-center text-brown-600 hover:text-brown-800 transition-smooth">
+                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                Ana Sayfaya Dön
+            </a>
+        </div>
+    </div>
+</section>
+
+<style>
+    .prose { max-width: none; }
+    .prose p { margin-bottom: 1.5rem; }
+    .prose h1, .prose h2, .prose h3 { color: #522c26; margin-top: 2rem; margin-bottom: 1rem; }
+    .prose ul, .prose ol { margin-bottom: 1.5rem; }
+    .prose blockquote { border-left: 4px solid #d89c4a; padding-left: 1rem; font-style: italic; }
+</style>
+{% endblock %}

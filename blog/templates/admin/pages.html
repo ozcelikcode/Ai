@@ -1,0 +1,115 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Sayfa Yönetimi{% endblock %}
+{% block page_description %}Özel sayfalarınızı oluşturun ve yönetin{% endblock %}
+
+{% block content %}
+<!-- Başlık ve Yeni Sayfa Butonu -->
+<div class="flex items-center justify-between mb-6">
+    <h3 class="text-lg font-semibold text-brown-900">Tüm Sayfalar</h3>
+    <a href="/admin/pages/new" class="bg-brown-600 text-white px-4 py-2 rounded-lg hover:bg-brown-700 transition-smooth">
+        <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>
+        Yeni Sayfa
+    </a>
+</div>
+
+{% if pages %}
+<!-- Sayfalar Tablosu -->
+<div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-brown-50">
+                <tr>
+                    <th class="px-6 py-4 text-left text-brown-900 font-semibold">Sayfa</th>
+                    <th class="px-6 py-4 text-left text-brown-900 font-semibold">Durum</th>
+                    <th class="px-6 py-4 text-left text-brown-900 font-semibold">Tarih</th>
+                    <th class="px-6 py-4 text-center text-brown-900 font-semibold">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-cream-200">
+                {% for page in pages %}
+                <tr class="hover:bg-cream-50 transition-smooth">
+                    <td class="px-6 py-4">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 bg-brown-100 rounded-lg flex items-center justify-center mr-4">
+                                <i data-lucide="file" class="w-5 h-5 text-brown-600"></i>
+                            </div>
+                            <div>
+                                <h4 class="font-medium text-brown-900">{{ page.title }}</h4>
+                                <p class="text-sm text-brown-600">/{{ page.slug }}</p>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if page.is_published %}
+                        <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Yayında</span>
+                        {% else %}
+                        <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">Taslak</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="text-brown-600 text-sm">
+                            <div>{{ page.created_at.strftime('%d.%m.%Y') }}</div>
+                            {% if page.show_updated_date and page.updated_at %}
+                            <div class="text-xs text-brown-500">Güncellendi: {{ page.updated_at.strftime('%d.%m.%Y') }}</div>
+                            {% endif %}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center justify-center space-x-2">
+                            {% if page.is_published %}
+                            <a href="/{{ page.slug }}" target="_blank" class="text-blue-600 hover:text-blue-800 transition-smooth" title="Görüntüle">
+                                <i data-lucide="external-link" class="w-4 h-4"></i>
+                            </a>
+                            {% endif %}
+                            <a href="/admin/pages/{{ page.id }}/edit" class="text-brown-600 hover:text-brown-800 transition-smooth" title="Düzenle">
+                                <i data-lucide="edit" class="w-4 h-4"></i>
+                            </a>
+                            <button onclick="deletePage({{ page.id }})" class="text-red-600 hover:text-red-800 transition-smooth" title="Sil">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% else %}
+<!-- Boş Durum -->
+<div class="text-center py-12">
+    <div class="w-16 h-16 bg-cream-200 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i data-lucide="file" class="w-8 h-8 text-brown-400"></i>
+    </div>
+    <h3 class="text-lg font-semibold text-brown-900 mb-2">Henüz özel sayfa yok</h3>
+    <p class="text-brown-600 mb-4">Hakkımızda, İletişim gibi özel sayfalar oluşturun.</p>
+    <a href="/admin/pages/new" class="bg-brown-600 text-white px-6 py-2 rounded-lg hover:bg-brown-700 transition-smooth">
+        <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>
+        İlk Sayfayı Ekle
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function deletePage(pageId) {
+    if (confirm('Bu sayfayı silmek istediğinizden emin misiniz?')) {
+        try {
+            const response = await fetch(`/admin/pages/${pageId}/delete`, {
+                method: 'POST'
+            });
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Sayfa silinirken bir hata oluştu.');
+            }
+        } catch (error) {
+            console.error('Sayfa silme hatası:', error);
+            alert('Sayfa silinirken bir hata oluştu.');
+        }
+    }
+}
+</script>
+{% endblock %}

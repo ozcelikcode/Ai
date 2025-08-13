@@ -1,0 +1,123 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Dashboard{% endblock %}
+{% block page_description %}Sistem genel durumu ve istatistikleri{% endblock %}
+
+{% block content %}
+<!-- İstatistik Kartları -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Toplam Yazılar -->
+    <div class="stat-card rounded-xl p-6 hover-lift transition-smooth">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-brown-600 text-sm font-medium">Toplam Yazılar</p>
+                <p class="text-3xl font-bold text-brown-900">{{ stats.total_posts if stats else 0 }}</p>
+            </div>
+            <div class="w-12 h-12 bg-brown-600 rounded-lg flex items-center justify-center">
+                <i data-lucide="file-text" class="w-6 h-6 text-white"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Yayınlanan Yazılar -->
+    <div class="stat-card rounded-xl p-6 hover-lift transition-smooth">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-brown-600 text-sm font-medium">Yayınlanan</p>
+                <p class="text-3xl font-bold text-brown-900">{{ stats.published_posts if stats else 0 }}</p>
+            </div>
+            <div class="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
+                <i data-lucide="check-circle" class="w-6 h-6 text-white"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Taslak Yazılar -->
+    <div class="stat-card rounded-xl p-6 hover-lift transition-smooth">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-brown-600 text-sm font-medium">Taslaklar</p>
+                <p class="text-3xl font-bold text-brown-900">{{ stats.draft_posts if stats else 0 }}</p>
+            </div>
+            <div class="w-12 h-12 bg-yellow-600 rounded-lg flex items-center justify-center">
+                <i data-lucide="edit" class="w-6 h-6 text-white"></i>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bekleyen Yorumlar -->
+    <div class="stat-card rounded-xl p-6 hover-lift transition-smooth">
+        <div class="flex items-center justify-between">
+            <div>
+                <p class="text-brown-600 text-sm font-medium">Bekleyen Yorumlar</p>
+                <p class="text-3xl font-bold text-brown-900">{{ stats.pending_comments if stats else 0 }}</p>
+            </div>
+            <div class="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center">
+                <i data-lucide="message-circle" class="w-6 h-6 text-white"></i>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Alt Kartlar -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Son Yazılar -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-brown-900">Son Yazılar</h3>
+            <a href="/admin/posts" class="text-brown-600 hover:text-brown-800 text-sm">Tümünü Gör</a>
+        </div>
+        
+        <div class="space-y-4">
+            {% if recent_posts %}
+                {% for post in recent_posts %}
+                <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-cream-50 transition-smooth">
+                    <div class="w-2 h-2 bg-brown-500 rounded-full mt-2"></div>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-brown-900">{{ post.title }}</h4>
+                        <p class="text-sm text-brown-600 mt-1">{{ post.created_at.strftime('%d.%m.%Y') }}</p>
+                        <span class="inline-block px-2 py-1 text-xs rounded-full mt-1 
+                                   {% if post.is_published %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                            {% if post.is_published %}Yayında{% else %}Taslak{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-brown-600 text-center py-4">Henüz yazı bulunmuyor.</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Son Yorumlar -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-brown-900">Son Yorumlar</h3>
+            <a href="/admin/comments" class="text-brown-600 hover:text-brown-800 text-sm">Tümünü Gör</a>
+        </div>
+        
+        <div class="space-y-4">
+            {% if recent_comments %}
+                {% for comment in recent_comments %}
+                <div class="flex items-start space-x-3 p-3 rounded-lg hover:bg-cream-50 transition-smooth">
+                    <div class="w-8 h-8 bg-brown-200 rounded-full flex items-center justify-center">
+                        <i data-lucide="user" class="w-4 h-4 text-brown-600"></i>
+                    </div>
+                    <div class="flex-1">
+                        <h4 class="font-medium text-brown-900">{{ comment.user.username if comment.user else 'Anonim' }}</h4>
+                        <p class="text-sm text-brown-600 mt-1">{{ comment.content[:50] }}...</p>
+                        <p class="text-xs text-brown-500 mt-1">{{ comment.created_at.strftime('%d.%m.%Y') }}</p>
+                        <span class="inline-block px-2 py-1 text-xs rounded-full mt-1 
+                                   {% if comment.is_approved %}bg-green-100 text-green-800{% else %}bg-yellow-100 text-yellow-800{% endif %}">
+                            {% if comment.is_approved %}Onaylandı{% else %}Bekliyor{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <p class="text-brown-600 text-center py-4">Henüz yorum bulunmuyor.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

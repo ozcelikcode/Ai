@@ -1,0 +1,49 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Yorumlar{% endblock %}
+{% block page_description %}Yorum yönetimi{% endblock %}
+
+{% block content %}
+<!-- Yorum Filtreleri -->
+<div class="flex items-center justify-between mb-6">
+    <div class="flex space-x-4">
+        <button class="px-4 py-2 bg-white border border-cream-300 rounded-lg hover:bg-cream-50 transition-smooth">
+            Tümü
+        </button>
+        <button class="px-4 py-2 bg-white border border-cream-300 rounded-lg hover:bg-cream-50 transition-smooth">
+            Onaylanmış
+        </button>
+        <button class="px-4 py-2 bg-white border border-cream-300 rounded-lg hover:bg-cream-50 transition-smooth">
+            Bekleyenler
+        </button>
+        <button class="px-4 py-2 bg-white border border-cream-300 rounded-lg hover:bg-cream-50 transition-smooth">
+            Spam
+        </button>
+    </div>
+</div>
+
+<!-- Yorumlar Tablosu -->
+<div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-brown-50">
+                <tr>
+                    <th class="px-6 py-4 text-left text-brown-900 font-semibold">Yazar</th>
+                    <th class="px-6 py-4 text-left text-brown-900 font-semibold">Yorum</th>
+                    <th class="px-6 py-4 text-left text-brown-900 font-semibold">Yazı</th>
+                    <th class="px-6 py-4 text-left text-brown-900 font-semibold">Durum</th>
+                    <th class="px-6 py-4 text-left text-brown-900 font-semibold">Tarih</th>
+                    <th class="px-6 py-4 text-center text-brown-900 font-semibold">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-cream-200">
+                <tr>
+                    <td colspan="6" class="px-6 py-8 text-center text-brown-600">
+                        Henüz yorum bulunmuyor.
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

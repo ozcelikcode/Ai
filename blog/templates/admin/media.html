@@ -1,0 +1,271 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Medya Galerisi{% endblock %}
+{% block page_description %}Resimler ve dosyalarınızı yönetin{% endblock %}
+
+{% block extra_head %}
+<style>
+    .drag-over { border-color: #944f37; background-color: #f7f3f0; }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Başlık ve Yükleme Butonları -->
+<div class="flex items-center justify-between mb-6">
+    <h3 class="text-lg font-semibold text-brown-900">Medya Dosyaları</h3>
+    <div class="flex items-center space-x-3">
+        <button id="upload-url-btn" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-smooth flex items-center">
+            <i data-lucide="link" class="w-4 h-4 mr-2"></i>
+            URL ile Ekle
+        </button>
+        <button id="upload-btn" class="bg-brown-600 text-white px-4 py-2 rounded-lg hover:bg-brown-700 transition-smooth flex items-center">
+            <i data-lucide="upload" class="w-4 h-4 mr-2"></i>
+            Dosya Yükle
+        </button>
+    </div>
+</div>
+
+<!-- Upload Area -->
+<div id="upload-area" class="hidden p-8 border-2 border-dashed border-cream-300 rounded-xl bg-white text-center mb-6">
+    <i data-lucide="upload-cloud" class="w-16 h-16 text-cream-400 mx-auto mb-4"></i>
+    <p class="text-lg font-medium text-brown-900 mb-2">Dosyaları buraya sürükleyin</p>
+    <p class="text-brown-600 mb-4">veya dosya seçmek için tıklayın</p>
+    <input type="file" id="file-input" multiple accept="image/*,.pdf,.doc,.docx" class="hidden">
+    <button onclick="document.getElementById('file-input').click()" 
+            class="bg-brown-600 text-white px-6 py-2 rounded-lg hover:bg-brown-700 transition-smooth">
+        Dosya Seç
+    </button>
+    <p class="text-sm text-brown-500 mt-2">Desteklenen formatlar: JPG, PNG, GIF, WebP, SVG, PDF, DOC</p>
+</div>
+
+<!-- URL Upload Modal -->
+<div id="url-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-brown-900">URL ile Resim Ekle</h3>
+            <button id="close-modal" class="text-brown-600 hover:text-brown-800">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <form id="url-form" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-brown-700 mb-2">Resim URL'si</label>
+                <input type="url" id="image-url" required
+                       class="w-full px-4 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-brown-500"
+                       placeholder="https://example.com/image.jpg">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-brown-700 mb-2">Alt Metni (Opsiyonel)</label>
+                <input type="text" id="alt-text"
+                       class="w-full px-4 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-brown-500"
+                       placeholder="Resim açıklaması">
+            </div>
+            
+            <div class="flex justify-end space-x-3">
+                <button type="button" id="cancel-btn" 
+                        class="px-4 py-2 text-brown-600 hover:text-brown-800 transition-smooth">
+                    İptal
+                </button>
+                <button type="submit"
+                        class="bg-brown-600 text-white px-4 py-2 rounded-lg hover:bg-brown-700 transition-smooth">
+                    Ekle
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Media Grid -->
+<div id="media-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+    {% if media_files %}
+        {% for media in media_files %}
+        <div class="media-item bg-white rounded-xl shadow-lg overflow-hidden hover-lift transition-smooth" data-id="{{ media.id }}">
+            {% if media.mime_type.startswith('image/') %}
+            <div class="aspect-square bg-gray-100 flex items-center justify-center">
+                <img src="/uploads/media/{{ media.filename }}" 
+                     alt="{{ media.alt_text or media.original_name }}"
+                     class="w-full h-full object-cover">
+            </div>
+            {% else %}
+            <div class="aspect-square bg-gray-100 flex items-center justify-center">
+                <i data-lucide="file" class="w-12 h-12 text-gray-400"></i>
+            </div>
+            {% endif %}
+            
+            <div class="p-3">
+                <p class="text-xs font-medium text-brown-900 truncate">{{ media.original_name }}</p>
+                <p class="text-xs text-brown-600">{{ (media.file_size / 1024) | round(1) }}KB</p>
+                
+                <div class="flex items-center justify-between mt-2">
+                    <button onclick="copyUrl('{{ media.filename }}')" 
+                            class="text-brown-600 hover:text-brown-800 transition-smooth">
+                        <i data-lucide="copy" class="w-4 h-4"></i>
+                    </button>
+                    <button onclick="deleteMedia({{ media.id }})" 
+                            class="text-red-600 hover:text-red-800 transition-smooth">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    {% else %}
+        <div class="col-span-full text-center py-12">
+            <div class="w-16 h-16 bg-cream-200 rounded-full flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="image" class="w-8 h-8 text-brown-400"></i>
+            </div>
+            <h3 class="text-lg font-semibold text-brown-900 mb-2">Henüz medya dosyası yok</h3>
+            <p class="text-brown-600 mb-4">İlk dosyanızı yüklemek için yukarıdaki butonları kullanın.</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Upload area toggle
+document.getElementById('upload-btn').addEventListener('click', function() {
+    const uploadArea = document.getElementById('upload-area');
+    uploadArea.classList.toggle('hidden');
+});
+
+// URL modal
+document.getElementById('upload-url-btn').addEventListener('click', function() {
+    document.getElementById('url-modal').classList.remove('hidden');
+});
+
+document.getElementById('close-modal').addEventListener('click', function() {
+    document.getElementById('url-modal').classList.add('hidden');
+});
+
+document.getElementById('cancel-btn').addEventListener('click', function() {
+    document.getElementById('url-modal').classList.add('hidden');
+});
+
+// Drag and drop
+const uploadArea = document.getElementById('upload-area');
+const fileInput = document.getElementById('file-input');
+
+uploadArea.addEventListener('dragover', function(e) {
+    e.preventDefault();
+    uploadArea.classList.add('drag-over');
+});
+
+uploadArea.addEventListener('dragleave', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+});
+
+uploadArea.addEventListener('drop', function(e) {
+    e.preventDefault();
+    uploadArea.classList.remove('drag-over');
+    const files = e.dataTransfer.files;
+    uploadFiles(files);
+});
+
+fileInput.addEventListener('change', function(e) {
+    uploadFiles(e.target.files);
+});
+
+// Upload files function
+async function uploadFiles(files) {
+    const formData = new FormData();
+    
+    for (let file of files) {
+        formData.append('files', file);
+    }
+    
+    try {
+        const response = await fetch('/admin/media/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            location.reload(); // Reload to show new files
+        } else {
+            alert('Hata: ' + (result.error || 'Dosya yüklenirken hata oluştu'));
+        }
+    } catch (error) {
+        console.error('Upload failed:', error);
+        alert('Dosya yükleme başarısız oldu.');
+    }
+}
+
+// URL form submission
+document.getElementById('url-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const url = document.getElementById('image-url').value;
+    const altText = document.getElementById('alt-text').value;
+    
+    const formData = new FormData();
+    formData.append('url', url);
+    formData.append('alt_text', altText);
+    
+    try {
+        const response = await fetch('/admin/media/upload-url', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            location.reload();
+        } else {
+            alert('Hata: ' + (result.error || 'URL yüklenemedi'));
+        }
+    } catch (error) {
+        console.error('Upload failed:', error);
+        alert('URL yükleme başarısız oldu.');
+    }
+    
+    document.getElementById('url-modal').classList.add('hidden');
+});
+
+// Copy URL function
+function copyUrl(filename) {
+    const url = `/uploads/media/${filename}`;
+    navigator.clipboard.writeText(window.location.origin + url).then(function() {
+        // Simple success feedback
+        const btn = event.target.closest('button');
+        const originalContent = btn.innerHTML;
+        btn.innerHTML = '<i data-lucide="check" class="w-4 h-4"></i>';
+        lucide.createIcons();
+        setTimeout(() => {
+            btn.innerHTML = originalContent;
+            lucide.createIcons();
+        }, 2000);
+    }).catch(function() {
+        alert('URL kopyalanamadı');
+    });
+}
+
+// Delete media function
+async function deleteMedia(mediaId) {
+    if (confirm('Bu dosyayı silmek istediğinizden emin misiniz?')) {
+        try {
+            const response = await fetch(`/admin/media/${mediaId}/delete`, {
+                method: 'POST'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                document.querySelector(`[data-id="${mediaId}"]`).remove();
+            } else {
+                alert('Hata: ' + (result.error || 'Dosya silinemedi'));
+            }
+        } catch (error) {
+            console.error('Delete failed:', error);
+            alert('Dosya silme başarısız oldu.');
+        }
+    }
+}
+</script>
+{% endblock %}

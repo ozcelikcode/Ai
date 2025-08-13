@@ -1,0 +1,293 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} - AI Blog{% endblock %}
+{% block description %}{{ post.meta_description or post.excerpt or post.content[:160] }}{% endblock %}
+
+{% block content %}
+<article class="py-16">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Post Header -->
+        <header class="mb-8">
+            {% if post.category %}
+            <div class="mb-4">
+                <a href="/category/{{ post.category.slug }}" 
+                   class="inline-block bg-brown-600 text-white px-3 py-1 rounded-full text-sm hover:bg-brown-700 transition-smooth">
+                    {{ post.category.name }}
+                </a>
+            </div>
+            {% endif %}
+            
+            <h1 class="text-4xl font-bold text-brown-900 mb-4">{{ post.title }}</h1>
+            
+            <div class="flex items-center gap-6 text-brown-600 text-sm">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 bg-brown-200 rounded-full flex items-center justify-center">
+                        <i data-lucide="user" class="w-4 h-4 text-brown-600"></i>
+                    </div>
+                    <span>{{ post.author.username }}</span>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <i data-lucide="calendar" class="w-4 h-4"></i>
+                    <span>{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                </div>
+                
+                {% if post.reading_time %}
+                <div class="flex items-center gap-2">
+                    <i data-lucide="clock" class="w-4 h-4"></i>
+                    <span>{{ post.reading_time }} dk okuma</span>
+                </div>
+                {% endif %}
+                
+                {% if post.show_updated_date and post.updated_at %}
+                <div class="flex items-center gap-2">
+                    <i data-lucide="edit" class="w-4 h-4"></i>
+                    <span>{{ post.updated_at.strftime('%d.%m.%Y') }} güncellendi</span>
+                </div>
+                {% endif %}
+            </div>
+        </header>
+        
+        <!-- Featured Image -->
+        {% if post.featured_image %}
+        <div class="mb-8">
+            <img src="{{ post.featured_image }}" alt="{{ post.title }}" 
+                 class="w-full h-96 object-cover rounded-xl shadow-lg">
+        </div>
+        {% endif %}
+        
+        <!-- Post Content -->
+        <div class="prose prose-lg prose-brown max-w-none mb-12">
+            {{ post.content | safe }}
+        </div>
+        
+        <!-- Like Section -->
+        {% if current_user %}
+        <div class="flex items-center justify-between py-6 border-y border-cream-200 mb-8">
+            <div class="flex items-center gap-4">
+                <button id="like-btn" data-post-id="{{ post.id }}" 
+                        class="flex items-center gap-2 px-4 py-2 rounded-lg transition-smooth hover:bg-cream-100 group">
+                    <i data-lucide="heart" class="w-5 h-5 transition-smooth group-hover:text-red-500" id="heart-icon"></i>
+                    <span id="like-count">0</span>
+                    <span>Beğeni</span>
+                </button>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <button onclick="sharePost()" class="flex items-center gap-2 px-4 py-2 rounded-lg transition-smooth hover:bg-cream-100">
+                    <i data-lucide="share-2" class="w-5 h-5"></i>
+                    <span>Paylaş</span>
+                </button>
+            </div>
+        </div>
+        {% endif %}
+        
+        <!-- Comments Section -->
+        <section id="comments" class="mb-12">
+            <h3 class="text-2xl font-bold text-brown-900 mb-6">Yorumlar</h3>
+            
+            <!-- Comment Form -->
+            {% if current_user %}
+            <div class="bg-cream-50 rounded-xl p-6 mb-8">
+                <form action="/post/{{ post.slug }}/comment" method="post">
+                    <div class="mb-4">
+                        <label for="content" class="block text-sm font-medium text-brown-700 mb-2">
+                            Yorumunuzu yazın
+                        </label>
+                        <textarea id="content" name="content" rows="4" required
+                                  class="w-full px-4 py-3 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-brown-500"
+                                  placeholder="Düşüncelerinizi paylaşın..."></textarea>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button type="submit" 
+                                class="bg-brown-600 text-white px-6 py-3 rounded-lg hover:bg-brown-700 transition-smooth">
+                            Yorum Gönder
+                        </button>
+                    </div>
+                </form>
+                
+                <p class="text-sm text-brown-600 mt-2">
+                    <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
+                    Yorumunuz onaylandıktan sonra görünecektir.
+                </p>
+            </div>
+            {% else %}
+            <div class="bg-cream-50 rounded-xl p-6 mb-8 text-center">
+                <p class="text-brown-700 mb-4">Yorum yapmak için giriş yapmanız gerekiyor.</p>
+                <a href="/login" class="bg-brown-600 text-white px-6 py-3 rounded-lg hover:bg-brown-700 transition-smooth">
+                    Giriş Yap
+                </a>
+            </div>
+            {% endif %}
+            
+            <!-- Comments List -->
+            <div id="comments-list" class="space-y-6">
+                <!-- Comments will be loaded here via JavaScript -->
+            </div>
+        </section>
+        
+        <!-- Related Posts -->
+        {% if related_posts %}
+        <section class="border-t border-cream-200 pt-12">
+            <h3 class="text-2xl font-bold text-brown-900 mb-6">İlgili Yazılar</h3>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {% for related_post in related_posts %}
+                <article class="bg-white rounded-xl shadow-lg overflow-hidden hover-lift transition-smooth">
+                    {% if related_post.featured_image %}
+                    <img src="{{ related_post.featured_image }}" alt="{{ related_post.title }}" 
+                         class="w-full h-48 object-cover">
+                    {% else %}
+                    <div class="w-full h-48 bg-gradient-to-br from-cream-200 to-brown-200 flex items-center justify-center">
+                        <i data-lucide="file-text" class="w-12 h-12 text-brown-500"></i>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="p-6">
+                        <h4 class="text-lg font-bold text-brown-900 mb-2 hover:text-brown-700 transition-smooth">
+                            <a href="/post/{{ related_post.slug }}">{{ related_post.title }}</a>
+                        </h4>
+                        
+                        {% if related_post.excerpt %}
+                        <p class="text-brown-700 text-sm">{{ related_post.excerpt[:100] }}...</p>
+                        {% endif %}
+                        
+                        <div class="flex items-center justify-between mt-4">
+                            <span class="text-xs text-brown-600">
+                                {{ related_post.created_at.strftime('%d.%m.%Y') }}
+                            </span>
+                            <a href="/post/{{ related_post.slug }}" 
+                               class="text-brown-600 hover:text-brown-800 transition-smooth text-sm">
+                                Oku →
+                            </a>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        </section>
+        {% endif %}
+    </div>
+</article>
+
+<script>
+    // Load comments on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadComments();
+    });
+    
+    async function loadComments() {
+        try {
+            const response = await fetch(`/api/post/{{ post.slug }}/comments`);
+            const data = await response.json();
+            
+            const commentsList = document.getElementById('comments-list');
+            
+            if (data.comments.length === 0) {
+                commentsList.innerHTML = `
+                    <div class="text-center py-8 text-brown-500">
+                        <i data-lucide="message-circle" class="w-12 h-12 mx-auto mb-2"></i>
+                        <p>Henüz yorum yapılmamış. İlk yorumu sen yap!</p>
+                    </div>
+                `;
+            } else {
+                commentsList.innerHTML = data.comments.map(comment => `
+                    <div class="flex items-start space-x-4 bg-white rounded-xl p-6 shadow-sm">
+                        <div class="w-10 h-10 bg-brown-200 rounded-full flex items-center justify-center flex-shrink-0">
+                            ${comment.user.profile_image 
+                                ? `<img src="${comment.user.profile_image}" alt="${comment.user.username}" class="w-10 h-10 rounded-full object-cover">`
+                                : `<i data-lucide="user" class="w-5 h-5 text-brown-600"></i>`
+                            }
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex items-center space-x-2 mb-2">
+                                <h4 class="font-semibold text-brown-900">${comment.user.username}</h4>
+                                <span class="text-sm text-brown-600">${comment.created_at}</span>
+                            </div>
+                            <p class="text-brown-700">${comment.content}</p>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Re-initialize lucide icons
+            lucide.createIcons();
+            
+        } catch (error) {
+            console.error('Error loading comments:', error);
+        }
+    }
+    
+    // Share functionality
+    function sharePost() {
+        if (navigator.share) {
+            navigator.share({
+                title: '{{ post.title }}',
+                text: '{{ post.excerpt or post.content[:100] }}',
+                url: window.location.href
+            });
+        } else {
+            // Fallback: copy to clipboard
+            navigator.clipboard.writeText(window.location.href);
+            alert('Link kopyalandı!');
+        }
+    }
+    
+    // Like functionality (if user is logged in)
+    {% if current_user %}
+    // Load initial like status
+    loadLikeStatus();
+    
+    async function loadLikeStatus() {
+        try {
+            const response = await fetch(`/api/posts/{{ post.id }}/like-status`);
+            const data = await response.json();
+            
+            const heartIcon = document.getElementById('heart-icon');
+            const likeCount = document.getElementById('like-count');
+            
+            likeCount.textContent = data.like_count;
+            
+            if (data.liked) {
+                heartIcon.classList.add('text-red-500', 'fill-current');
+            } else {
+                heartIcon.classList.remove('text-red-500', 'fill-current');
+            }
+        } catch (error) {
+            console.error('Error loading like status:', error);
+        }
+    }
+    
+    document.getElementById('like-btn').addEventListener('click', async function() {
+        const postId = this.dataset.postId;
+        
+        try {
+            const response = await fetch(`/api/posts/${postId}/like`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                const heartIcon = document.getElementById('heart-icon');
+                const likeCount = document.getElementById('like-count');
+                
+                likeCount.textContent = data.like_count;
+                
+                if (data.liked) {
+                    heartIcon.classList.add('text-red-500', 'fill-current');
+                } else {
+                    heartIcon.classList.remove('text-red-500', 'fill-current');
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling like:', error);
+        }
+    });
+    {% endif %}
+</script>
+{% endblock %}

@@ -1,0 +1,125 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}İçerik Yönetimi{% endblock %}
+{% block page_description %}Blog yazılarınızı yönetin{% endblock %}
+
+{% block content %}
+<!-- Başlık ve Yeni Yazı Butonu -->
+<div class="flex items-center justify-between mb-6">
+    <h3 class="text-lg font-semibold text-brown-900">Tüm Yazılar</h3>
+    <a href="/admin/posts/new" class="bg-brown-600 text-white px-4 py-2 rounded-lg hover:bg-brown-700 transition-smooth">
+        <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>
+        Yeni Yazı
+    </a>
+</div>
+
+<!-- Yazılar Tablosu -->
+<div class="bg-white rounded-xl shadow-lg overflow-hidden">
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-brown-50">
+                <tr>
+                    <th class="px-6 py-4 text-left text-brown-900 font-semibold">Başlık</th>
+                    <th class="px-6 py-4 text-left text-brown-900 font-semibold">Kategori</th>
+                    <th class="px-6 py-4 text-left text-brown-900 font-semibold">Durum</th>
+                    <th class="px-6 py-4 text-left text-brown-900 font-semibold">Tarih</th>
+                    <th class="px-6 py-4 text-center text-brown-900 font-semibold">İşlemler</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y divide-cream-200">
+                {% for post in posts %}
+                <tr class="table-row hover:bg-cream-50 transition-smooth">
+                    <td class="px-6 py-4">
+                        <div>
+                            <h4 class="font-medium text-brown-900">{{ post.title }}</h4>
+                            <p class="text-sm text-brown-600 mt-1">{{ (post.excerpt if post.excerpt else post.content)|excerpt(100) }}</p>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                            {{ post.category.name if post.category else 'Kategorisiz' }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4">
+                        {% if post.is_published %}
+                        <span class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Yayında</span>
+                        {% elif post.is_draft %}
+                        <span class="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">Taslak</span>
+                        {% else %}
+                        <span class="px-2 py-1 text-xs bg-gray-100 text-gray-800 rounded-full">Bekliyor</span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 text-brown-600 text-sm">
+                        {{ post.created_at.strftime('%d.%m.%Y') }}
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex items-center justify-center space-x-2">
+                            <a href="/post/{{ post.slug }}" target="_blank" class="text-blue-600 hover:text-blue-800 transition-smooth" title="Görüntüle">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </a>
+                            <a href="/admin/posts/{{ post.id }}/edit" class="text-brown-600 hover:text-brown-800 transition-smooth" title="Düzenle">
+                                <i data-lucide="edit" class="w-4 h-4"></i>
+                            </a>
+                            <button onclick="deletePost({{ post.id }})" class="text-red-600 hover:text-red-800 transition-smooth" title="Sil">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="5" class="px-6 py-8 text-center text-brown-600">
+                        Henüz yazı eklenmemiş. <a href="/admin/posts/new" class="text-brown-800 font-medium hover:underline">İlk yazınızı ekleyin</a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Sayfalama (eğer gerekirse) -->
+{% if posts|length > 10 %}
+<div class="mt-6 flex justify-center">
+    <div class="flex space-x-2">
+        <button class="px-3 py-2 text-brown-600 bg-white rounded-lg border border-cream-300 hover:bg-cream-50 transition-smooth">
+            Önceki
+        </button>
+        <button class="px-3 py-2 text-white bg-brown-600 rounded-lg">
+            1
+        </button>
+        <button class="px-3 py-2 text-brown-600 bg-white rounded-lg border border-cream-300 hover:bg-cream-50 transition-smooth">
+            Sonraki
+        </button>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+async function deletePost(postId) {
+    if (confirm('Bu yazıyı silmek istediğinizden emin misiniz?')) {
+        try {
+            const response = await fetch(`/admin/posts/${postId}/delete`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Yazı silinirken bir hata oluştu.');
+            }
+        } catch (error) {
+            console.error('Yazı silme hatası:', error);
+            alert('Yazı silinirken bir hata oluştu.');
+        }
+    }
+}
+</script>
+{% endblock %}
+
+{% block extra_head %}
+<style>
+    .table-row:hover { background-color: #faf0e0; }
+</style>
+{% endblock %}

@@ -1,0 +1,321 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}{% if page %}Sayfa Düzenle{% else %}Yeni Sayfa{% endif %}{% endblock %}
+{% block page_description %}{% if page %}{{ page.title }} sayfasını düzenleyin{% else %}Yeni özel sayfa oluşturun{% endif %}{% endblock %}
+
+{% block extra_head %}
+<!-- Jodit Editor CSS -->
+<link rel="stylesheet" href="https://unpkg.com/jodit@3.24.5/build/jodit.min.css"/>
+<style>
+.jodit-container {
+    border-radius: 8px;
+}
+.jodit-toolbar-button {
+    border-radius: 4px;
+}
+.jodit-workplace {
+    background: #f9f9f9;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Sayfa Formu -->
+<form method="POST" action="{% if page %}/admin/pages/{{ page.id }}/edit{% else %}/admin/pages/new{% endif %}" class="space-y-6" onsubmit="syncPageEditorContent()">
+    
+    <!-- Üst Kısım: Başlık ve İşlem Butonları -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="flex items-center justify-between mb-6">
+            <div class="flex items-center space-x-4">
+                <a href="/admin/pages" class="text-brown-600 hover:text-brown-800 transition-smooth">
+                    <i data-lucide="arrow-left" class="w-5 h-5"></i>
+                </a>
+                <h2 class="text-xl font-semibold text-brown-900">
+                    {% if page %}Sayfa Düzenle{% else %}Yeni Sayfa Oluştur{% endif %}
+                </h2>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <!-- Taslak Kaydet -->
+                <button type="submit" name="action" value="draft" class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 transition-smooth">
+                    <i data-lucide="save" class="w-4 h-4 mr-2"></i>
+                    Taslak Kaydet
+                </button>
+                
+                <!-- Yayınla -->
+                <button type="submit" name="action" value="publish" class="bg-brown-600 text-white px-6 py-2 rounded-lg hover:bg-brown-700 transition-smooth">
+                    <i data-lucide="send" class="w-4 h-4 mr-2"></i>
+                    {% if page and page.is_published %}Güncelle{% else %}Yayınla{% endif %}
+                </button>
+            </div>
+        </div>
+        
+        <!-- Başlık -->
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-brown-700 mb-2">Sayfa Başlığı</label>
+            <input type="text" name="title" id="title" required
+                   value="{{ page.title if page else '' }}"
+                   class="w-full px-4 py-3 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-brown-500 text-lg"
+                   placeholder="Sayfa başlığını yazın...">
+        </div>
+        
+        <!-- Slug Önizleme -->
+        <div class="mb-4">
+            <label class="block text-sm font-medium text-brown-700 mb-2">URL Slug</label>
+            <div class="flex items-center space-x-2">
+                <span class="text-brown-600 text-sm">http://localhost:8000/</span>
+                <input type="text" name="slug" id="slug"
+                       value="{{ page.slug if page else '' }}"
+                       class="flex-1 px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-brown-500"
+                       placeholder="url-slug-otomatik-olusur">
+            </div>
+            <p class="text-xs text-brown-500 mt-1">Başlık yazıldıkça otomatik oluşur, düzenleyebilirsiniz</p>
+        </div>
+    </div>
+    
+    <!-- İçerik Editörü -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <div class="mb-4">
+            <div class="flex items-center justify-between mb-2">
+                <label class="block text-sm font-medium text-brown-700">Sayfa İçeriği</label>
+                <div class="flex items-center space-x-2 text-sm text-brown-600">
+                    <span id="word-count">0 kelime</span>
+                </div>
+            </div>
+            <textarea name="content" id="content" rows="20"
+                      class="w-full px-4 py-3 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-brown-500"
+                      placeholder="Sayfa içeriğinizi buraya yazın...">{{ page.content if page else '' }}</textarea>
+        </div>
+    </div>
+    
+    <!-- Ek Ayarlar -->
+    <div class="bg-white rounded-xl shadow-lg p-6">
+        <h3 class="text-lg font-semibold text-brown-900 mb-4">Ek Ayarlar</h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Sol Kolon -->
+            <div class="space-y-4">
+                <!-- Meta Description -->
+                <div>
+                    <label class="block text-sm font-medium text-brown-700 mb-2">Meta Açıklama (SEO)</label>
+                    <textarea name="meta_description" rows="3"
+                              class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-brown-500"
+                              placeholder="Arama motorları için kısa açıklama...">{{ page.meta_description if page else '' }}</textarea>
+                    <p class="text-xs text-brown-500 mt-1">İdeal uzunluk: 150-160 karakter</p>
+                </div>
+                
+                <!-- Sayfa Sırası -->
+                <div>
+                    <label class="block text-sm font-medium text-brown-700 mb-2">Menü Sırası</label>
+                    <input type="number" name="menu_order" min="0"
+                           value="{{ page.menu_order if page else 0 }}"
+                           class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-brown-500">
+                    <p class="text-xs text-brown-500 mt-1">Menüde görünme sırası (düşük sayılar önce görünür)</p>
+                </div>
+            </div>
+            
+            <!-- Sağ Kolon -->
+            <div class="space-y-4">
+                <!-- Seçenekler -->
+                <div class="space-y-3">
+                    <label class="flex items-center">
+                        <input type="checkbox" name="show_in_menu" 
+                               {% if not page or page.show_in_menu %}checked{% endif %}
+                               class="rounded border-brown-300 text-brown-600 focus:ring-brown-500">
+                        <span class="ml-2 text-sm text-brown-700">Menüde göster</span>
+                    </label>
+                    
+                    <label class="flex items-center">
+                        <input type="checkbox" name="show_updated_date" 
+                               {% if page and page.show_updated_date %}checked{% endif %}
+                               class="rounded border-brown-300 text-brown-600 focus:ring-brown-500">
+                        <span class="ml-2 text-sm text-brown-700">Güncellenme tarihini göster</span>
+                    </label>
+                    
+                    <label class="flex items-center">
+                        <input type="checkbox" name="allow_comments" 
+                               {% if page and page.allow_comments %}checked{% endif %}
+                               class="rounded border-brown-300 text-brown-600 focus:ring-brown-500">
+                        <span class="ml-2 text-sm text-brown-700">Yorumlara izin ver</span>
+                    </label>
+                </div>
+                
+                <!-- Sayfa Türü -->
+                <div>
+                    <label class="block text-sm font-medium text-brown-700 mb-2">Sayfa Türü</label>
+                    <select name="page_type" class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-brown-500">
+                        <option value="page" {% if not page or page.page_type == 'page' %}selected{% endif %}>Normal Sayfa</option>
+                        <option value="contact" {% if page and page.page_type == 'contact' %}selected{% endif %}>İletişim Sayfası</option>
+                        <option value="about" {% if page and page.page_type == 'about' %}selected{% endif %}>Hakkımızda Sayfası</option>
+                        <option value="privacy" {% if page and page.page_type == 'privacy' %}selected{% endif %}>Gizlilik Politikası</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Hidden Fields -->
+    <input type="hidden" name="author_id" value="{{ admin_user.id }}">
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Slug otomatik oluşturma
+document.getElementById('title').addEventListener('input', function() {
+    const title = this.value;
+    const slug = title
+        .toLowerCase()
+        .replace(/ğ/g, 'g')
+        .replace(/ü/g, 'u')
+        .replace(/ş/g, 's')
+        .replace(/ı/g, 'i')
+        .replace(/ö/g, 'o')
+        .replace(/ç/g, 'c')
+        .replace(/[^a-z0-9]/g, '-')
+        .replace(/-+/g, '-')
+        .replace(/^-|-$/g, '');
+    
+    document.getElementById('slug').value = slug;
+});
+
+// Kelime sayısı hesaplama
+document.getElementById('content').addEventListener('input', function() {
+    const content = this.value;
+    const wordCount = content.trim() ? content.trim().split(/\s+/).length : 0;
+    document.getElementById('word-count').textContent = `${wordCount} kelime`;
+});
+
+// Bildirim gösterme
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 transition-smooth ${
+        type === 'success' ? 'bg-green-600' : 
+        type === 'error' ? 'bg-red-600' : 'bg-blue-600'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Form submit işlemini yakala ve Jodit content'i senkronize et
+function syncPageEditorContent() {
+    if (window.pageJoditEditor) {
+        document.getElementById('content').value = window.pageJoditEditor.getEditorValue();
+    }
+}
+
+// Jodit Editor
+document.addEventListener('DOMContentLoaded', function() {
+    // Jodit Editor'ü yükle
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/jodit@3.24.5/build/jodit.min.js';
+    script.onload = function() {
+        const contentTextarea = document.getElementById('content');
+        if (contentTextarea) {
+            const editor = Jodit.make(contentTextarea, {
+                height: 400,
+                theme: 'default',
+                toolbar: true,
+                spellcheck: true,
+                language: 'tr',
+                toolbarSticky: false,
+                showCharsCounter: false,
+                showWordsCounter: true,
+                showXPathInStatusbar: false,
+                askBeforePasteHTML: false,
+                askBeforePasteFromWord: false,
+                defaultActionOnPaste: 'insert_clear_html',
+                buttons: [
+                    'bold', 'italic', 'underline', 'strikethrough', '|',
+                    'superscript', 'subscript', '|',
+                    'ul', 'ol', '|',
+                    'outdent', 'indent', '|',
+                    'font', 'fontsize', 'brush', 'paragraph', '|',
+                    'image', 'file', 'video', 'table', 'link', '|',
+                    'left', 'center', 'right', 'justify', '|',
+                    'undo', 'redo', '|',
+                    'hr', 'eraser', 'copyformat', '|',
+                    'symbol', 'fullsize', 'print', 'about'
+                ],
+                uploader: {
+                    insertImageAsBase64URI: false,
+                    url: '/admin/media/upload',
+                    filesVariableName: 'files',
+                    withCredentials: false,
+                    pathVariableName: 'path',
+                    format: 'json',
+                    method: 'POST',
+                    prepareData: function (formData) {
+                        return formData;
+                    },
+                    isSuccess: function (resp) {
+                        return resp.success;
+                    },
+                    getMessage: function (resp) {
+                        return resp.files && resp.files[0] ? resp.files[0].url : '';
+                    },
+                    process: function (resp) {
+                        return {
+                            files: resp.files || [],
+                            path: '',
+                            baseurl: '',
+                            error: resp.error || 0,
+                            msg: resp.message || ''
+                        };
+                    },
+                    error: function (e) {
+                        console.error('Upload error:', e);
+                    }
+                },
+                filebrowser: {
+                    ajax: {
+                        url: '/admin/media/api'
+                    },
+                    height: 400
+                }
+            });
+            
+            // Kelime sayısını güncelle
+            function updateWordCount() {
+                const content = editor.getEditorValue();
+                // HTML taglerini kaldır ve sadece metin içeriğini al
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = content;
+                const textContent = tempDiv.textContent || tempDiv.innerText || '';
+                
+                // Kelime sayısını hesapla
+                const cleanText = textContent.replace(/\s+/g, ' ').trim();
+                const wordCount = cleanText ? cleanText.split(' ').filter(word => word.length > 0).length : 0;
+                
+                const wordCountElement = document.getElementById('word-count');
+                if (wordCountElement) {
+                    wordCountElement.textContent = `${wordCount} kelime`;
+                }
+            }
+            
+            editor.events.on('change', updateWordCount);
+            editor.events.on('afterInit', updateWordCount);
+            
+            // Periyodik güncelleme
+            let updateTimeout;
+            editor.events.on('keyup', function() {
+                clearTimeout(updateTimeout);
+                updateTimeout = setTimeout(updateWordCount, 500);
+            });
+            
+            // Global referansı sakla
+            window.pageJoditEditor = editor;
+            
+            // İlk yükleme
+            setTimeout(updateWordCount, 1000);
+        }
+    };
+    document.head.appendChild(script);
+});
+</script>
+{% endblock %}

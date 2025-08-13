@@ -1,0 +1,136 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Kategoriler{% endblock %}
+{% block page_description %}Blog kategorilerinizi yönetin{% endblock %}
+
+{% block content %}
+<!-- Başlık ve Yeni Kategori Butonu -->
+<div class="flex items-center justify-between mb-6">
+    <h3 class="text-lg font-semibold text-brown-900">Tüm Kategoriler</h3>
+    <button onclick="openNewCategoryModal()" class="bg-brown-600 text-white px-4 py-2 rounded-lg hover:bg-brown-700 transition-smooth">
+        <i data-lucide="plus" class="w-4 h-4 inline mr-2"></i>
+        Yeni Kategori
+    </button>
+</div>
+
+<!-- Kategoriler Grid -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for category in categories %}
+    <div class="bg-white rounded-xl shadow-lg p-6 hover-lift transition-smooth">
+        <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 bg-brown-600 rounded-lg flex items-center justify-center">
+                <i data-lucide="folder" class="w-6 h-6 text-white"></i>
+            </div>
+            <div class="flex space-x-2">
+                <button onclick="editCategory({{ category.id }}, '{{ category.name }}', '{{ category.description or '' }}')" 
+                        class="text-brown-600 hover:text-brown-800 transition-smooth">
+                    <i data-lucide="edit" class="w-4 h-4"></i>
+                </button>
+                <button onclick="deleteCategory({{ category.id }})" 
+                        class="text-red-600 hover:text-red-800 transition-smooth">
+                    <i data-lucide="trash-2" class="w-4 h-4"></i>
+                </button>
+            </div>
+        </div>
+        
+        <h3 class="text-lg font-semibold text-brown-900 mb-2">{{ category.name }}</h3>
+        <p class="text-brown-600 text-sm mb-3">{{ category.description or 'Açıklama bulunmuyor' }}</p>
+        <p class="text-xs text-brown-500">{{ category.posts|length }} yazı</p>
+    </div>
+    {% else %}
+    <div class="col-span-full text-center py-12">
+        <div class="w-16 h-16 bg-brown-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <i data-lucide="folder" class="w-8 h-8 text-brown-600"></i>
+        </div>
+        <h3 class="text-lg font-semibold text-brown-900 mb-2">Henüz kategori yok</h3>
+        <p class="text-brown-600 mb-4">İlk kategorinizi oluşturun</p>
+        <button onclick="openNewCategoryModal()" class="bg-brown-600 text-white px-4 py-2 rounded-lg hover:bg-brown-700 transition-smooth">
+            Kategori Ekle
+        </button>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Kategori Modal -->
+<div id="categoryModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-96">
+        <h3 id="modalTitle" class="text-lg font-semibold text-brown-900 mb-4">Yeni Kategori</h3>
+        
+        <form id="categoryForm" method="POST">
+            <div class="mb-4">
+                <label class="block text-brown-700 font-medium mb-2">Kategori Adı</label>
+                <input type="text" id="categoryName" name="name" required 
+                       class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
+            </div>
+            
+            <div class="mb-6">
+                <label class="block text-brown-700 font-medium mb-2">Açıklama</label>
+                <textarea id="categoryDescription" name="description" rows="3"
+                          class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent"></textarea>
+            </div>
+            
+            <div class="flex space-x-4">
+                <button type="submit" class="flex-1 bg-brown-600 text-white py-2 rounded-lg hover:bg-brown-700 transition-smooth">
+                    Kaydet
+                </button>
+                <button type="button" onclick="closeModal()" class="flex-1 bg-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-400 transition-smooth">
+                    İptal
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+let editingCategoryId = null;
+
+function openNewCategoryModal() {
+    editingCategoryId = null;
+    document.getElementById('modalTitle').textContent = 'Yeni Kategori';
+    document.getElementById('categoryForm').action = '/admin/categories/new';
+    document.getElementById('categoryName').value = '';
+    document.getElementById('categoryDescription').value = '';
+    document.getElementById('categoryModal').classList.remove('hidden');
+}
+
+function editCategory(id, name, description) {
+    editingCategoryId = id;
+    document.getElementById('modalTitle').textContent = 'Kategori Düzenle';
+    document.getElementById('categoryForm').action = `/admin/categories/${id}/edit`;
+    document.getElementById('categoryName').value = name;
+    document.getElementById('categoryDescription').value = description;
+    document.getElementById('categoryModal').classList.remove('hidden');
+}
+
+function closeModal() {
+    document.getElementById('categoryModal').classList.add('hidden');
+}
+
+async function deleteCategory(categoryId) {
+    if (confirm('Bu kategoriyi silmek istediğinizden emin misiniz?')) {
+        try {
+            const response = await fetch(`/admin/categories/${categoryId}/delete`, {
+                method: 'DELETE'
+            });
+            if (response.ok) {
+                location.reload();
+            } else {
+                alert('Kategori silinirken bir hata oluştu.');
+            }
+        } catch (error) {
+            console.error('Kategori silme hatası:', error);
+            alert('Kategori silinirken bir hata oluştu.');
+        }
+    }
+}
+
+// Modal dışına tıklayınca kapat
+document.getElementById('categoryModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

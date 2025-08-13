@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}{{ tag.name }} Etiketi - {{ site_settings.site_title if site_settings else 'AI Blog' }}{% endblock %}
+{% block description %}{{ tag.name }} etiketiyle ilgili yazılar{% endblock %}
+
+{% block content %}
+<section class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Page Header -->
+        <div class="text-center mb-12">
+            <div class="inline-flex items-center px-6 py-3 bg-cream-600 text-white rounded-full mb-4">
+                <i data-lucide="tag" class="w-5 h-5 mr-2"></i>
+                {{ tag.name }}
+            </div>
+            <h1 class="text-4xl font-bold text-brown-900 mb-4">{{ tag.name }} Etiketiyle İlgili Yazılar</h1>
+            <p class="text-brown-600 text-lg">{{ posts|length }} yazı bulundu</p>
+        </div>
+
+        {% if posts %}
+        <!-- Posts Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for post in posts %}
+            <article class="bg-white rounded-xl shadow-lg overflow-hidden hover-lift transition-smooth">
+                {% if post.featured_image %}
+                <div class="aspect-w-16 aspect-h-9">
+                    <img src="{{ post.featured_image }}" alt="{{ post.title }}" 
+                         class="w-full h-48 object-cover">
+                </div>
+                {% endif %}
+                
+                <div class="p-6">
+                    <div class="flex items-center mb-3">
+                        {% if post.category %}
+                        <span class="px-3 py-1 bg-brown-100 text-brown-700 text-sm rounded-full">
+                            {{ post.category.name }}
+                        </span>
+                        {% endif %}
+                        <span class="text-brown-500 text-sm ml-auto">
+                            {{ post.created_at.strftime('%d %B %Y') }}
+                        </span>
+                    </div>
+                    
+                    <h2 class="text-xl font-bold text-brown-900 mb-3 hover:text-brown-700 transition-smooth">
+                        <a href="/post/{{ post.slug }}">{{ post.title }}</a>
+                    </h2>
+                    
+                    <p class="text-brown-600 mb-4">{{ post.excerpt }}</p>
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center text-brown-500 text-sm">
+                            <i data-lucide="clock" class="w-4 h-4 mr-1"></i>
+                            <span>{{ post.reading_time }} dk okuma</span>
+                        </div>
+                        
+                        <a href="/post/{{ post.slug }}" 
+                           class="text-brown-600 hover:text-brown-800 transition-smooth flex items-center">
+                            Devamını Oku
+                            <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <!-- No Posts -->
+        <div class="text-center py-16">
+            <i data-lucide="file-text" class="w-24 h-24 text-brown-300 mx-auto mb-6"></i>
+            <h3 class="text-2xl font-semibold text-brown-700 mb-4">Henüz yazı yok</h3>
+            <p class="text-brown-600 mb-6">Bu etiketle ilgili henüz yayınlanmış bir yazı bulunmuyor.</p>
+            <a href="/" class="bg-brown-600 text-white px-6 py-3 rounded-lg hover:bg-brown-700 transition-smooth inline-flex items-center">
+                <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
+                Ana Sayfaya Dön
+            </a>
+        </div>
+        {% endif %}
+        
+        <!-- Back to Categories -->
+        <div class="text-center mt-16">
+            <a href="/" class="inline-flex items-center text-brown-600 hover:text-brown-800 transition-smooth">
+                <i data-lucide="arrow-left" class="w-4 h-4 mr-2"></i>
+                Ana Sayfaya Dön
+            </a>
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,129 +1,146 @@
-# Blog Projesi
+# AI Blog Platform
 
-Modern ve profesyonel bir blog uygulaması. Go backend ve Tailwind CSS ile responsive frontend tasarımı.
+Modern yapay zeka destekli blog platformu. FastAPI backend ve Vanilla JavaScript frontend ile geliştirilmiş, SQLite veritabanı kullanan profesyonel bir blog sistemi.
 
-## Özellikler
+## 🚀 Özellikler
 
-✨ **Modern Tasarım**
-- Tailwind CSS ile responsive tasarım
-- Krem-kahve renk paleti
-- Yumuşak geçişler ve animasyonlar
-- Lucide Icons icon seti
+### 🎯 Ana Özellikler
+- **AI Destekli İçerik Üretimi** - Gemini 2.5 Pro API ile otomatik blog yazısı oluşturma
+- **Modern Responsive Tasarım** - Tailwind CSS ile krem-kahverengi tema
+- **Dinamik Admin Panel** - Kapsamlı yönetim sistemi
+- **Gelişmiş Arama Sistemi** - Frontend ve admin panelde güçlü arama
 
-🔐 **Güvenli Admin Paneli**
-- JWT tabanlı kimlik doğrulama
-- Güvenli şifre hashleme (bcrypt)
-- Admin yetkilendirme sistemi
+### 👤 Kullanıcı Deneyimi
+- **Kullanıcı Kayıt/Giriş Sistemi** - Güvenli kimlik doğrulama
+- **Profil Yönetimi** - Avatar seçimi ve şifre değiştirme
+- **Yorum Sistemi** - Onay/ret mekanizması ile moderasyon
+- **Beğenme Sistemi** - Giriş yapan kullanıcılar için
 
-📝 **Blog Yönetimi**
-- Yazı oluşturma, düzenleme ve silme
-- Taslak/Yayın durumu yönetimi
-- Otomatik slug oluşturma
-- Özet (excerpt) desteği
+### 🔧 Yönetim Özellikleri
+- **Kategoriler** - Blog yazıları için kategori yönetimi
+- **Etiketler** - Otomatik tamamlama ile etiket sistemi
+- **Medya Galerisi** - Resim yükleme (dosya/URL ile)
+- **Sayfa Yönetimi** - Özel sayfa oluşturma
+- **SEO Optimizasyonu** - Meta etiketleri ve slug sistemi
+- **Taslak Sistemi** - Yazıları taslak olarak kaydetme
 
-🏗️ **Sağlam Mimari**
-- Temiz kod yapısı
-- Modüler Go backend
-- SQLite veritabanı (kurulum gerektirmez)
-- RESTful API
+### 🛡️ Güvenlik
+- **JWT Tabanlı Kimlik Doğrulama** - Güvenli session yönetimi
+- **Admin Yetkilendirme** - Rol tabanlı erişim kontrolü
+- **Input Validation** - Güvenli veri işleme
 
-## Kurulum
+## 📋 Gereksinimler
 
-### Gereksinimler
-- Go 1.21 veya üzeri
-- Git
+- Python 3.8+
+- SQLite (otomatik kurulum)
 
-### Adımlar
+## 🛠️ Kurulum
 
-1. **Projeyi klonlayın**
-   ```bash
-   git clone <repository-url>
-   cd blog
-   ```
+### 1. Projeyi İndirin
+```bash
+git clone https://github.com/yourusername/ai-blog.git
+cd ai-blog
+```
 
-2. **Go modüllerini indirin**
-   ```bash
-   go mod tidy
-   ```
+### 2. Virtual Environment Oluşturun
+```bash
+python -m venv venv
 
-3. **Uygulamayı başlatın**
-   ```bash
-   go run ./cmd/blog
-   ```
-   Alternatif (Node.js bulunanlar için):
-   ```bash
-   npm run dev
-   ```
+# Windows
+venv\Scripts\activate
 
-4. **Tarayıcınızda açın**
-   ```
-   http://localhost:8081
-   ```
+# Linux/Mac
+source venv/bin/activate
+```
 
-## Kullanım
+### 3. Bağımlılıkları Yükleyin
+```bash
+pip install -r requirements.txt
+```
 
-### İlk Admin Girişi
-Uygulama ilk çalıştırıldığında otomatik olarak admin kullanıcısı oluşturulur:
+### 4. Ortam Değişkenlerini Ayarlayın
+`.env.example` dosyasını `.env` olarak kopyalayın ve gerekli ayarları yapın:
+```bash
+cp .env.example .env
+```
+
+`.env` dosyasında SECRET_KEY'i değiştirin (üretim ortamı için).
+
+### 5. Veritabanını Başlatın
+```bash
+python app/utils/init_db.py
+```
+
+### 6. Uygulamayı Çalıştırın
+```bash
+python main.py
+```
+
+Uygulama `http://localhost:8000` adresinde çalışacaktır.
+
+## 👤 İlk Giriş
+
+İlk admin kullanıcısı otomatik oluşturulur:
 - **Kullanıcı Adı:** `admin`
 - **Şifre:** `12345678`
 
-### Admin Panel
-- Admin paneline erişim: `http://localhost:8081/admin`
-- Yeni yazı oluşturma, düzenleme ve silme
-- Yazıları taslak olarak kaydetme veya yayınlama
+Admin paneline `http://localhost:8000/admin` adresinden erişebilirsiniz.
 
-### API Endpoints
-
-#### Genel Kullanım
-- `GET /api/posts?published=true` - Yayınlanan yazıları listele
-- `GET /api/posts/:id` - Yazı detayını getir
-- `GET /api/posts/slug/:slug` - Slug ile yazı getir
-
-#### Kimlik Doğrulama
-- `POST /api/auth/login` - Admin girişi
-
-#### Admin İşlemleri (Token gerekli)
-- `POST /api/posts` - Yeni yazı oluştur
-- `PUT /api/posts/:id` - Yazı güncelle
-- `DELETE /api/posts/:id` - Yazı sil
-
-## Proje Yapısı
+## 📁 Proje Yapısı
 
 ```
-├── cmd/blog/           # Ana uygulama
-├── internal/
-│   ├── auth/          # JWT işlemleri
-│   ├── database/      # Veritabanı bağlantısı
-│   ├── handlers/      # HTTP handler'lar
-│   ├── middleware/    # Middleware'ler
-│   └── models/        # Veri modelleri
-├── web/
-│   ├── templates/     # HTML şablonları
-│   └── static/        # CSS, JS, resim dosyaları
-├── go.mod             # Go modül dosyası
-└── README.md          # Bu dosya
+ai-blog/
+├── app/
+│   ├── core/           # Temel sistem dosyaları
+│   ├── models/         # Veritabanı modelleri
+│   ├── routers/        # API endpoint'leri
+│   └── utils/          # Yardımcı fonksiyonlar
+├── static/             # CSS, JS, resim dosyaları
+├── templates/          # HTML şablonları
+├── uploads/            # Yüklenen dosyalar
+├── main.py            # Ana uygulama
+└── requirements.txt   # Python bağımlılıkları
 ```
 
-## Geliştirme
+## 🔧 Yapılandırma
+
+### Gemini API
+AI destekli içerik üretimi için Gemini API kullanılmaktadır. `.env` dosyasında API anahtarınızı ayarlayın.
 
 ### Veritabanı
-Proje SQLite kullanır. Veritabanı dosyası (`blog.db`) otomatik olarak oluşturulur.
+Varsayılan olarak SQLite kullanılır. Farklı bir veritabanı için `DATABASE_URL` ayarını değiştirin.
 
-### Güvenlik
-- Şifreler bcrypt ile hashlenir
-- JWT token'lar kullanılır
-- Admin yetkilendirme middleware'i
+## 🚀 Deployment
 
-### Özelleştirme
-- Renkler: `web/templates/base.html` içindeki Tailwind config
-- Stil: Tailwind CSS sınıfları
-- API: `internal/handlers/` klasöründeki handler'lar
+### Üretim Ortamı
+1. `.env` dosyasında `DEBUG=False` ayarlayın
+2. Güçlü bir `SECRET_KEY` oluşturun
+3. HTTPS kullanın
+4. Güvenlik başlıklarını yapılandırın
 
-## Lisans
+### Docker (Opsiyonel)
+```bash
+# Dockerfile oluşturulacak
+docker build -t ai-blog .
+docker run -p 8000:8000 ai-blog
+```
 
-Bu proje açık kaynak kodludur.
+## 🤝 Katkıda Bulunma
 
-## Destek
+1. Fork'layın
+2. Feature branch oluşturun (`git checkout -b feature/amazing-feature`)
+3. Commit'leyin (`git commit -m 'Add amazing feature'`)
+4. Push'layın (`git push origin feature/amazing-feature`)
+5. Pull Request açın
 
-Sorunlar ve öneriler için GitHub Issues kullanın.
+## 📝 Lisans
 
+Bu proje MIT lisansı altında lisanslanmıştır.
+
+## 📞 Destek
+
+Herhangi bir sorun için issue açabilir veya iletişime geçebilirsiniz.
+
+---
+
+**AI Blog Platform** - Modern blog deneyimi için tasarlandı.

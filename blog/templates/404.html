@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}Sayfa Bulunamadı - {{ site_settings.site_title if site_settings else 'AI Blog' }}{% endblock %}
+
+{% block content %}
+<section class="min-h-screen flex items-center justify-center py-16">
+    <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <!-- 404 Icon -->
+        <div class="mb-8">
+            <div class="w-32 h-32 mx-auto mb-6 bg-brown-100 rounded-full flex items-center justify-center">
+                <i data-lucide="search" class="w-16 h-16 text-brown-500"></i>
+            </div>
+            <h1 class="text-6xl font-bold text-brown-900 mb-4">404</h1>
+            <h2 class="text-2xl font-semibold text-brown-700 mb-4">Sayfa Bulunamadı</h2>
+        </div>
+
+        <!-- Error Message -->
+        <div class="mb-8">
+            <p class="text-lg text-brown-600 mb-4">
+                Aradığınız sayfa mevcut değil veya taşınmış olabilir.
+            </p>
+            <p class="text-brown-500">
+                Lütfen URL'yi kontrol edin veya ana sayfaya dönün.
+            </p>
+        </div>
+
+        <!-- Actions -->
+        <div class="space-y-4 sm:space-y-0 sm:space-x-4 sm:flex sm:justify-center">
+            <a href="/" 
+               class="inline-flex items-center justify-center px-6 py-3 bg-brown-600 text-white rounded-lg hover:bg-brown-700 transition-smooth">
+                <i data-lucide="home" class="w-5 h-5 mr-2"></i>
+                Ana Sayfa
+            </a>
+            
+            <button onclick="history.back()" 
+                    class="inline-flex items-center justify-center px-6 py-3 bg-cream-200 text-brown-700 rounded-lg hover:bg-cream-300 transition-smooth">
+                <i data-lucide="arrow-left" class="w-5 h-5 mr-2"></i>
+                Geri Dön
+            </button>
+            
+            <button id="search-btn" 
+                    class="inline-flex items-center justify-center px-6 py-3 border border-brown-300 text-brown-700 rounded-lg hover:bg-brown-50 transition-smooth">
+                <i data-lucide="search" class="w-5 h-5 mr-2"></i>
+                Arama
+            </button>
+        </div>
+
+        <!-- Helpful Links -->
+        <div class="mt-12 pt-8 border-t border-cream-200">
+            <h3 class="text-lg font-semibold text-brown-900 mb-4">Popüler Sayfalar</h3>
+            <div class="space-y-2">
+                <a href="/" class="block text-brown-600 hover:text-brown-800 transition-smooth">
+                    Ana Sayfa
+                </a>
+                <a href="/categories" class="block text-brown-600 hover:text-brown-800 transition-smooth">
+                    Kategoriler
+                </a>
+                <a href="/about" class="block text-brown-600 hover:text-brown-800 transition-smooth">
+                    Hakkımızda
+                </a>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+    // Search functionality for 404 page
+    document.getElementById('search-btn').addEventListener('click', function() {
+        const query = prompt('Ne aramak istiyorsunuz?');
+        if (query && query.trim()) {
+            window.location.href = `/search?q=${encodeURIComponent(query.trim())}`;
+        }
+    });
+</script>
+{% endblock %}

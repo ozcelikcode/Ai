@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}{{ profile_user.username }} - Profil - AI Blog{% endblock %}
+
+{% block content %}
+<section class="py-16">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Profile Header -->
+        <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+            <div class="flex items-center space-x-6">
+                <div class="w-24 h-24 bg-brown-200 rounded-full flex items-center justify-center flex-shrink-0">
+                    {% if profile_user.profile_image %}
+                    <img src="{{ profile_user.profile_image }}" alt="{{ profile_user.username }}" 
+                         class="w-24 h-24 rounded-full object-cover">
+                    {% else %}
+                    <i data-lucide="user" class="w-12 h-12 text-brown-600"></i>
+                    {% endif %}
+                </div>
+                
+                <div class="flex-1">
+                    <h1 class="text-3xl font-bold text-brown-900 mb-2">{{ profile_user.username }}</h1>
+                    <p class="text-brown-600 mb-4">
+                        Üyelik Tarihi: {{ profile_user.created_at.strftime('%d.%m.%Y') }}
+                    </p>
+                    
+                    <div class="flex items-center space-x-6">
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-brown-900">{{ stats.total_posts }}</div>
+                            <div class="text-sm text-brown-600">Yazı</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-brown-900">{{ stats.total_comments }}</div>
+                            <div class="text-sm text-brown-600">Yorum</div>
+                        </div>
+                        <div class="text-center">
+                            <div class="text-2xl font-bold text-brown-900">{{ stats.total_likes }}</div>
+                            <div class="text-sm text-brown-600">Beğeni</div>
+                        </div>
+                    </div>
+                </div>
+                
+                {% if current_user and current_user.id == profile_user.id %}
+                <div class="flex-shrink-0">
+                    <a href="/settings" 
+                       class="bg-brown-600 text-white px-6 py-3 rounded-lg hover:bg-brown-700 transition-smooth flex items-center">
+                        <i data-lucide="settings" class="w-4 h-4 mr-2"></i>
+                        Profil Ayarları
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        
+        <!-- User's Posts -->
+        <div class="bg-white rounded-xl shadow-lg p-8">
+            <h2 class="text-2xl font-bold text-brown-900 mb-6">{{ profile_user.username }} Tarafından Yazılan Blog Yazıları</h2>
+            
+            {% if posts %}
+            <div class="space-y-6">
+                {% for post in posts %}
+                <article class="border-b border-cream-200 pb-6 last:border-b-0">
+                    <div class="flex items-start gap-6">
+                        {% if post.featured_image %}
+                        <div class="w-32 h-24 flex-shrink-0">
+                            <img src="{{ post.featured_image }}" alt="{{ post.title }}" 
+                                 class="w-full h-full object-cover rounded-lg">
+                        </div>
+                        {% else %}
+                        <div class="w-32 h-24 bg-gradient-to-br from-cream-200 to-brown-200 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <i data-lucide="file-text" class="w-8 h-8 text-brown-500"></i>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="flex-1">
+                            <div class="flex items-center gap-2 mb-2">
+                                {% if post.category %}
+                                <span class="px-2 py-1 text-xs font-medium bg-brown-100 text-brown-800 rounded-full">
+                                    {{ post.category.name }}
+                                </span>
+                                {% endif %}
+                                <div class="flex items-center gap-4 text-sm text-brown-600">
+                                    <span>{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                                    {% if post.reading_time %}
+                                    <span>{{ post.reading_time }} dk okuma</span>
+                                    {% endif %}
+                                    <div class="flex items-center gap-1">
+                                        <i data-lucide="heart" class="w-4 h-4"></i>
+                                        <span>{{ post.likes|length }} beğeni</span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h3 class="text-xl font-bold text-brown-900 mb-3 hover:text-brown-700 transition-smooth">
+                                <a href="/post/{{ post.slug }}">{{ post.title }}</a>
+                            </h3>
+                            
+                            {% if post.excerpt %}
+                            <p class="text-brown-700 mb-4 line-clamp-2">{{ post.excerpt }}</p>
+                            {% endif %}
+                            
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2 text-sm text-brown-600">
+                                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                                    <span>{{ post.comments|selectattr("is_approved", "equalto", true)|list|length }} yorum</span>
+                                </div>
+                                
+                                <a href="/post/{{ post.slug }}" 
+                                   class="text-brown-600 hover:text-brown-800 transition-smooth font-medium text-sm">
+                                    Devamını Oku →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            
+            {% if stats.total_posts > posts|length %}
+            <div class="text-center mt-8">
+                <p class="text-brown-600">{{ stats.total_posts - posts|length }} yazı daha var...</p>
+            </div>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-16">
+                <i data-lucide="file-text" class="w-24 h-24 text-brown-300 mx-auto mb-6"></i>
+                <h3 class="text-xl font-semibold text-brown-700 mb-2">Henüz yazı yayınlanmamış</h3>
+                <p class="text-brown-600">{{ profile_user.username }} henüz blog yazısı yayınlamamış.</p>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endblock %}

@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}AI Blog - Ana Sayfa{% endblock %}
+
+{% block content %}
+<section class="bg-gradient-to-br from-cream-100 to-brown-100 py-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <h1 class="text-5xl font-bold text-brown-900 mb-6">
+            AI Destekli Blog Platformu
+        </h1>
+        <p class="text-xl text-brown-700 mb-8 max-w-3xl mx-auto">
+            Yapay zeka ile güçlendirilmiş modern blog deneyimi. En güncel içerikler ve teknoloji haberleri.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="#posts" class="bg-brown-600 text-white px-8 py-3 rounded-lg hover:bg-brown-700 transition-smooth hover-lift">
+                Blog Yazılarını Keşfet
+            </a>
+            <a href="/register" class="border-2 border-brown-600 text-brown-600 px-8 py-3 rounded-lg hover:bg-brown-600 hover:text-white transition-smooth">
+                Üye Ol
+            </a>
+        </div>
+    </div>
+</section>
+
+<section id="posts" class="py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h2 class="text-3xl font-bold text-brown-900 mb-4">Son Blog Yazıları</h2>
+            <p class="text-brown-700">En güncel ve ilgi çekici içeriklerimizi keşfedin</p>
+        </div>
+
+        {% if posts %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {% for post in posts %}
+            <article class="bg-white rounded-xl shadow-lg overflow-hidden hover-lift transition-smooth">
+                {% if post.featured_image %}
+                <img src="{{ post.featured_image }}" alt="{{ post.title }}" class="w-full h-48 object-cover">
+                {% else %}
+                <div class="w-full h-48 bg-gradient-to-br from-cream-200 to-brown-200 flex items-center justify-center">
+                    <i data-lucide="file-text" class="w-16 h-16 text-brown-500"></i>
+                </div>
+                {% endif %}
+                
+                <div class="p-6">
+                    <div class="flex items-center gap-2 text-sm text-brown-600 mb-3">
+                        <i data-lucide="calendar" class="w-4 h-4"></i>
+                        <span>{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                        {% if post.reading_time %}
+                        <span>•</span>
+                        <i data-lucide="clock" class="w-4 h-4"></i>
+                        <span>{{ post.reading_time }} dk okuma</span>
+                        {% endif %}
+                    </div>
+                    
+                    <h3 class="text-xl font-bold text-brown-900 mb-3 hover:text-brown-700 transition-smooth">
+                        <a href="/post/{{ post.slug }}">{{ post.title }}</a>
+                    </h3>
+                    
+                    {% if post.excerpt %}
+                    <p class="text-brown-700 mb-4 line-clamp-3">{{ post.excerpt|strip_html }}</p>
+                    {% else %}
+                    <p class="text-brown-700 mb-4 line-clamp-3">{{ post.content|excerpt(120) }}</p>
+                    {% endif %}
+                    
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <div class="w-8 h-8 bg-brown-200 rounded-full flex items-center justify-center">
+                                <i data-lucide="user" class="w-4 h-4 text-brown-600"></i>
+                            </div>
+                            <span class="text-sm text-brown-600">{{ post.author.username }}</span>
+                        </div>
+                        
+                        <a href="/post/{{ post.slug }}" class="text-brown-600 hover:text-brown-800 transition-smooth font-medium">
+                            Devamını Oku
+                            <i data-lucide="arrow-right" class="w-4 h-4 inline ml-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-16">
+            <i data-lucide="file-text" class="w-24 h-24 text-brown-300 mx-auto mb-6"></i>
+            <h3 class="text-xl font-semibold text-brown-700 mb-2">Henüz blog yazısı yok</h3>
+            <p class="text-brown-600">İlk içerikler yakında yayınlanacak.</p>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="bg-cream-100 py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            <div class="text-center">
+                <div class="w-16 h-16 bg-brown-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="zap" class="w-8 h-8 text-white"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-brown-900 mb-3">AI Destekli</h3>
+                <p class="text-brown-700">Yapay zeka ile güçlendirilmiş içerik üretimi ve optimizasyonu.</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="w-16 h-16 bg-brown-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="heart" class="w-8 h-8 text-white"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-brown-900 mb-3">Kullanıcı Dostu</h3>
+                <p class="text-brown-700">Sade ve anlaşılır arayüz ile mükemmel okuma deneyimi.</p>
+            </div>
+            
+            <div class="text-center">
+                <div class="w-16 h-16 bg-brown-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i data-lucide="shield-check" class="w-8 h-8 text-white"></i>
+                </div>
+                <h3 class="text-xl font-semibold text-brown-900 mb-3">Güvenli</h3>
+                <p class="text-brown-700">Modern güvenlik standartları ile korumalı platform.</p>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

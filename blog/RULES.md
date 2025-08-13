@@ -1,61 +1,184 @@
-# Proje Geliştirme Kuralları
+# AI Blog Platform - Geliştirme Kuralları
 
-## Tasarım Kuralları
+Bu dokümanda AI Blog platformunun geliştirilmesi sırasında uyulması gereken tüm kurallar ve standartlar yer almaktadır.
 
-### CSS ve Stil
-- **Tailwind CSS** her kısımda kullanılacak
+## 🎨 Tasarım Kuralları
+
+### CSS ve Stil Yaklaşımı
+- **Tailwind CSS** tüm stil işlemleri için kullanılacak
+- **Vanilla JavaScript** kullanılacak, harici framework kullanılmayacak
 - **Yumuşak geçişli tasarımlar** tercih edilecek
-- **Krem rengi-kahverengi tarzlarında** (Claude'un yeni tasarımı gibi) çok açık ve göz yormayan renkler kullanılacak
-- **Hafif ve göz yormayan animasyonlar** olacak
-- Her kısımda animasyon kullanılmaz
-- Site açılışında ya da yenilenmesinde animasyon yüklenmesi olmayacak
-- Sadece hover ve focus gibi olaylarda animasyon olacak
-- **Lucide Icons** (FontAwesome alternatifi en iyi ve ücretsiz ikon seti) kullanılacak
+- **Krem rengi-kahverengi tonları** ana renk paleti olacak
+  - Krem: `#fefdfb` - `#825726` arası tonlar
+  - Kahverengi: `#f7f3f0` - `#522c26` arası tonlar
+- **Hafif ve göz yormayan animasyonlar** kullanılacak
+- Animasyonlar sadece hover ve focus olaylarında aktif olacak
+- Site yüklenirken animasyon olmayacak
+- **Lucide Icons** ikon seti kullanılacak (FontAwesome yerine)
 
-## Backend Kuralları
+### Responsive Tasarım
+- Tüm cihazlara tam uyumlu tasarım
+- Mobile-first yaklaşım
+- Breakpoint'ler: sm (640px), md (768px), lg (1024px), xl (1280px)
 
-### Teknoloji ve Yapı
-- **Go dili** ile yazılacak
-- **Dinamik, profesyonel, geleceğe yönelik** kod yapısı olması gerek
-- **Değişmesi kolay ve topluluk tercihi** bir yapı tercih edilmeli
-- **Popüler veritabanı** tercihi (SQLite - ayar kullanıcı-yönetici tarafından müdahale gerektirmeyen)
-- **Temiz kod yapısı** ve sadece gereken kısımlarda yorum satırları
+## 🔧 Backend Kuralları
 
-### Güvenlik
-- **Güvenlik zaafiyeti verecek herhangi bir kod yapısı asla kullanılmamalı**
-- **Güvenli ve profesyonel kod yapıları** tercih edilmeli
-- Şifreleme ve kimlik doğrulama en iyi uygulamalarla yapılacak
+### Teknoloji Stack
+- **Python 3.8+** kullanılacak
+- **FastAPI** web framework olarak kullanılacak
+- **SQLite** veritabanı (kullanıcı müdahalesiz)
+- **SQLAlchemy** ORM olarak kullanılacak
+- **Pydantic** veri validasyonu için
 
-## Geliştirme Yaklaşımı
+### Kod Yapısı ve Kalite
+- **Dinamik, profesyonel, geleceğe yönelik** kod yapısı
+- Değişmesi kolay modüler yapı
+- Topluluk tarafından kabul gören standartlar
+- **Temiz kod** prensipleri
+- Yorum satırları sadece gerekli yerlerde
+- **Type hints** kullanımı zorunlu
+- **Docstring** kritik fonksiyonlarda
+
+### Güvenlik Standartları
+- **Güvenlik zaafiyeti riski olan kod asla kullanılmayacak**
+- **JWT** tabanlı kimlik doğrulama
+- **Bcrypt** ile şifre hashleme
+- **SQL injection** koruması
+- **XSS** koruması
+- **CSRF** koruması
+- **Rate limiting** uygulanacak
+- Kullanıcı girişleri her zaman validate edilecek
+
+## 🗂️ Proje Yapısı
+
+### Dosya ve Klasör Organizasyonu
+Yaygın olarak kullanılan GitHub projesi yapısı:
+
+```
+ai-blog/
+├── app/
+│   ├── core/           # Veritabanı, auth, config
+│   ├── models/         # SQLAlchemy modelleri
+│   ├── routers/        # FastAPI route'ları
+│   ├── utils/          # Yardımcı fonksiyonlar
+│   └── __init__.py
+├── static/
+│   ├── css/            # Custom CSS (minimal)
+│   ├── js/             # Vanilla JavaScript
+│   ├── images/         # Statik resimler
+│   └── media/          # Kullanıcı yüklemeleri
+├── templates/
+│   ├── admin/          # Admin panel şablonları
+│   ├── blog/           # Blog şablonları
+│   └── base.html       # Ana şablon
+├── uploads/            # Kullanıcı dosyaları
+├── main.py            # Ana uygulama
+├── requirements.txt   # Python bağımlılıkları
+├── .env               # Ortam değişkenleri
+├── .gitignore        # Git ignore kuralları
+├── README.md         # Kullanıcı dokümantasyonu
+└── RULES.md          # Bu dosya
+```
+
+## 📝 Blog Özellikleri ve Gereksinimler
+
+### Ana Özellikler
+- Blog sayfasında temel araç ve gereçler
+- SEO optimizasyonu (meta etiketler, slug, sitemap)
+- Arama fonksiyonu (admin panel dahil)
+- Admin panel giriş sistemi
+- İlk admin: username=`admin`, password=`12345678`
+
+### Admin Panel Gereksinimleri
+- Profesyonel araçlar ve arayüz
+- Resim işlemleri: yükleme, sürükleme, URL ile ekleme
+- AI destekli içerik üretimi (Gemini API)
+- Kategoriler sayfası
+- Sayfa yönetimi (özel sayfalar)
+- Ayarlar sayfası:
+  - Site başlığı, logo, favicon
+  - Meta etiketleri
+  - Profil resimleri yönetimi
+  - AI prompt ve parametreler
+- Yorum sistemi ve onay/ret
+- İçerik yönetimi:
+  - Taslak sistemi
+  - Otomatik slug üretimi
+  - Güncellenme tarihi (açılabilir/kapanabilir)
+  - Medya galerisi
+- Yazı okuma süresi hesaplayıcı
+- Beğeni sistemi (giriş yapmış kullanıcılar)
+- Kullanıcı profil sayfaları
+
+### Gemini API Entegrasyonu
+- API Key: `AIzaSyA7kpevybllWyvF-Vxjob2tjKW65mgEwqM`
+- Manuel ve AI seçenekleri
+- Prompt, uzunluk, tür ayarları
+- Hata yönetimi ve fallback
+
+## 🔄 Geliştirme Süreci
 
 ### Kod Kalitesi
 - **Çok değil, akıllı ve öz kod** yazılacak
-- **Hatalı olabilecek kod yapılarından** uzak durulacak
-- Test yapıları sadece istendiğinde oluşturulacak
+- Hatalı kod yapılarından uzak durulacak
+- Test yapıları sadece istendiğinde
+- Code review zorunlu
+- **Hiçbir kod parçası sorulmadan silinmeyecek**
 
-### Problem Çözme
-- **Zor ve çözülemeyen sorunlarda sorunun köküne** inilmeli
-- Yine olmazsa **kod yapısı hakkında daha çok araştırma** yapılacak
-- **Herhangi bir kod yapısı ve fonksiyon sorulmadan asla silinmemeli**
+### Problem Çözme Yaklaşımı
+- Zor problemlerde köküne inilecek
+- Araştırma odaklı çözüm
+- Topluluk kaynaklarından faydalanma
+- Dokümantasyon takibi
 
-## Proje Gereksinimleri
+### Bölümsel Geliştirme
+- **Her şey bölüm bölüm yapılacak**
+- Tek seferde tüm sistemi yapmaya kalkışılmayacak
+- Her modül test edilecek
+- Incremental development
 
-### Blog Özellikleri
-- **Blog sayfasında olması gereken temel araç ve gereçler** içinde barındırılacak
-- **Admin panel giriş sayfası** olacak
-- İlk admin oluşturulduğunda:
-  - Kullanıcı adı: `admin`
-  - Şifre: `12345678`
+## 📚 Dokümantasyon Standartları
 
-### Dokümantasyon
-- **README.md**: Github standartlarında, kullanıcılara sunacakmış gibi sade ve anlaşılır dilde
-- Kurulum sayfası içerecek
-- Abartıya kaçmadan detaylı ve özlü olacak
+### README.md
+- GitHub standartlarında
+- Sade ve anlaşılır dil
+- Kurulum talimatları
+- Detaylı ama özlü
+- Kullanıcı odaklı bilgiler
 
-## Önemli Notlar
+### RULES.md (Bu Dosya)
+- Geliştirici kuralları
+- Teknik detaylar
+- Kod standartları
+- İç dokümantasyon
 
-- Bu kurallar geliştirici için rehberdir
-- README.md dosyasında bu kurallara değinilmez
-- Kullanıcılar için sadece gerekli bilgiler README.md'de yer alır
-- Kod temizliği ve güvenlik her zaman öncelik
-- Performans ve kullanıcı deneyimi odaklı geliştirme
+## 🚀 Deployment ve Production
+
+### Üretim Ortamı Kuralları
+- `DEBUG=False` ayarı
+- Güçlü SECRET_KEY
+- HTTPS zorunlu
+- Güvenlik başlıkları
+- Error handling
+- Logging sistemi
+- Backup stratejisi
+
+### Performance
+- Database query optimization
+- Static file caching
+- Image optimization
+- Minification (gerektiğinde)
+
+## ⚠️ Önemli Hatırlatmalar
+
+1. **Kullanıcı bilgileri sadece README.md'de**
+2. **Kurallar RULES.md'de**
+3. **Kod temizliği ve güvenlik öncelik**
+4. **Performans ve UX odaklı geliştirme**
+5. **Bölüm bölüm geliştirme**
+6. **Community best practices takibi**
+7. **Sürekli öğrenme ve iyileştirme**
+
+---
+
+Bu kurallar projenin tutarlılığını ve kalitesini sağlamak için titizlikle uygulanmalıdır.
