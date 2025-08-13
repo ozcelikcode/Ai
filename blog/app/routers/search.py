@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, Request, Query
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 from app.core.database import get_db
@@ -9,7 +8,7 @@ from app.models.models import Post, Category, Tag, PostTag
 from typing import Optional
 
 router = APIRouter(tags=["search"])
-templates = Jinja2Templates(directory="templates")
+from app.core.templates import templates
 
 @router.get("/search", response_class=HTMLResponse)
 async def search_page(

@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import Optional
 
 router = APIRouter(tags=["comments"])
-templates = Jinja2Templates(directory="templates")
+from app.core.templates import templates
 
 @router.post("/post/{slug}/comment")
 async def add_comment(

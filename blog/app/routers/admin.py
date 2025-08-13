@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Form, File, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_admin_user
@@ -15,7 +14,7 @@ import uuid
 from pathlib import Path
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-templates = Jinja2Templates(directory="templates")
+from app.core.templates import templates
 
 @router.get("/", response_class=HTMLResponse)
 @router.get("", response_class=HTMLResponse)
@@ -271,7 +270,7 @@ async def update_post(
     
     return RedirectResponse(url="/admin/posts", status_code=303)
 
-@router.post("/posts/{post_id}/delete")
+@router.delete("/posts/{post_id}/delete")
 async def delete_post(post_id: int, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     post = db.query(Post).filter(Post.id == post_id).first()
     if not post:
@@ -280,7 +279,7 @@ async def delete_post(post_id: int, admin_user: User = Depends(get_admin_user), 
     db.delete(post)
     db.commit()
     
-    return RedirectResponse(url="/admin/posts", status_code=303)
+    return JSONResponse({"success": True})
 
 @router.get("/categories", response_class=HTMLResponse)
 async def admin_categories(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):

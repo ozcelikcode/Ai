@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
-from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user, get_current_user_optional, verify_password, get_password_hash
@@ -8,7 +7,7 @@ from app.models.models import User, Post, PostLike, Comment
 from typing import Optional
 
 router = APIRouter(tags=["users"])
-templates = Jinja2Templates(directory="templates")
+from app.core.templates import templates
 
 @router.get("/profile/{username}", response_class=HTMLResponse)
 async def user_profile(
