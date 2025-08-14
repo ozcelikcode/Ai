@@ -166,7 +166,7 @@ async def sitemap(request: Request, db: Session = Depends(get_db)):
     for page in pages:
         sitemap_xml += f'''
     <url>
-        <loc>{base_url}/page/{page.slug}</loc>
+        <loc>{base_url}/{page.slug}</loc>
         <lastmod>{page.updated_at.strftime('%Y-%m-%d') if page.updated_at else page.created_at.strftime('%Y-%m-%d')}</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.6</priority>
@@ -190,15 +190,7 @@ async def sitemap(request: Request, db: Session = Depends(get_db)):
 async def robots_txt(request: Request):
     """Generate robots.txt for SEO"""
     from fastapi.responses import Response
-    
     base_url = str(request.base_url).rstrip('/')
-    robots_content = f"""User-agent: *
-Allow: /
-Disallow: /admin/
-Disallow: /api/
-Disallow: /uploads/
+    robots_content = f"""User-agent: *\nAllow: /\nDisallow: /admin/\nDisallow: /api/\nDisallow: /uploads/\n\nSitemap: {base_url}/sitemap.xml\n"""
 
-Sitemap: {base_url}/sitemap.xml
-"""
-    
     return Response(content=robots_content, media_type="text/plain")
