@@ -16,7 +16,7 @@ import mimetypes
 import io
 
 router = APIRouter(prefix="/admin", tags=["media"])
-from app.core.templates import templates
+templates = Jinja2Templates(directory="templates")
 
 # Allowed file extensions and max size
 ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.pdf', '.doc', '.docx'}

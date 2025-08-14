@@ -18,7 +18,12 @@ app = FastAPI(title="AI Blog", version="1.0.0")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
-from app.core.templates import templates
+templates = Jinja2Templates(directory="templates")
+
+# Jinja2 filter'ları ekle
+from app.utils.helpers import strip_html_tags, get_excerpt
+templates.env.filters['strip_html'] = strip_html_tags
+templates.env.filters['excerpt'] = get_excerpt
 
 # Global template context processor
 @app.middleware("http")
@@ -27,7 +32,30 @@ async def add_site_settings_to_templates(request, call_next):
     response = await call_next(request)
     return response
 
-# TemplateResponse override ve filtreler app.core.templates içinde yönetilir
+# Override TemplateResponse to include site settings
+original_template_response = templates.TemplateResponse
+
+def template_response_with_settings(name: str, context: dict, status_code: int = 200, **kwargs):
+    # Add site settings if not already present and if db session available
+    if "site_settings" not in context and "request" in context:
+        try:
+            from app.core.database import SessionLocal
+            from app.models.models import Settings
+            db = SessionLocal()
+            try:
+                context["site_settings"] = db.query(Settings).first()
+            except Exception as e:
+                print(f"Error loading site settings: {e}")
+                context["site_settings"] = None
+            finally:
+                db.close()
+        except Exception as e:
+            print(f"Database connection error: {e}")
+            context["site_settings"] = None
+    
+    return original_template_response(name, context, status_code=status_code, **kwargs)
+
+templates.TemplateResponse = template_response_with_settings
 
 # Router include order matters. Register admin-related routers BEFORE the
 # blog router that exposes a catch-all path like `/{slug}` to prevent

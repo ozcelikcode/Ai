@@ -55,6 +55,109 @@
             </div>
         </div>
 
+        <!-- Yorum Ayarları -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
+                <i data-lucide="message-circle" class="w-5 h-5 mr-2"></i>
+                Yorum Ayarları
+            </h3>
+            
+            <div>
+                <label class="block text-brown-700 font-medium mb-2">Yorum Karakter Sınırı</label>
+                <select name="comment_limit" 
+                        class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
+                    <option value="125" {{ 'selected' if settings and settings.comment_limit == 125 else '' }}>125 karakter</option>
+                    <option value="250" {{ 'selected' if settings and settings.comment_limit == 250 else '' }}>250 karakter</option>
+                    <option value="500" {{ 'selected' if settings and settings.comment_limit == 500 else '' }}>500 karakter</option>
+                    <option value="750" {{ 'selected' if settings and settings.comment_limit == 750 else '' }}>750 karakter</option>
+                    <option value="1000" {{ 'selected' if settings and settings.comment_limit == 1000 else '' }}>1000 karakter</option>
+                </select>
+                <p class="text-sm text-brown-600 mt-1">Kullanıcıların yazabileceği maksimum yorum uzunluğu</p>
+            </div>
+        </div>
+
+        <!-- Logo Ayarları -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
+                <i data-lucide="image" class="w-5 h-5 mr-2"></i>
+                Logo Ayarları
+            </h3>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-brown-700 font-medium mb-2">Logo Türü</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="radio" name="logo_type" value="text" 
+                                   {{ 'checked' if not settings or settings.logo_type == 'text' else '' }}
+                                   class="mr-2">
+                            Sadece Metin Logo
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="logo_type" value="image" 
+                                   {{ 'checked' if settings and settings.logo_type == 'image' else '' }}
+                                   class="mr-2">
+                            Sadece Resim Logo
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="logo_type" value="icon_text" 
+                                   {{ 'checked' if settings and settings.logo_type == 'icon_text' else '' }}
+                                   class="mr-2">
+                            İkon + Metin Logo
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="logo_type" value="icon" 
+                                   {{ 'checked' if settings and settings.logo_type == 'icon' else '' }}
+                                   class="mr-2">
+                            Sadece İkon Logo
+                        </label>
+                    </div>
+                </div>
+                
+                <div id="logo-icon-field" class="hidden">
+                    <label class="block text-brown-700 font-medium mb-2">Logo İkon (Lucide Icon Name)</label>
+                    <input type="text" name="logo_icon" 
+                           value="{{ settings.logo_icon if settings else '' }}" 
+                           placeholder="home, user, star, etc."
+                           class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
+                    <p class="text-sm text-brown-600 mt-1">Lucide icon ismi girin (örn: home, user, star)</p>
+                </div>
+                
+                <div id="logo-image-field" class="hidden">
+                    <label class="block text-brown-700 font-medium mb-2">Logo Resmi</label>
+                    <div class="space-y-2">
+                        <input type="file" name="logo_file" accept="image/*" 
+                               class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
+                        <input type="url" name="site_logo" 
+                               value="{{ settings.site_logo if settings else '' }}" 
+                               placeholder="veya URL girin"
+                               class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
+                        <button type="button" onclick="openMediaGallery('logo')" 
+                                class="px-4 py-2 bg-cream-100 text-brown-700 rounded-lg hover:bg-cream-200 transition-smooth">
+                            <i data-lucide="folder" class="w-4 h-4 inline mr-2"></i>
+                            Galeriden Seç
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Footer Ayarları -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
+                <i data-lucide="layout" class="w-5 h-5 mr-2"></i>
+                Footer Ayarları
+            </h3>
+            
+            <div>
+                <label class="block text-brown-700 font-medium mb-2">Footer İçeriği</label>
+                <textarea name="footer_content" rows="6" 
+                          placeholder="Footer alanında görünecek içerik (HTML desteklenir)"
+                          class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">{{ settings.footer_content if settings else '' }}</textarea>
+                <p class="text-sm text-brown-600 mt-1">HTML etiketleri kullanabilirsiniz</p>
+            </div>
+        </div>
+
         <!-- AI Ayarları -->
         <div class="bg-white rounded-xl shadow-lg p-6">
             <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
@@ -138,6 +241,34 @@
 
 {% block extra_js %}
 <script>
+// Logo type selection handler
+document.addEventListener('DOMContentLoaded', function() {
+    const logoTypeRadios = document.querySelectorAll('input[name="logo_type"]');
+    const logoIconField = document.getElementById('logo-icon-field');
+    const logoImageField = document.getElementById('logo-image-field');
+    
+    function toggleLogoFields() {
+        const selectedType = document.querySelector('input[name="logo_type"]:checked').value;
+        
+        logoIconField.classList.add('hidden');
+        logoImageField.classList.add('hidden');
+        
+        if (selectedType === 'icon' || selectedType === 'icon_text') {
+            logoIconField.classList.remove('hidden');
+        }
+        
+        if (selectedType === 'image' || selectedType === 'icon_text') {
+            logoImageField.classList.remove('hidden');
+        }
+    }
+    
+    logoTypeRadios.forEach(radio => {
+        radio.addEventListener('change', toggleLogoFields);
+    });
+    
+    toggleLogoFields();
+});
+
 async function deleteAvatar(avatarId) {
     if (confirm('Bu avatarı silmek istediğinizden emin misiniz?')) {
         try {
@@ -154,6 +285,94 @@ async function deleteAvatar(avatarId) {
             alert('Avatar silinirken bir hata oluştu.');
         }
     }
+}
+
+// Media gallery modal
+let mediaGalleryModal = null;
+let mediaGalleryTarget = null;
+
+function openMediaGallery(target) {
+    mediaGalleryTarget = target;
+    
+    if (!mediaGalleryModal) {
+        createMediaGalleryModal();
+    }
+    
+    loadMediaFiles();
+    mediaGalleryModal.classList.remove('hidden');
+}
+
+function createMediaGalleryModal() {
+    const modalHtml = `
+        <div id="media-gallery-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+            <div class="bg-white rounded-xl p-6 max-w-4xl max-h-[80vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold">Medya Galerisi</h3>
+                    <button onclick="closeMediaGallery()" class="text-gray-500 hover:text-gray-700">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+                <div id="media-grid" class="grid grid-cols-4 gap-4">
+                    <!-- Media files will be loaded here -->
+                </div>
+            </div>
+        </div>
+    `;
+    
+    document.body.insertAdjacentHTML('beforeend', modalHtml);
+    mediaGalleryModal = document.getElementById('media-gallery-modal');
+}
+
+function closeMediaGallery() {
+    if (mediaGalleryModal) {
+        mediaGalleryModal.classList.add('hidden');
+    }
+}
+
+async function loadMediaFiles() {
+    try {
+        const response = await fetch('/admin/api/media');
+        const data = await response.json();
+        
+        const mediaGrid = document.getElementById('media-grid');
+        mediaGrid.innerHTML = '';
+        
+        data.media.forEach(media => {
+            const mediaItem = document.createElement('div');
+            mediaItem.className = 'cursor-pointer border-2 border-transparent hover:border-brown-500 rounded-lg overflow-hidden';
+            mediaItem.onclick = () => selectMedia(media.file_path);
+            
+            if (media.mime_type.startsWith('image/')) {
+                mediaItem.innerHTML = `
+                    <img src="${media.file_path}" alt="${media.alt_text || media.original_name}" 
+                         class="w-full h-24 object-cover">
+                    <p class="p-2 text-xs text-gray-600 truncate">${media.original_name}</p>
+                `;
+            } else {
+                mediaItem.innerHTML = `
+                    <div class="w-full h-24 bg-gray-200 flex items-center justify-center">
+                        <i data-lucide="file" class="w-8 h-8 text-gray-500"></i>
+                    </div>
+                    <p class="p-2 text-xs text-gray-600 truncate">${media.original_name}</p>
+                `;
+            }
+            
+            mediaGrid.appendChild(mediaItem);
+        });
+        
+        // Reinitialize Lucide icons
+        lucide.createIcons();
+    } catch (error) {
+        console.error('Media yüklenirken hata:', error);
+    }
+}
+
+function selectMedia(filePath) {
+    if (mediaGalleryTarget === 'logo') {
+        document.querySelector('input[name="site_logo"]').value = filePath;
+    }
+    
+    closeMediaGallery();
 }
 </script>
 {% endblock %}

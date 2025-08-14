@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request, Form, File, UploadFile
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_admin_user
@@ -14,7 +15,7 @@ import uuid
 from pathlib import Path
 
 router = APIRouter(prefix="/admin", tags=["admin"])
-from app.core.templates import templates
+templates = Jinja2Templates(directory="templates")
 
 @router.get("/", response_class=HTMLResponse)
 @router.get("", response_class=HTMLResponse)
@@ -56,22 +57,53 @@ async def admin_dashboard(request: Request, admin_user: User = Depends(get_admin
 
 @router.get("/posts", response_class=HTMLResponse)
 async def admin_posts(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
-    posts = db.query(Post).order_by(Post.created_at.desc()).all()
-    return templates.TemplateResponse("admin/posts.html", {
-        "request": request,
-        "admin_user": admin_user,
-        "posts": posts
-    })
+    try:
+        from sqlalchemy.orm import joinedload
+        
+        # Use eager loading for better performance and to avoid lazy loading issues
+        posts = db.query(Post).options(
+            joinedload(Post.category),
+            joinedload(Post.author)
+        ).order_by(Post.created_at.desc()).all()
+        
+        return templates.TemplateResponse("admin/posts.html", {
+            "request": request,
+            "admin_user": admin_user,
+            "posts": posts
+        })
+    except Exception as e:
+        # Log the error (in production you'd use proper logging)
+        print(f"Admin posts error: {e}")
+        import traceback
+        traceback.print_exc()
+        
+        # Return with empty posts list to prevent 500 error
+        return templates.TemplateResponse("admin/posts.html", {
+            "request": request,
+            "admin_user": admin_user,
+            "posts": [],
+            "error_message": "Yazılar yüklenirken bir hata oluştu. Lütfen tekrar deneyin."
+        })
 
 @router.get("/posts/new", response_class=HTMLResponse)
 async def new_post_form(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
-    categories = db.query(Category).all()
-    return templates.TemplateResponse("admin/post_form.html", {
-        "request": request,
-        "admin_user": admin_user,
-        "categories": categories,
-        "post": None
-    })
+    try:
+        categories = db.query(Category).all()
+        return templates.TemplateResponse("admin/post_form.html", {
+            "request": request,
+            "admin_user": admin_user,
+            "categories": categories,
+            "post": None
+        })
+    except Exception as e:
+        print(f"Error loading new post form: {e}")
+        return templates.TemplateResponse("admin/post_form.html", {
+            "request": request,
+            "admin_user": admin_user,
+            "categories": [],
+            "post": None,
+            "error_message": "Form yüklenirken hata oluştu."
+        })
 
 @router.post("/posts/upload-featured-image")
 async def upload_featured_image(
@@ -270,16 +302,34 @@ async def update_post(
     
     return RedirectResponse(url="/admin/posts", status_code=303)
 
-@router.delete("/posts/{post_id}/delete")
+@router.post("/posts/{post_id}/delete")
 async def delete_post(post_id: int, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
-    post = db.query(Post).filter(Post.id == post_id).first()
-    if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
-    
-    db.delete(post)
-    db.commit()
-    
-    return JSONResponse({"success": True})
+    try:
+        post = db.query(Post).filter(Post.id == post_id).first()
+        if not post:
+            raise HTTPException(status_code=404, detail="Post not found")
+        
+        # Delete related records first to avoid foreign key constraints
+        from app.models.models import PostTag, Comment, PostLike
+        
+        # Delete post tags
+        db.query(PostTag).filter(PostTag.post_id == post_id).delete()
+        
+        # Delete comments
+        db.query(Comment).filter(Comment.post_id == post_id).delete()
+        
+        # Delete likes
+        db.query(PostLike).filter(PostLike.post_id == post_id).delete()
+        
+        # Now delete the post
+        db.delete(post)
+        db.commit()
+        
+        return RedirectResponse(url="/admin/posts", status_code=303)
+    except Exception as e:
+        print(f"Error deleting post: {e}")
+        db.rollback()
+        return RedirectResponse(url="/admin/posts?error=delete_failed", status_code=303)
 
 @router.get("/categories", response_class=HTMLResponse)
 async def admin_categories(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
@@ -534,10 +584,14 @@ async def improve_ai_content(
 @router.get("/settings", response_class=HTMLResponse)
 async def admin_settings(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     settings = db.query(Settings).first()
+    from app.models.models import Avatar
+    avatars = db.query(Avatar).filter(Avatar.is_active == True).all()
+    
     return templates.TemplateResponse("admin/settings.html", {
         "request": request,
         "admin_user": admin_user,
-        "settings": settings
+        "settings": settings,
+        "avatars": avatars
     })
 
 @router.post("/settings/save")
@@ -545,12 +599,17 @@ async def save_settings(
     request: Request,
     site_title: str = Form(...),
     site_logo: str = Form(""),
+    logo_type: str = Form("text"),
+    logo_icon: str = Form(""),
     favicon: str = Form(""),
     meta_description: str = Form(""),
     meta_keywords: str = Form(""),
+    comment_limit: int = Form(500),
+    footer_content: str = Form(""),
     ai_prompt: str = Form(""),
     ai_content_length: str = Form("medium"),
     ai_content_type: str = Form("informative"),
+    logo_file: UploadFile = File(None),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
@@ -560,18 +619,109 @@ async def save_settings(
         settings = Settings()
         db.add(settings)
     
+    # Handle logo file upload
+    logo_url = site_logo
+    if logo_file and logo_file.filename:
+        if not logo_file.content_type.startswith('image/'):
+            return JSONResponse({"success": False, "error": "Sadece resim dosyaları yükleyebilirsiniz"})
+        
+        # Create upload directory
+        upload_dir = Path("uploads/site")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Generate unique filename
+        file_extension = os.path.splitext(logo_file.filename)[1]
+        unique_filename = f"logo_{uuid.uuid4()}{file_extension}"
+        file_path = upload_dir / unique_filename
+        
+        # Save file
+        file_content = await logo_file.read()
+        with open(file_path, "wb") as f:
+            f.write(file_content)
+        
+        logo_url = f"/uploads/site/{unique_filename}"
+    
     settings.site_title = site_title
-    settings.site_logo = site_logo if site_logo else None
+    settings.site_logo = logo_url if logo_url else None
+    settings.logo_type = logo_type
+    settings.logo_icon = logo_icon if logo_icon else None
     settings.favicon = favicon if favicon else None
     settings.meta_description = meta_description if meta_description else None
     settings.meta_keywords = meta_keywords if meta_keywords else None
+    settings.comment_limit = comment_limit
+    settings.footer_content = footer_content if footer_content else None
     settings.ai_prompt = ai_prompt if ai_prompt else "Write a blog post about the given topic"
     settings.ai_content_length = ai_content_length
     settings.ai_content_type = ai_content_type
     
     db.commit()
     
-    return JSONResponse({"success": True})
+    return RedirectResponse(url="/admin/settings?success=1", status_code=303)
+
+# Site Customization Routes
+@router.get("/customize", response_class=HTMLResponse)
+async def admin_customize(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    settings = db.query(Settings).first()
+    
+    # Create default settings if not exists
+    if not settings:
+        settings = Settings()
+        db.add(settings)
+        db.commit()
+    
+    return templates.TemplateResponse("admin/customize.html", {
+        "request": request,
+        "admin_user": admin_user,
+        "settings": settings
+    })
+
+@router.post("/customize/save")
+async def save_customization(
+    request: Request,
+    logo_type: str = Form("text"),
+    logo_icon: str = Form(""),
+    site_logo: str = Form(""),
+    footer_content: str = Form(""),
+    logo_file: UploadFile = File(None),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    settings = db.query(Settings).first()
+    
+    if not settings:
+        settings = Settings()
+        db.add(settings)
+    
+    # Handle logo file upload
+    logo_url = site_logo
+    if logo_file and logo_file.filename:
+        if not logo_file.content_type.startswith('image/'):
+            return JSONResponse({"success": False, "error": "Sadece resim dosyaları yükleyebilirsiniz"})
+        
+        # Create upload directory
+        upload_dir = Path("uploads/site")
+        upload_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Generate unique filename
+        file_extension = os.path.splitext(logo_file.filename)[1]
+        unique_filename = f"logo_{uuid.uuid4()}{file_extension}"
+        file_path = upload_dir / unique_filename
+        
+        # Save file
+        file_content = await logo_file.read()
+        with open(file_path, "wb") as f:
+            f.write(file_content)
+        
+        logo_url = f"/uploads/site/{unique_filename}"
+    
+    settings.logo_type = logo_type
+    settings.logo_icon = logo_icon if logo_icon else None
+    settings.site_logo = logo_url if logo_url else None
+    settings.footer_content = footer_content if footer_content else None
+    
+    db.commit()
+    
+    return RedirectResponse(url="/admin/customize?success=1", status_code=303)
 
 # Tag Management Routes
 @router.get("/tags", response_class=HTMLResponse)
@@ -638,6 +788,26 @@ async def delete_tag(tag_id: int, admin_user: User = Depends(get_admin_user), db
     db.commit()
     
     return RedirectResponse(url="/admin/tags", status_code=303)
+
+# API Routes for Media Gallery
+@router.get("/api/media")
+async def get_media_files(admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    """Get all media files for gallery"""
+    from app.models.models import Media
+    media_files = db.query(Media).order_by(Media.created_at.desc()).all()
+    
+    return JSONResponse({
+        "success": True,
+        "media": [{
+            "id": media.id,
+            "filename": media.filename,
+            "original_name": media.original_name,
+            "file_path": media.file_path,
+            "mime_type": media.mime_type,
+            "alt_text": media.alt_text,
+            "created_at": media.created_at.isoformat()
+        } for media in media_files]
+    })
 
 @router.get("/api/tags/search")
 async def search_tags(q: str = "", admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):

@@ -132,9 +132,13 @@ class Settings(Base):
     id = Column(Integer, primary_key=True, index=True)
     site_title = Column(String(200), default="My Blog")
     site_logo = Column(String(200), nullable=True)
+    logo_type = Column(String(20), default="text")  # text, image, icon_text, icon
+    logo_icon = Column(String(100), nullable=True)
     favicon = Column(String(200), nullable=True)
     meta_description = Column(String(300), nullable=True)
     meta_keywords = Column(String(300), nullable=True)
+    footer_content = Column(Text, nullable=True)
+    comment_limit = Column(Integer, default=500)
     ai_prompt = Column(Text, default="Write a blog post about the given topic")
     ai_content_length = Column(String(50), default="medium")
     ai_content_type = Column(String(50), default="informative")

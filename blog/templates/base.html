@@ -81,18 +81,58 @@
         #navbar-search-input:focus {
             box-shadow: 0 0 0 3px rgba(180, 83, 9, 0.1);
         }
+        
+        /* Custom scrollbar for main content */
+        .main-scrollbar {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(180, 83, 9, 0.3) transparent;
+        }
+        
+        .main-scrollbar::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .main-scrollbar::-webkit-scrollbar-track {
+            background: rgba(180, 83, 9, 0.1);
+            border-radius: 4px;
+        }
+        
+        .main-scrollbar::-webkit-scrollbar-thumb {
+            background: rgba(180, 83, 9, 0.3);
+            border-radius: 4px;
+            transition: background 0.3s ease;
+        }
+        
+        .main-scrollbar::-webkit-scrollbar-thumb:hover {
+            background: rgba(180, 83, 9, 0.5);
+        }
     </style>
 </head>
-<body class="bg-cream-50 text-brown-900 min-h-screen">
+<body class="bg-cream-50 text-brown-900 min-h-screen main-scrollbar">
     <nav class="bg-white/80 backdrop-blur-sm border-b border-cream-200 sticky top-0 z-40">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
                     <a href="/" class="flex items-center text-2xl font-bold text-brown-800 hover:text-brown-600 transition-smooth">
-                        {% if site_settings and site_settings.site_logo %}
-                        <img src="{{ site_settings.site_logo }}" alt="{{ site_settings.site_title if site_settings else 'AI Blog' }}" class="h-8 w-8 mr-2">
+                        {% if site_settings %}
+                            {% if site_settings.logo_type == 'image' and site_settings.site_logo %}
+                                <img src="{{ site_settings.site_logo }}" alt="{{ site_settings.site_title }}" class="h-8 w-auto mr-2">
+                            {% elif site_settings.logo_type == 'icon' and site_settings.logo_icon %}
+                                <i data-lucide="{{ site_settings.logo_icon }}" class="w-8 h-8 mr-2"></i>
+                            {% elif site_settings.logo_type == 'icon_text' %}
+                                {% if site_settings.logo_icon %}
+                                <i data-lucide="{{ site_settings.logo_icon }}" class="w-8 h-8 mr-2"></i>
+                                {% endif %}
+                                <span>{{ site_settings.site_title }}</span>
+                                {% if site_settings.site_logo %}
+                                <img src="{{ site_settings.site_logo }}" alt="{{ site_settings.site_title }}" class="h-6 w-auto ml-2">
+                                {% endif %}
+                            {% else %}
+                                <span>{{ site_settings.site_title }}</span>
+                            {% endif %}
+                        {% else %}
+                            <span>AI Blog</span>
                         {% endif %}
-                        {{ site_settings.site_title if site_settings else 'AI Blog' }}
                     </a>
                 </div>
                 
@@ -115,15 +155,39 @@
                                 Admin Panel
                             </a>
                             {% endif %}
-                            <div class="flex items-center space-x-2">
-                                <div class="w-8 h-8 bg-brown-200 rounded-full flex items-center justify-center">
-                                    <i data-lucide="user" class="w-4 h-4 text-brown-600"></i>
+                            <div class="relative group">
+                                <button class="flex items-center space-x-2 text-brown-700 hover:text-brown-900 transition-smooth">
+                                    <div class="w-8 h-8 bg-brown-200 rounded-full flex items-center justify-center">
+                                        {% if current_user.profile_image %}
+                                        <img src="{{ current_user.profile_image }}" alt="{{ current_user.username }}" class="w-8 h-8 rounded-full object-cover">
+                                        {% else %}
+                                        <i data-lucide="user" class="w-4 h-4 text-brown-600"></i>
+                                        {% endif %}
+                                    </div>
+                                    <span class="text-brown-700">{{ current_user.username }}</span>
+                                    <i data-lucide="chevron-down" class="w-4 h-4"></i>
+                                </button>
+                                
+                                <!-- Dropdown Menu -->
+                                <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-cream-200 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                    <div class="py-2">
+                                        <a href="/profile/{{ current_user.username }}" class="block px-4 py-2 text-sm text-brown-700 hover:bg-cream-50 transition-smooth">
+                                            <i data-lucide="user" class="w-4 h-4 inline mr-2"></i>
+                                            Profil Sayfam
+                                        </a>
+                                        <a href="/settings" class="block px-4 py-2 text-sm text-brown-700 hover:bg-cream-50 transition-smooth">
+                                            <i data-lucide="settings" class="w-4 h-4 inline mr-2"></i>
+                                            Profil Ayarları
+                                        </a>
+                                        <div class="border-t border-cream-200 mt-2 pt-2">
+                                            <a href="/logout" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-smooth">
+                                                <i data-lucide="log-out" class="w-4 h-4 inline mr-2"></i>
+                                                Çıkış Yap
+                                            </a>
+                                        </div>
+                                    </div>
                                 </div>
-                                <span class="text-brown-700">{{ current_user.username }}</span>
                             </div>
-                            <a href="/logout" class="text-brown-700 hover:text-brown-900 transition-smooth">
-                                Çıkış
-                            </a>
                         </div>
                     {% else %}
                         <div class="flex items-center space-x-2">
@@ -185,27 +249,37 @@
 
     <footer class="bg-brown-800 text-cream-100 mt-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                <div class="col-span-2">
-                    <h3 class="text-xl font-bold mb-4">{{ site_settings.site_title if site_settings else 'AI Blog' }}</h3>
-                    <p class="text-cream-200 mb-4">Modern yapay zeka destekli blog platformu. En güncel içerikler ve teknoloji haberleri için bizi takip edin.</p>
+            {% if site_settings and site_settings.footer_content %}
+                <!-- Custom Footer Content -->
+                <div class="custom-footer-content">
+                    {{ site_settings.footer_content|safe }}
                 </div>
-                <div>
-                    <h4 class="font-semibold mb-4">Hızlı Linkler</h4>
-                    <ul class="space-y-2">
-                        <li><a href="/" class="text-cream-200 hover:text-white transition-smooth">Ana Sayfa</a></li>
-                        <li><a href="/categories" class="text-cream-200 hover:text-white transition-smooth">Kategoriler</a></li>
-                        <li><a href="/about" class="text-cream-200 hover:text-white transition-smooth">Hakkında</a></li>
-                    </ul>
+            {% else %}
+                <!-- Default Footer Content -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                    <div class="col-span-2">
+                        <h3 class="text-xl font-bold mb-4">{{ site_settings.site_title if site_settings else 'AI Blog' }}</h3>
+                        <p class="text-cream-200 mb-4">Modern yapay zeka destekli blog platformu. En güncel içerikler ve teknoloji haberleri için bizi takip edin.</p>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-4">Hızlı Linkler</h4>
+                        <ul class="space-y-2">
+                            <li><a href="/" class="text-cream-200 hover:text-white transition-smooth">Ana Sayfa</a></li>
+                            <li><a href="/categories" class="text-cream-200 hover:text-white transition-smooth">Kategoriler</a></li>
+                            <li><a href="/about" class="text-cream-200 hover:text-white transition-smooth">Hakkında</a></li>
+                        </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-4">İletişim</h4>
+                        <ul class="space-y-2">
+                            <li><a href="/contact" class="text-cream-200 hover:text-white transition-smooth">İletişim</a></li>
+                            <li><a href="/privacy" class="text-cream-200 hover:text-white transition-smooth">Gizlilik</a></li>
+                        </ul>
+                    </div>
                 </div>
-                <div>
-                    <h4 class="font-semibold mb-4">İletişim</h4>
-                    <ul class="space-y-2">
-                        <li><a href="/contact" class="text-cream-200 hover:text-white transition-smooth">İletişim</a></li>
-                        <li><a href="/privacy" class="text-cream-200 hover:text-white transition-smooth">Gizlilik</a></li>
-                    </ul>
-                </div>
-            </div>
+            {% endif %}
+            
+            <!-- Copyright Notice -->
             <div class="border-t border-brown-700 mt-8 pt-8 text-center text-cream-300">
                 <p>&copy; 2024 {{ site_settings.site_title if site_settings else 'AI Blog' }}. Tüm hakları saklıdır.</p>
             </div>

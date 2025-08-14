@@ -44,7 +44,11 @@
                 <div class="p-6">
                     <div class="flex items-center gap-2 text-sm text-brown-600 mb-3">
                         <i data-lucide="calendar" class="w-4 h-4"></i>
+                        {% if post.created_at %}
                         <span>{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                        {% else %}
+                        <span></span>
+                        {% endif %}
                         {% if post.reading_time %}
                         <span>•</span>
                         <i data-lucide="clock" class="w-4 h-4"></i>
@@ -67,7 +71,11 @@
                             <div class="w-8 h-8 bg-brown-200 rounded-full flex items-center justify-center">
                                 <i data-lucide="user" class="w-4 h-4 text-brown-600"></i>
                             </div>
+                            {% if post.author %}
                             <span class="text-sm text-brown-600">{{ post.author.username }}</span>
+                            {% else %}
+                            <span class="text-sm text-brown-600">Anonim</span>
+                            {% endif %}
                         </div>
                         
                         <a href="/post/{{ post.slug }}" class="text-brown-600 hover:text-brown-800 transition-smooth font-medium">

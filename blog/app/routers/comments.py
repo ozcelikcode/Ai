@@ -4,12 +4,12 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user, get_admin_user, get_current_user_optional
-from app.models.models import Comment, Post, User
+from app.models.models import Comment, Post, User, Settings
 from datetime import datetime
 from typing import Optional
 
 router = APIRouter(tags=["comments"])
-from app.core.templates import templates
+templates = Jinja2Templates(directory="templates")
 
 @router.post("/post/{slug}/comment")
 async def add_comment(
@@ -23,11 +23,21 @@ async def add_comment(
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     
+    # Check comment character limit
+    settings = db.query(Settings).first()
+    comment_limit = settings.comment_limit if settings else 500
+    
+    if len(content.strip()) > comment_limit:
+        raise HTTPException(status_code=400, detail=f"Yorum {comment_limit} karakterden uzun olamaz")
+    
+    if len(content.strip()) < 1:
+        raise HTTPException(status_code=400, detail="Yorum boş olamaz")
+    
     comment = Comment(
         content=content.strip(),
         user_id=current_user.id,
         post_id=post.id,
-        is_approved=False  # Comments need approval
+        is_approved=current_user.is_admin  # Admins don't need approval
     )
     
     db.add(comment)

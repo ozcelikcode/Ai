@@ -4,6 +4,26 @@
 {% block page_description %}Blog yazılarınızı yönetin{% endblock %}
 
 {% block content %}
+<!-- Hata Mesajı -->
+{% if error_message %}
+<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+    <div class="flex items-center">
+        <i data-lucide="alert-circle" class="w-5 h-5 mr-2"></i>
+        {{ error_message }}
+    </div>
+</div>
+{% endif %}
+
+<!-- Delete Error Mesajı -->
+{% if request.query_params.get('error') == 'delete_failed' %}
+<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+    <div class="flex items-center">
+        <i data-lucide="alert-triangle" class="w-5 h-5 mr-2"></i>
+        Yazı silinirken bir hata oluştu. Lütfen tekrar deneyin.
+    </div>
+</div>
+{% endif %}
+
 <!-- Başlık ve Yeni Yazı Butonu -->
 <div class="flex items-center justify-between mb-6">
     <h3 class="text-lg font-semibold text-brown-900">Tüm Yazılar</h3>
@@ -32,7 +52,13 @@
                     <td class="px-6 py-4">
                         <div>
                             <h4 class="font-medium text-brown-900">{{ post.title }}</h4>
-                            <p class="text-sm text-brown-600 mt-1">{{ (post.excerpt if post.excerpt else post.content)|excerpt(100) }}</p>
+                            <p class="text-sm text-brown-600 mt-1">
+                                {% if post.excerpt %}
+                                    {{ post.excerpt[:100] }}{% if post.excerpt|length > 100 %}...{% endif %}
+                                {% else %}
+                                    {{ post.content|striptags[:100] }}{% if post.content|striptags|length > 100 %}...{% endif %}
+                                {% endif %}
+                            </p>
                         </div>
                     </td>
                     <td class="px-6 py-4">
@@ -102,11 +128,22 @@ async function deletePost(postId) {
     if (confirm('Bu yazıyı silmek istediğinizden emin misiniz?')) {
         try {
             const response = await fetch(`/admin/posts/${postId}/delete`, {
-                method: 'DELETE'
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                }
             });
+            
             if (response.ok) {
-                location.reload();
+                // Check if response is a redirect
+                if (response.redirected || response.url.includes('/admin/posts')) {
+                    window.location.href = '/admin/posts';
+                } else {
+                    location.reload();
+                }
             } else {
+                const text = await response.text();
+                console.error('Delete response:', text);
                 alert('Yazı silinirken bir hata oluştu.');
             }
         } catch (error) {

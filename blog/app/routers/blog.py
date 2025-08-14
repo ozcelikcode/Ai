@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user_optional
@@ -7,7 +8,7 @@ from app.models.models import Post, Category, Page, Tag, PostTag
 from typing import Optional
 
 router = APIRouter()
-from app.core.templates import templates
+templates = Jinja2Templates(directory="templates")
 
 @router.get("/post/{slug}", response_class=HTMLResponse)
 async def post_detail(request: Request, slug: str, db: Session = Depends(get_db)):
