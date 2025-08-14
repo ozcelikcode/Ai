@@ -4,11 +4,22 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user, get_current_user_optional, verify_password, get_password_hash
-from app.models.models import User, Post, PostLike, Comment
+from app.models.models import User, Post, PostLike, Comment, Settings
 from typing import Optional
 
 router = APIRouter(tags=["users"])
 templates = Jinja2Templates(directory="templates")
+
+def get_template_context(request: Request, db: Session, current_user=None):
+    """Get common template context including site settings"""
+    site_settings = db.query(Settings).first()
+    context = {
+        "request": request,
+        "site_settings": site_settings
+    }
+    if current_user is not None:
+        context["current_user"] = current_user
+    return context
 
 @router.get("/profile/{username}", response_class=HTMLResponse)
 async def user_profile(
@@ -44,9 +55,8 @@ async def user_profile(
         Post.author_id == user.id
     ).count()
     
-    return templates.TemplateResponse("blog/profile.html", {
-        "request": request,
-        "current_user": current_user,
+    context = get_template_context(request, db, current_user)
+    context.update({
         "profile_user": user,
         "posts": posts,
         "stats": {
@@ -55,6 +65,7 @@ async def user_profile(
             "total_likes": total_likes
         }
     })
+    return templates.TemplateResponse("blog/profile.html", context)
 
 @router.get("/profile", response_class=HTMLResponse)
 async def my_profile(request: Request, current_user: User = Depends(get_current_user)):
@@ -79,11 +90,9 @@ async def profile_settings(
         "/static/images/avatars/avatar6.svg"
     ]
     
-    return templates.TemplateResponse("blog/profile_settings.html", {
-        "request": request,
-        "current_user": current_user,
-        "available_images": available_images
-    })
+    context = get_template_context(request, db, current_user)
+    context["available_images"] = available_images
+    return templates.TemplateResponse("blog/profile_settings.html", context)
 
 @router.post("/settings")
 async def update_profile_settings(
@@ -115,21 +124,37 @@ async def change_password(
     
     # Verify current password
     if not verify_password(current_password, current_user.hashed_password):
-        return templates.TemplateResponse("blog/profile_settings.html", {
-            "request": request,
-            "current_user": current_user,
+        available_images = [
+            "/static/images/avatars/avatar1.svg",
+            "/static/images/avatars/avatar2.svg",
+            "/static/images/avatars/avatar3.svg",
+            "/static/images/avatars/avatar4.svg",
+            "/static/images/avatars/avatar5.svg",
+            "/static/images/avatars/avatar6.svg"
+        ]
+        context = get_template_context(request, db, current_user)
+        context.update({
             "error": "Mevcut şifreniz yanlış",
-            "available_images": []
+            "available_images": available_images
         })
+        return templates.TemplateResponse("blog/profile_settings.html", context)
     
     # Check password confirmation
     if new_password != confirm_password:
-        return templates.TemplateResponse("blog/profile_settings.html", {
-            "request": request,
-            "current_user": current_user,
+        available_images = [
+            "/static/images/avatars/avatar1.svg",
+            "/static/images/avatars/avatar2.svg",
+            "/static/images/avatars/avatar3.svg",
+            "/static/images/avatars/avatar4.svg",
+            "/static/images/avatars/avatar5.svg",
+            "/static/images/avatars/avatar6.svg"
+        ]
+        context = get_template_context(request, db, current_user)
+        context.update({
             "error": "Yeni şifreler eşleşmiyor",
-            "available_images": []
+            "available_images": available_images
         })
+        return templates.TemplateResponse("blog/profile_settings.html", context)
     
     # Update password
     current_user.hashed_password = get_password_hash(new_password)

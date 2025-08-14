@@ -80,23 +80,23 @@
             </div>
         </div>
 
-
-
-        <!-- Footer Ayarları -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
-                <i data-lucide="layout" class="w-5 h-5 mr-2"></i>
-                Footer Ayarları
-            </h3>
-            
-            <div>
-                <label class="block text-brown-700 font-medium mb-2">Footer İçeriği</label>
-                <textarea name="footer_content" rows="6" 
-                          placeholder="Footer alanında görünecek içerik (HTML desteklenir)"
-                          class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">{{ settings.footer_content if settings else '' }}</textarea>
-                <p class="text-sm text-brown-600 mt-1">HTML etiketleri kullanabilirsiniz</p>
+        <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div class="flex items-center">
+                <i data-lucide="info" class="w-5 h-5 text-blue-600 mr-2"></i>
+                <div>
+                    <p class="text-blue-800 font-medium">Footer Ayarları</p>
+                    <p class="text-blue-700 text-sm mt-1">
+                        Footer ayarlarını yapmak için 
+                        <a href="/admin/customize" class="font-medium underline hover:no-underline">Site Özelleştirme</a> 
+                        sayfasını kullanın.
+                    </p>
+                </div>
             </div>
         </div>
+
+
+
+
 
         <!-- AI Ayarları -->
         <div class="bg-white rounded-xl shadow-lg p-6">

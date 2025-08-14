@@ -5,26 +5,31 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import verify_password, create_access_token, get_password_hash, ACCESS_TOKEN_EXPIRE_MINUTES
-from app.models.models import User
+from app.models.models import User, Settings
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
+def get_template_context(request: Request, db: Session):
+    """Get common template context including site settings"""
+    site_settings = db.query(Settings).first()
+    return {
+        "request": request,
+        "site_settings": site_settings
+    }
+
 @router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
-    return templates.TemplateResponse("blog/login.html", {"request": request})
+async def login_page(request: Request, db: Session = Depends(get_db)):
+    context = get_template_context(request, db)
+    return templates.TemplateResponse("blog/login.html", context)
 
 @router.post("/login")
 async def login(request: Request, username: str = Form(...), password: str = Form(...), db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
     if not user or not verify_password(password, user.hashed_password):
-        from app.models.models import Settings
-        site_settings = db.query(Settings).first()
-        return templates.TemplateResponse("blog/login.html", {
-            "request": request, 
-            "site_settings": site_settings,
-            "error": "Invalid username or password"
-        })
+        context = get_template_context(request, db)
+        context["error"] = "Invalid username or password"
+        return templates.TemplateResponse("blog/login.html", context)
     
     access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
@@ -37,38 +42,24 @@ async def login(request: Request, username: str = Form(...), password: str = For
 
 @router.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request, db: Session = Depends(get_db)):
-    from app.models.models import Settings
-    site_settings = db.query(Settings).first()
-    return templates.TemplateResponse("blog/register.html", {
-        "request": request,
-        "site_settings": site_settings
-    })
+    context = get_template_context(request, db)
+    return templates.TemplateResponse("blog/register.html", context)
 
 @router.post("/register")
 async def register(request: Request, username: str = Form(...), email: str = Form(...), password: str = Form(...), password_confirm: str = Form(...), db: Session = Depends(get_db)):
-    from app.models.models import Settings
-    site_settings = db.query(Settings).first()
+    context = get_template_context(request, db)
     
     if password != password_confirm:
-        return templates.TemplateResponse("blog/register.html", {
-            "request": request, 
-            "site_settings": site_settings,
-            "error": "Passwords don't match"
-        })
+        context["error"] = "Passwords don't match"
+        return templates.TemplateResponse("blog/register.html", context)
     
     if db.query(User).filter(User.username == username).first():
-        return templates.TemplateResponse("blog/register.html", {
-            "request": request, 
-            "site_settings": site_settings,
-            "error": "Username already exists"
-        })
+        context["error"] = "Username already exists"
+        return templates.TemplateResponse("blog/register.html", context)
     
     if db.query(User).filter(User.email == email).first():
-        return templates.TemplateResponse("blog/register.html", {
-            "request": request, 
-            "site_settings": site_settings,
-            "error": "Email already exists"
-        })
+        context["error"] = "Email already exists"
+        return templates.TemplateResponse("blog/register.html", context)
     
     hashed_password = get_password_hash(password)
     user = User(username=username, email=email, hashed_password=hashed_password)

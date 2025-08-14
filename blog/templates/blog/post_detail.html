@@ -73,11 +73,28 @@
                 </button>
             </div>
             
-            <div class="flex items-center gap-4">
-                <button onclick="sharePost()" class="flex items-center gap-2 px-4 py-2 rounded-lg transition-smooth hover:bg-cream-100">
-                    <i data-lucide="share-2" class="w-5 h-5"></i>
-                    <span>Paylaş</span>
-                </button>
+            <div class="flex items-center gap-2">
+                <span class="text-brown-700 font-medium mr-2">Paylaş:</span>
+                <a href="javascript:void(0)" onclick="shareToTwitter()" 
+                   class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-smooth" title="Twitter'da Paylaş">
+                    <i data-lucide="twitter" class="w-4 h-4"></i>
+                </a>
+                <a href="javascript:void(0)" onclick="shareToFacebook()" 
+                   class="p-2 bg-blue-700 text-white rounded-lg hover:bg-blue-800 transition-smooth" title="Facebook'ta Paylaş">
+                    <i data-lucide="facebook" class="w-4 h-4"></i>
+                </a>
+                <a href="javascript:void(0)" onclick="shareToLinkedIn()" 
+                   class="p-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-smooth" title="LinkedIn'de Paylaş">
+                    <i data-lucide="linkedin" class="w-4 h-4"></i>
+                </a>
+                <a href="javascript:void(0)" onclick="shareToWhatsApp()" 
+                   class="p-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-smooth" title="WhatsApp'ta Paylaş">
+                    <i data-lucide="message-circle" class="w-4 h-4"></i>
+                </a>
+                <a href="javascript:void(0)" onclick="shareToTelegram()" 
+                   class="p-2 bg-blue-400 text-white rounded-lg hover:bg-blue-500 transition-smooth" title="Telegram'da Paylaş">
+                    <i data-lucide="send" class="w-4 h-4"></i>
+                </a>
             </div>
         </div>
         {% endif %}
@@ -193,19 +210,73 @@
                 `;
             } else {
                 commentsList.innerHTML = data.comments.map(comment => `
-                    <div class="flex items-start space-x-4 bg-white rounded-xl p-6 shadow-sm">
-                        <div class="w-10 h-10 bg-brown-200 rounded-full flex items-center justify-center flex-shrink-0">
-                            ${comment.user.profile_image 
-                                ? `<img src="${comment.user.profile_image}" alt="${comment.user.username}" class="w-10 h-10 rounded-full object-cover">`
-                                : `<i data-lucide="user" class="w-5 h-5 text-brown-600"></i>`
-                            }
-                        </div>
-                        <div class="flex-1">
-                            <div class="flex items-center space-x-2 mb-2">
-                                <h4 class="font-semibold text-brown-900">${comment.user.username}</h4>
-                                <span class="text-sm text-brown-600">${comment.created_at}</span>
+                    <div id="comment-${comment.id}" class="bg-white rounded-xl p-6 shadow-sm">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-10 h-10 bg-brown-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                ${comment.user.profile_image 
+                                    ? `<img src="${comment.user.profile_image}" alt="${comment.user.username}" class="w-10 h-10 rounded-full object-cover">`
+                                    : `<i data-lucide="user" class="w-5 h-5 text-brown-600"></i>`
+                                }
                             </div>
-                            <p class="text-brown-700">${comment.content}</p>
+                            <div class="flex-1">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center space-x-2">
+                                        <h4 class="font-semibold text-brown-900">${comment.user.username}</h4>
+                                        <span class="text-sm text-brown-600">${comment.created_at}</span>
+                                    </div>
+                                    {% if current_user %}
+                                    <button onclick="toggleReplyForm(${comment.id})" class="text-sm text-brown-600 hover:text-brown-800 transition-smooth">
+                                        <i data-lucide="reply" class="w-4 h-4 inline mr-1"></i>
+                                        Yanıtla
+                                    </button>
+                                    {% endif %}
+                                </div>
+                                <p class="text-brown-700 mb-3">${comment.content}</p>
+                                
+                                <!-- Reply Form -->
+                                {% if current_user %}
+                                <div id="reply-form-${comment.id}" class="hidden bg-cream-50 rounded-lg p-4 mb-4">
+                                    <form action="/post/{{ post.slug }}/comment/${comment.id}/reply" method="post">
+                                        <textarea name="content" rows="3" required
+                                                  placeholder="Yanıtınızı yazın..."
+                                                  class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-brown-500 text-sm"></textarea>
+                                        <div class="flex justify-end space-x-2 mt-2">
+                                            <button type="button" onclick="toggleReplyForm(${comment.id})" 
+                                                    class="px-4 py-2 text-sm text-brown-600 hover:text-brown-800 transition-smooth">
+                                                İptal
+                                            </button>
+                                            <button type="submit" 
+                                                    class="px-4 py-2 bg-brown-600 text-white text-sm rounded hover:bg-brown-700 transition-smooth">
+                                                Yanıtla
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Replies -->
+                                ${comment.replies.length > 0 ? `
+                                    <div class="border-l-2 border-cream-200 ml-4 pl-4 mt-4 space-y-4">
+                                        ${comment.replies.map(reply => `
+                                            <div class="flex items-start space-x-3">
+                                                <div class="w-8 h-8 bg-brown-200 rounded-full flex items-center justify-center flex-shrink-0">
+                                                    ${reply.user.profile_image 
+                                                        ? `<img src="${reply.user.profile_image}" alt="${reply.user.username}" class="w-8 h-8 rounded-full object-cover">`
+                                                        : `<i data-lucide="user" class="w-4 h-4 text-brown-600"></i>`
+                                                    }
+                                                </div>
+                                                <div class="flex-1">
+                                                    <div class="flex items-center space-x-2 mb-1">
+                                                        <h5 class="font-medium text-brown-900 text-sm">${reply.user.username}</h5>
+                                                        <span class="text-xs text-brown-600">${reply.created_at}</span>
+                                                    </div>
+                                                    <p class="text-brown-700 text-sm">${reply.content}</p>
+                                                </div>
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
                     </div>
                 `).join('');
@@ -219,19 +290,29 @@
         }
     }
     
-    // Share functionality
-    function sharePost() {
-        if (navigator.share) {
-            navigator.share({
-                title: '{{ post.title }}',
-                text: '{{ post.excerpt or post.content[:100] }}',
-                url: window.location.href
-            });
-        } else {
-            // Fallback: copy to clipboard
-            navigator.clipboard.writeText(window.location.href);
-            alert('Link kopyalandı!');
-        }
+    // Social Media Share Functions
+    const postTitle = encodeURIComponent('{{ post.title }}');
+    const postUrl = encodeURIComponent(window.location.href);
+    const postText = encodeURIComponent('{{ post.excerpt or post.content[:100] }}');
+    
+    function shareToTwitter() {
+        window.open(`https://twitter.com/intent/tweet?text=${postTitle}&url=${postUrl}`, '_blank', 'width=600,height=400');
+    }
+    
+    function shareToFacebook() {
+        window.open(`https://www.facebook.com/sharer/sharer.php?u=${postUrl}`, '_blank', 'width=600,height=400');
+    }
+    
+    function shareToLinkedIn() {
+        window.open(`https://www.linkedin.com/sharing/share-offsite/?url=${postUrl}`, '_blank', 'width=600,height=400');
+    }
+    
+    function shareToWhatsApp() {
+        window.open(`https://wa.me/?text=${postTitle}%20${postUrl}`, '_blank');
+    }
+    
+    function shareToTelegram() {
+        window.open(`https://t.me/share/url?url=${postUrl}&text=${postTitle}`, '_blank', 'width=600,height=400');
     }
     
     // Like functionality (if user is logged in)
@@ -289,5 +370,24 @@
         }
     });
     {% endif %}
+    
+    // Toggle reply form function
+    function toggleReplyForm(commentId) {
+        const replyForm = document.getElementById(`reply-form-${commentId}`);
+        if (replyForm.classList.contains('hidden')) {
+            // Hide all other reply forms first
+            document.querySelectorAll('[id^="reply-form-"]').forEach(form => {
+                form.classList.add('hidden');
+            });
+            replyForm.classList.remove('hidden');
+            // Focus on textarea
+            const textarea = replyForm.querySelector('textarea');
+            if (textarea) {
+                textarea.focus();
+            }
+        } else {
+            replyForm.classList.add('hidden');
+        }
+    }
 </script>
 {% endblock %}

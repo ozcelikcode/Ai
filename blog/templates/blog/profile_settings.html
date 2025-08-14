@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Profil Ayarları - AI Blog{% endblock %}
+{% block title %}Profil Ayarları - {{ site_settings.site_title if site_settings else 'AI Blog' }}{% endblock %}
 
 {% block content %}
 <section class="py-16">

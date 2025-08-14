@@ -154,37 +154,176 @@
                 Footer Özelleştirme
             </h3>
             
-            <div class="space-y-4">
+            <div class="space-y-6">
+                <!-- Copyright Text -->
                 <div>
-                    <label class="block text-brown-700 font-medium mb-2">Footer İçeriği</label>
-                    <textarea name="footer_content" rows="8" 
-                              placeholder="Footer alanında görünecek içerik. HTML etiketleri kullanabilirsiniz."
-                              class="w-full px-3 py-3 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">{% if settings and settings.footer_content %}{{ settings.footer_content }}{% endif %}</textarea>
-                    <div class="flex items-start mt-2 text-sm">
-                        <i data-lucide="info" class="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0"></i>
-                        <div class="text-brown-600">
-                            <p class="mb-1">HTML etiketleri kullanabilirsiniz. Örnek içerik:</p>
-                            <code class="text-xs bg-cream-100 px-2 py-1 rounded">
-                                &lt;p&gt;© 2024 Site Adı. Tüm hakları saklıdır.&lt;/p&gt;<br>
-                                &lt;div class="flex space-x-4"&gt;<br>
-                                &nbsp;&nbsp;&lt;a href="/about"&gt;Hakkımızda&lt;/a&gt;<br>
-                                &nbsp;&nbsp;&lt;a href="/contact"&gt;İletişim&lt;/a&gt;<br>
-                                &lt;/div&gt;
-                            </code>
+                    <label class="block text-brown-700 font-medium mb-2">Copyright Metni</label>
+                    <input type="text" name="footer_copyright" 
+                           value="{% if settings and settings.footer_copyright %}{{ settings.footer_copyright }}{% else %}© 2024 AI Blog. Tüm hakları saklıdır.{% endif %}"
+                           placeholder="© 2024 Site Adı. Tüm hakları saklıdır."
+                           class="w-full px-3 py-3 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
+                </div>
+                
+                <!-- Footer Columns GUI Editor -->
+                <div>
+                    <label class="block text-brown-700 font-medium mb-4">Footer Kolonları (Görsel Editör)</label>
+                    
+                    <div id="footer-columns-gui" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <!-- Column 1 -->
+                        <div class="footer-column-gui bg-white border-2 border-cream-300 rounded-lg p-4 cursor-move" data-column="1">
+                            <div class="flex items-center justify-between mb-3">
+                                <input type="text" name="column_1_title" value="Hızlı Linkler" 
+                                       class="font-medium text-brown-900 bg-transparent border-none outline-none flex-1">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="grip-vertical" class="w-4 h-4 text-brown-500 cursor-move"></i>
+                                    <button type="button" onclick="addColumnItem(1)" class="text-brown-600 hover:text-brown-800">
+                                        <i data-lucide="plus" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="column-1-items" class="space-y-2">
+                                <div class="flex items-center gap-2 column-item">
+                                    <input type="text" placeholder="Link metni" value="Ana Sayfa" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <input type="text" placeholder="URL" value="/" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2 column-item">
+                                    <input type="text" placeholder="Link metni" value="Kategoriler" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <input type="text" placeholder="URL" value="/categories" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2 column-item">
+                                    <input type="text" placeholder="Link metni" value="Hakkında" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <input type="text" placeholder="URL" value="/about" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                            </div>
                         </div>
+                        
+                        <!-- Column 2 -->
+                        <div class="footer-column-gui bg-white border-2 border-cream-300 rounded-lg p-4 cursor-move" data-column="2">
+                            <div class="flex items-center justify-between mb-3">
+                                <input type="text" name="column_2_title" value="İletişim" 
+                                       class="font-medium text-brown-900 bg-transparent border-none outline-none flex-1">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="grip-vertical" class="w-4 h-4 text-brown-500 cursor-move"></i>
+                                    <button type="button" onclick="addColumnItem(2)" class="text-brown-600 hover:text-brown-800">
+                                        <i data-lucide="plus" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="column-2-items" class="space-y-2">
+                                <div class="flex items-center gap-2 column-item">
+                                    <input type="text" placeholder="Link metni" value="İletişim" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <input type="text" placeholder="URL" value="/contact" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2 column-item">
+                                    <input type="text" placeholder="Link metni" value="Gizlilik" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <input type="text" placeholder="URL" value="/privacy" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2 column-item">
+                                    <input type="text" placeholder="Link metni" value="Kullanım Şartları" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <input type="text" placeholder="URL" value="/terms" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Column 3 -->
+                        <div class="footer-column-gui bg-white border-2 border-cream-300 rounded-lg p-4 cursor-move" data-column="3">
+                            <div class="flex items-center justify-between mb-3">
+                                <input type="text" name="column_3_title" value="Sosyal Medya" 
+                                       class="font-medium text-brown-900 bg-transparent border-none outline-none flex-1">
+                                <div class="flex items-center gap-2">
+                                    <i data-lucide="grip-vertical" class="w-4 h-4 text-brown-500 cursor-move"></i>
+                                    <button type="button" onclick="addSocialIcon(3)" class="text-brown-600 hover:text-brown-800">
+                                        <i data-lucide="plus" class="w-4 h-4"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div id="column-3-items" class="space-y-2">
+                                <div class="flex items-center gap-2 social-item">
+                                    <select class="px-2 py-1 text-sm border rounded">
+                                        <option value="twitter">Twitter</option>
+                                        <option value="facebook">Facebook</option>
+                                        <option value="instagram">Instagram</option>
+                                        <option value="linkedin">LinkedIn</option>
+                                        <option value="youtube">YouTube</option>
+                                    </select>
+                                    <input type="text" placeholder="URL" value="#" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2 social-item">
+                                    <select class="px-2 py-1 text-sm border rounded">
+                                        <option value="twitter">Twitter</option>
+                                        <option value="facebook" selected>Facebook</option>
+                                        <option value="instagram">Instagram</option>
+                                        <option value="linkedin">LinkedIn</option>
+                                        <option value="youtube">YouTube</option>
+                                    </select>
+                                    <input type="text" placeholder="URL" value="#" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                                <div class="flex items-center gap-2 social-item">
+                                    <select class="px-2 py-1 text-sm border rounded">
+                                        <option value="twitter">Twitter</option>
+                                        <option value="facebook">Facebook</option>
+                                        <option value="instagram" selected>Instagram</option>
+                                        <option value="linkedin">LinkedIn</option>
+                                        <option value="youtube">YouTube</option>
+                                    </select>
+                                    <input type="text" placeholder="URL" value="#" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                        <i data-lucide="x" class="w-3 h-3"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hidden inputs for form submission -->
+                    <input type="hidden" name="footer_column_1" id="footer-column-1-data">
+                    <input type="hidden" name="footer_column_2" id="footer-column-2-data">
+                    <input type="hidden" name="footer_column_3" id="footer-column-3-data">
+                    <input type="hidden" name="footer_column_order" id="footer-column-order" value="1,2,3">
+                    
+                    <div class="mt-3 text-sm text-brown-600">
+                        <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
+                        Görsel editör ile footer'ınızı kolayca düzenleyebilirsiniz. + butonlarıyla yeni öğe ekleyebilirsiniz.
                     </div>
                 </div>
                 
-                <!-- Footer preview -->
+                <!-- Footer Preview -->
                 <div class="border-t border-cream-200 pt-4">
                     <label class="block text-brown-700 font-medium mb-2">Önizleme</label>
                     <div class="bg-brown-900 text-cream-100 p-6 rounded-lg">
-                        <div id="footer-preview">
-                            {% if settings and settings.footer_content %}
-                                {{ settings.footer_content|safe }}
-                            {% else %}
-                                <p class="text-center text-cream-300">Footer içeriği burada görünecek...</p>
-                            {% endif %}
+                        <div id="footer-preview" class="space-y-6">
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                <div id="preview-column-1"></div>
+                                <div id="preview-column-2"></div>
+                                <div id="preview-column-3"></div>
+                            </div>
+                            <div class="border-t border-cream-700 pt-4 text-center">
+                                <p id="preview-copyright" class="text-cream-300"></p>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -248,17 +387,8 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Footer content preview
-    if (footerTextarea && footerPreview) {
-        footerTextarea.addEventListener('input', function() {
-            const content = this.value.trim();
-            if (content) {
-                footerPreview.innerHTML = content;
-            } else {
-                footerPreview.innerHTML = '<p class="text-center text-cream-300">Footer içeriği burada görünecek...</p>';
-            }
-        });
-    }
+    // Footer drag & drop and preview
+    initializeFooterEditor();
     
     toggleLogoFields();
 });
@@ -372,6 +502,246 @@ function selectMedia(filePath) {
     }
     
     closeMediaGallery();
+}
+
+// Footer GUI Editor Functions
+function initializeFooterEditor() {
+    // Initialize drag and drop
+    initializeFooterDragAndDrop();
+    
+    // Initialize preview
+    updateFooterPreview();
+    
+    // Add event listeners for real-time preview
+    const copyrightInput = document.querySelector('input[name="footer_copyright"]');
+    
+    if (copyrightInput) {
+        copyrightInput.addEventListener('input', updateFooterPreview);
+    }
+    
+    // Add listeners to all GUI inputs
+    addFooterListeners();
+    
+    // Initialize form data generation before submit
+    document.querySelector('form').addEventListener('submit', generateFooterData);
+}
+
+function initializeFooterDragAndDrop() {
+    const footerColumns = document.getElementById('footer-columns-gui');
+    if (!footerColumns) return;
+    
+    let draggedElement = null;
+    
+    // Add drag event listeners to columns
+    const columns = footerColumns.querySelectorAll('.footer-column-gui');
+    columns.forEach(column => {
+        column.draggable = true;
+        
+        column.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        column.addEventListener('dragend', function() {
+            this.style.opacity = '1';
+            draggedElement = null;
+        });
+        
+        column.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        
+        column.addEventListener('dragenter', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#b45309';
+        });
+        
+        column.addEventListener('dragleave', function() {
+            this.style.borderColor = '#d1d5db';
+        });
+        
+        column.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#d1d5db';
+            
+            if (draggedElement && draggedElement !== this) {
+                // Swap elements
+                const parent = this.parentNode;
+                const nextSibling = this.nextSibling;
+                
+                if (nextSibling) {
+                    parent.insertBefore(draggedElement, nextSibling);
+                } else {
+                    parent.appendChild(draggedElement);
+                }
+                
+                parent.insertBefore(this, draggedElement.nextSibling || null);
+                
+                // Update column order
+                updateColumnOrder();
+                
+                // Update preview
+                updateFooterPreview();
+            }
+        });
+    });
+}
+
+function updateColumnOrder() {
+    const columns = document.querySelectorAll('.footer-column-gui');
+    const order = Array.from(columns).map(col => col.dataset.column);
+    document.getElementById('footer-column-order').value = order.join(',');
+}
+
+function addFooterListeners() {
+    // Add listeners to all inputs in GUI
+    document.querySelectorAll('#footer-columns-gui input, #footer-columns-gui select').forEach(input => {
+        input.addEventListener('input', updateFooterPreview);
+        input.addEventListener('change', updateFooterPreview);
+    });
+}
+
+function addColumnItem(columnNumber) {
+    const container = document.getElementById(`column-${columnNumber}-items`);
+    const newItem = document.createElement('div');
+    newItem.className = 'flex items-center gap-2 column-item';
+    newItem.innerHTML = `
+        <input type="text" placeholder="Link metni" class="flex-1 px-2 py-1 text-sm border rounded">
+        <input type="text" placeholder="URL" class="flex-1 px-2 py-1 text-sm border rounded">
+        <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+            <i data-lucide="x" class="w-3 h-3"></i>
+        </button>
+    `;
+    container.appendChild(newItem);
+    
+    // Add listeners to new inputs
+    newItem.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', updateFooterPreview);
+    });
+    
+    lucide.createIcons();
+    updateFooterPreview();
+}
+
+function addSocialIcon(columnNumber) {
+    const container = document.getElementById(`column-${columnNumber}-items`);
+    const newItem = document.createElement('div');
+    newItem.className = 'flex items-center gap-2 social-item';
+    newItem.innerHTML = `
+        <select class="px-2 py-1 text-sm border rounded">
+            <option value="twitter">Twitter</option>
+            <option value="facebook">Facebook</option>
+            <option value="instagram">Instagram</option>
+            <option value="linkedin">LinkedIn</option>
+            <option value="youtube">YouTube</option>
+        </select>
+        <input type="text" placeholder="URL" class="flex-1 px-2 py-1 text-sm border rounded">
+        <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+            <i data-lucide="x" class="w-3 h-3"></i>
+        </button>
+    `;
+    container.appendChild(newItem);
+    
+    // Add listeners to new inputs
+    newItem.querySelectorAll('input, select').forEach(input => {
+        input.addEventListener('input', updateFooterPreview);
+        input.addEventListener('change', updateFooterPreview);
+    });
+    
+    lucide.createIcons();
+    updateFooterPreview();
+}
+
+function removeColumnItem(button) {
+    button.closest('.column-item, .social-item').remove();
+    updateFooterPreview();
+}
+
+function generateFooterData() {
+    // Generate HTML for each column based on GUI
+    for (let i = 1; i <= 3; i++) {
+        const container = document.getElementById(`column-${i}-items`);
+        const title = document.querySelector(`input[name="column_${i}_title"]`).value;
+        let html = '';
+        
+        if (i === 3) {
+            // Social media column
+            const socialItems = container.querySelectorAll('.social-item');
+            if (socialItems.length > 0) {
+                html = '<div class="flex space-x-3">';
+                socialItems.forEach(item => {
+                    const icon = item.querySelector('select').value;
+                    const url = item.querySelector('input').value;
+                    html += `<a href="${url}" class="text-cream-300 hover:text-white transition-smooth"><i data-lucide="${icon}" class="w-5 h-5"></i></a>`;
+                });
+                html += '</div>';
+            }
+        } else {
+            // Regular link columns
+            const linkItems = container.querySelectorAll('.column-item');
+            if (linkItems.length > 0) {
+                html = `<h4 class="font-semibold mb-4">${title}</h4><ul class="space-y-2">`;
+                linkItems.forEach(item => {
+                    const text = item.querySelectorAll('input')[0].value;
+                    const url = item.querySelectorAll('input')[1].value;
+                    html += `<li><a href="${url}" class="text-cream-300 hover:text-white transition-smooth">${text}</a></li>`;
+                });
+                html += '</ul>';
+            }
+        }
+        
+        document.getElementById(`footer-column-${i}-data`).value = html;
+    }
+}
+
+function updateFooterPreview() {
+    const copyrightText = document.querySelector('input[name="footer_copyright"]').value || 
+                         '© 2024 AI Blog. Tüm hakları saklıdır.';
+    
+    // Update copyright
+    document.getElementById('preview-copyright').innerHTML = copyrightText;
+    
+    // Update columns based on GUI
+    for (let i = 1; i <= 3; i++) {
+        const container = document.getElementById(`column-${i}-items`);
+        const title = document.querySelector(`input[name="column_${i}_title"]`).value;
+        let html = '';
+        
+        if (i === 3) {
+            // Social media column
+            const socialItems = container.querySelectorAll('.social-item');
+            if (socialItems.length > 0) {
+                html = '<div class="flex space-x-3">';
+                socialItems.forEach(item => {
+                    const icon = item.querySelector('select').value;
+                    const url = item.querySelector('input').value;
+                    html += `<a href="${url}" class="text-cream-300 hover:text-white transition-smooth"><i data-lucide="${icon}" class="w-5 h-5"></i></a>`;
+                });
+                html += '</div>';
+            }
+        } else {
+            // Regular link columns
+            const linkItems = container.querySelectorAll('.column-item');
+            if (linkItems.length > 0) {
+                html = `<h4 class="font-semibold mb-4">${title}</h4><ul class="space-y-2">`;
+                linkItems.forEach(item => {
+                    const text = item.querySelectorAll('input')[0].value;
+                    const url = item.querySelectorAll('input')[1].value;
+                    html += `<li><a href="${url}" class="text-cream-300 hover:text-white transition-smooth">${text}</a></li>`;
+                });
+                html += '</ul>';
+            }
+        }
+        
+        document.getElementById(`preview-column-${i}`).innerHTML = html;
+    }
+    
+    // Re-initialize Lucide icons in preview
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons();
+    }
 }
 </script>
 {% endblock %}

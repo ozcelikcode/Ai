@@ -39,9 +39,11 @@ async def admin_dashboard(request: Request, admin_user: User = Depends(get_admin
     if db.query(Comment).first():
         recent_comments = db.query(Comment).order_by(Comment.created_at.desc()).limit(5).all()
     
+    site_settings = db.query(Settings).first()
     return templates.TemplateResponse("admin/dashboard.html", {
         "request": request,
         "admin_user": admin_user,
+        "site_settings": site_settings,
         "stats": {
             "total_posts": total_posts,
             "published_posts": published_posts,
@@ -66,9 +68,11 @@ async def admin_posts(request: Request, admin_user: User = Depends(get_admin_use
             joinedload(Post.author)
         ).order_by(Post.created_at.desc()).all()
         
+        site_settings = db.query(Settings).first()
         return templates.TemplateResponse("admin/posts.html", {
             "request": request,
             "admin_user": admin_user,
+            "site_settings": site_settings,
             "posts": posts
         })
     except Exception as e:
@@ -89,17 +93,21 @@ async def admin_posts(request: Request, admin_user: User = Depends(get_admin_use
 async def new_post_form(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     try:
         categories = db.query(Category).all()
+        site_settings = db.query(Settings).first()
         return templates.TemplateResponse("admin/post_form.html", {
             "request": request,
             "admin_user": admin_user,
+            "site_settings": site_settings,
             "categories": categories,
             "post": None
         })
     except Exception as e:
         print(f"Error loading new post form: {e}")
+        site_settings = db.query(Settings).first()
         return templates.TemplateResponse("admin/post_form.html", {
             "request": request,
             "admin_user": admin_user,
+            "site_settings": site_settings,
             "categories": [],
             "post": None,
             "error_message": "Form yüklenirken hata oluştu."
@@ -334,9 +342,11 @@ async def delete_post(post_id: int, admin_user: User = Depends(get_admin_user), 
 @router.get("/categories", response_class=HTMLResponse)
 async def admin_categories(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     categories = db.query(Category).all()
+    site_settings = db.query(Settings).first()
     return templates.TemplateResponse("admin/categories.html", {
         "request": request,
         "admin_user": admin_user,
+        "site_settings": site_settings,
         "categories": categories
     })
 
@@ -400,17 +410,21 @@ async def delete_category(category_id: int, admin_user: User = Depends(get_admin
 async def admin_pages(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     from app.models.models import Page
     pages = db.query(Page).order_by(Page.created_at.desc()).all()
+    site_settings = db.query(Settings).first()
     return templates.TemplateResponse("admin/pages.html", {
         "request": request,
         "admin_user": admin_user,
+        "site_settings": site_settings,
         "pages": pages
     })
 
 @router.get("/pages/new", response_class=HTMLResponse)
-async def new_page_form(request: Request, admin_user: User = Depends(get_admin_user)):
+async def new_page_form(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    site_settings = db.query(Settings).first()
     return templates.TemplateResponse("admin/page_form.html", {
         "request": request,
         "admin_user": admin_user,
+        "site_settings": site_settings,
         "page": None
     })
 
@@ -590,6 +604,7 @@ async def admin_settings(request: Request, admin_user: User = Depends(get_admin_
     return templates.TemplateResponse("admin/settings.html", {
         "request": request,
         "admin_user": admin_user,
+        "site_settings": settings,
         "settings": settings,
         "avatars": avatars
     })
@@ -602,7 +617,6 @@ async def save_settings(
     meta_description: str = Form(""),
     meta_keywords: str = Form(""),
     comment_limit: int = Form(500),
-    footer_content: str = Form(""),
     ai_prompt: str = Form(""),
     ai_content_length: str = Form("medium"),
     ai_content_type: str = Form("informative"),
@@ -620,7 +634,6 @@ async def save_settings(
     settings.meta_description = meta_description if meta_description else None
     settings.meta_keywords = meta_keywords if meta_keywords else None
     settings.comment_limit = comment_limit
-    settings.footer_content = footer_content if footer_content else None
     settings.ai_prompt = ai_prompt if ai_prompt else "Write a blog post about the given topic"
     settings.ai_content_length = ai_content_length
     settings.ai_content_type = ai_content_type
@@ -643,6 +656,7 @@ async def admin_customize(request: Request, admin_user: User = Depends(get_admin
     return templates.TemplateResponse("admin/customize.html", {
         "request": request,
         "admin_user": admin_user,
+        "site_settings": settings,
         "settings": settings
     })
 
@@ -652,7 +666,11 @@ async def save_customization(
     logo_type: str = Form("text"),
     logo_icon: str = Form(""),
     site_logo: str = Form(""),
-    footer_content: str = Form(""),
+    footer_copyright: str = Form(""),
+    footer_column_1: str = Form(""),
+    footer_column_2: str = Form(""),
+    footer_column_3: str = Form(""),
+    footer_column_order: str = Form("1,2,3"),
     logo_file: UploadFile = File(None),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
@@ -708,7 +726,11 @@ async def save_customization(
         elif site_logo and site_logo.strip():
             settings.site_logo = site_logo.strip()
     
-    settings.footer_content = footer_content.strip() if footer_content.strip() else None
+    settings.footer_copyright = footer_copyright.strip() if footer_copyright.strip() else None
+    settings.footer_column_1 = footer_column_1.strip() if footer_column_1.strip() else None
+    settings.footer_column_2 = footer_column_2.strip() if footer_column_2.strip() else None
+    settings.footer_column_3 = footer_column_3.strip() if footer_column_3.strip() else None
+    settings.footer_column_order = footer_column_order.strip() if footer_column_order.strip() else "1,2,3"
     
     db.commit()
     
@@ -720,9 +742,11 @@ async def save_customization(
 async def admin_tags(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     from app.models.models import Tag
     tags = db.query(Tag).all()
+    site_settings = db.query(Settings).first()
     return templates.TemplateResponse("admin/tags.html", {
         "request": request,
         "admin_user": admin_user,
+        "site_settings": site_settings,
         "tags": tags
     })
 

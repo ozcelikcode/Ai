@@ -64,19 +64,22 @@ app.include_router(auth.router)
 app.include_router(admin.router)
 app.include_router(media.router)
 app.include_router(users.router)
-app.include_router(blog.router)
+
+# Include search routers BEFORE blog router (important for /search route)
+search_routers = get_search_routers()
+for router in search_routers:
+    app.include_router(router)
 
 # Include comment routers
 comment_routers = get_comments_routers()
 for router in comment_routers:
     app.include_router(router)
 
-# Include search routers
-search_routers = get_search_routers()
-for router in search_routers:
-    app.include_router(router)
+# Blog router MUST be last due to catch-all /{slug} route
+app.include_router(blog.router)
 
 from app.core.auth import get_current_user_optional, get_admin_user
+from app.core.database import SessionLocal
 
 def get_template_context(request: Request, db: Session, current_user=None):
     """Get common template context including site settings"""
@@ -102,11 +105,27 @@ async def homepage(request: Request, db: Session = Depends(get_db)):
 # Exception handlers
 @app.exception_handler(404)
 async def not_found_handler(request: Request, exc: HTTPException):
-    return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
+    db = SessionLocal()
+    try:
+        current_user = get_current_user_optional(request, db)
+        context = get_template_context(request, db, current_user)
+        return templates.TemplateResponse("404.html", context, status_code=404)
+    except Exception:
+        return templates.TemplateResponse("404.html", {"request": request}, status_code=404)
+    finally:
+        db.close()
 
 @app.exception_handler(500)
 async def internal_error_handler(request: Request, exc: Exception):
-    return templates.TemplateResponse("500.html", {"request": request}, status_code=500)
+    db = SessionLocal()
+    try:
+        current_user = get_current_user_optional(request, db)
+        context = get_template_context(request, db, current_user)
+        return templates.TemplateResponse("500.html", context, status_code=500)
+    except Exception:
+        return templates.TemplateResponse("500.html", {"request": request}, status_code=500)
+    finally:
+        db.close()
 
 if __name__ == "__main__":
     import uvicorn

@@ -4,11 +4,22 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_current_user_optional
-from app.models.models import Post, Category, Page, Tag, PostTag
+from app.models.models import Post, Category, Page, Tag, PostTag, Settings
 from typing import Optional
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
+
+def get_template_context(request: Request, db: Session, current_user=None):
+    """Get common template context including site settings"""
+    site_settings = db.query(Settings).first()
+    context = {
+        "request": request,
+        "site_settings": site_settings
+    }
+    if current_user is not None:
+        context["current_user"] = current_user
+    return context
 
 @router.get("/post/{slug}", response_class=HTMLResponse)
 async def post_detail(request: Request, slug: str, db: Session = Depends(get_db)):
@@ -25,23 +36,21 @@ async def post_detail(request: Request, slug: str, db: Session = Depends(get_db)
         Post.is_published == True
     ).limit(3).all()
     
-    return templates.TemplateResponse("blog/post_detail.html", {
-        "request": request,
+    context = get_template_context(request, db, current_user)
+    context.update({
         "post": post,
-        "current_user": current_user,
         "related_posts": related_posts
     })
+    return templates.TemplateResponse("blog/post_detail.html", context)
 
 @router.get("/categories", response_class=HTMLResponse)
 async def categories_list(request: Request, db: Session = Depends(get_db)):
     categories = db.query(Category).all()
     current_user = get_current_user_optional(request, db)
     
-    return templates.TemplateResponse("blog/categories.html", {
-        "request": request,
-        "categories": categories,
-        "current_user": current_user
-    })
+    context = get_template_context(request, db, current_user)
+    context["categories"] = categories
+    return templates.TemplateResponse("blog/categories.html", context)
 
 @router.get("/category/{slug}", response_class=HTMLResponse)
 async def category_posts(request: Request, slug: str, db: Session = Depends(get_db)):
@@ -56,12 +65,12 @@ async def category_posts(request: Request, slug: str, db: Session = Depends(get_
     
     current_user = get_current_user_optional(request, db)
     
-    return templates.TemplateResponse("blog/category_posts.html", {
-        "request": request,
+    context = get_template_context(request, db, current_user)
+    context.update({
         "category": category,
-        "posts": posts,
-        "current_user": current_user
+        "posts": posts
     })
+    return templates.TemplateResponse("blog/category_posts.html", context)
 
 @router.get("/{slug}", response_class=HTMLResponse)
 async def page_detail(request: Request, slug: str, db: Session = Depends(get_db)):
@@ -71,11 +80,9 @@ async def page_detail(request: Request, slug: str, db: Session = Depends(get_db)
     
     current_user = get_current_user_optional(request, db)
     
-    return templates.TemplateResponse("blog/page_detail.html", {
-        "request": request,
-        "page": page,
-        "current_user": current_user
-    })
+    context = get_template_context(request, db, current_user)
+    context["page"] = page
+    return templates.TemplateResponse("blog/page_detail.html", context)
 
 @router.get("/tag/{slug}", response_class=HTMLResponse)
 async def tag_posts(request: Request, slug: str, db: Session = Depends(get_db)):
@@ -91,21 +98,19 @@ async def tag_posts(request: Request, slug: str, db: Session = Depends(get_db)):
     
     current_user = get_current_user_optional(request, db)
     
-    return templates.TemplateResponse("blog/tag_posts.html", {
-        "request": request,
+    context = get_template_context(request, db, current_user)
+    context.update({
         "tag": tag,
-        "posts": posts,
-        "current_user": current_user
+        "posts": posts
     })
+    return templates.TemplateResponse("blog/tag_posts.html", context)
 
 @router.get("/about", response_class=HTMLResponse)
 async def about_page(request: Request, db: Session = Depends(get_db)):
     current_user = get_current_user_optional(request, db)
     
-    return templates.TemplateResponse("blog/about.html", {
-        "request": request,
-        "current_user": current_user
-    })
+    context = get_template_context(request, db, current_user)
+    return templates.TemplateResponse("blog/about.html", context)
 
 @router.get("/sitemap.xml")
 async def sitemap(request: Request, db: Session = Depends(get_db)):

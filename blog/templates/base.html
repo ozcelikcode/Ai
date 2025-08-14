@@ -246,39 +246,69 @@
 
     <footer class="bg-brown-800 text-cream-100 mt-16">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-            {% if site_settings and site_settings.footer_content %}
-                <!-- Custom Footer Content -->
-                <div class="custom-footer-content">
-                    {{ site_settings.footer_content|safe }}
+            {% if site_settings and (site_settings.footer_column_1 or site_settings.footer_column_2 or site_settings.footer_column_3) %}
+                <!-- Custom Footer Columns -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    {% set column_order = site_settings.footer_column_order.split(',') if site_settings.footer_column_order 
+                                         else ['1', '2', '3'] %}
+                    
+                    {% for column_num in column_order %}
+                        <div>
+                            {% if column_num == '1' and site_settings.footer_column_1 %}
+                                {{ site_settings.footer_column_1|safe }}
+                            {% elif column_num == '2' and site_settings.footer_column_2 %}
+                                {{ site_settings.footer_column_2|safe }}
+                            {% elif column_num == '3' and site_settings.footer_column_3 %}
+                                {{ site_settings.footer_column_3|safe }}
+                            {% endif %}
+                        </div>
+                    {% endfor %}
                 </div>
             {% else %}
                 <!-- Default Footer Content -->
-                <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
-                    <div class="col-span-2">
-                        <h3 class="text-xl font-bold mb-4">{{ site_settings.site_title if site_settings else 'AI Blog' }}</h3>
-                        <p class="text-cream-200 mb-4">Modern yapay zeka destekli blog platformu. En güncel içerikler ve teknoloji haberleri için bizi takip edin.</p>
-                    </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div>
                         <h4 class="font-semibold mb-4">Hızlı Linkler</h4>
                         <ul class="space-y-2">
-                            <li><a href="/" class="text-cream-200 hover:text-white transition-smooth">Ana Sayfa</a></li>
-                            <li><a href="/categories" class="text-cream-200 hover:text-white transition-smooth">Kategoriler</a></li>
-                            <li><a href="/about" class="text-cream-200 hover:text-white transition-smooth">Hakkında</a></li>
+                            <li><a href="/" class="text-cream-300 hover:text-white transition-smooth">Ana Sayfa</a></li>
+                            <li><a href="/categories" class="text-cream-300 hover:text-white transition-smooth">Kategoriler</a></li>
+                            <li><a href="/about" class="text-cream-300 hover:text-white transition-smooth">Hakkında</a></li>
                         </ul>
                     </div>
                     <div>
                         <h4 class="font-semibold mb-4">İletişim</h4>
                         <ul class="space-y-2">
-                            <li><a href="/contact" class="text-cream-200 hover:text-white transition-smooth">İletişim</a></li>
-                            <li><a href="/privacy" class="text-cream-200 hover:text-white transition-smooth">Gizlilik</a></li>
+                            <li><a href="/contact" class="text-cream-300 hover:text-white transition-smooth">İletişim</a></li>
+                            <li><a href="/privacy" class="text-cream-300 hover:text-white transition-smooth">Gizlilik</a></li>
+                            <li><a href="/terms" class="text-cream-300 hover:text-white transition-smooth">Kullanım Şartları</a></li>
                         </ul>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold mb-4">Sosyal Medya</h4>
+                        <div class="flex space-x-3">
+                            <a href="#" class="text-cream-300 hover:text-white transition-smooth">
+                                <i data-lucide="twitter" class="w-5 h-5"></i>
+                            </a>
+                            <a href="#" class="text-cream-300 hover:text-white transition-smooth">
+                                <i data-lucide="facebook" class="w-5 h-5"></i>
+                            </a>
+                            <a href="#" class="text-cream-300 hover:text-white transition-smooth">
+                                <i data-lucide="instagram" class="w-5 h-5"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             {% endif %}
             
             <!-- Copyright Notice -->
             <div class="border-t border-brown-700 mt-8 pt-8 text-center text-cream-300">
-                <p>&copy; 2024 {{ site_settings.site_title if site_settings else 'AI Blog' }}. Tüm hakları saklıdır.</p>
+                <p>
+                    {% if site_settings and site_settings.footer_copyright %}
+                        {{ site_settings.footer_copyright }}
+                    {% else %}
+                        &copy; 2024 {{ site_settings.site_title if site_settings else 'AI Blog' }}. Tüm hakları saklıdır.
+                    {% endif %}
+                </p>
             </div>
         </div>
     </footer>

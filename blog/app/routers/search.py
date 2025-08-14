@@ -5,11 +5,22 @@ from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 from app.core.database import get_db
 from app.core.auth import get_current_user_optional
-from app.models.models import Post, Category, Tag, PostTag
+from app.models.models import Post, Category, Tag, PostTag, Settings
 from typing import Optional
 
 router = APIRouter(tags=["search"])
 templates = Jinja2Templates(directory="templates")
+
+def get_template_context(request: Request, db: Session, current_user=None):
+    """Get common template context including site settings"""
+    site_settings = db.query(Settings).first()
+    context = {
+        "request": request,
+        "site_settings": site_settings
+    }
+    if current_user is not None:
+        context["current_user"] = current_user
+    return context
 
 @router.get("/search", response_class=HTMLResponse)
 async def search_page(
@@ -26,15 +37,15 @@ async def search_page(
     if q.strip():
         results = search_posts(db, q, category)
     
-    return templates.TemplateResponse("blog/search.html", {
-        "request": request,
-        "current_user": current_user,
+    context = get_template_context(request, db, current_user)
+    context.update({
         "query": q,
         "category_filter": category,
         "results": results,
         "categories": categories,
         "result_count": len(results)
     })
+    return templates.TemplateResponse("blog/search.html", context)
 
 @router.get("/api/search")
 async def search_api(

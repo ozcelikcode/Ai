@@ -45,6 +45,51 @@ async def add_comment(
     
     return RedirectResponse(url=f"/post/{slug}#comments", status_code=303)
 
+@router.post("/post/{slug}/comment/{comment_id}/reply")
+async def reply_to_comment(
+    slug: str,
+    comment_id: int,
+    content: str = Form(...),
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Reply to a comment"""
+    post = db.query(Post).filter(Post.slug == slug, Post.is_published == True).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Post not found")
+    
+    # Check if parent comment exists
+    parent_comment = db.query(Comment).filter(
+        Comment.id == comment_id,
+        Comment.post_id == post.id,
+        Comment.is_approved == True
+    ).first()
+    if not parent_comment:
+        raise HTTPException(status_code=404, detail="Parent comment not found")
+    
+    # Check comment character limit
+    settings = db.query(Settings).first()
+    comment_limit = settings.comment_limit if settings else 500
+    
+    if len(content.strip()) > comment_limit:
+        raise HTTPException(status_code=400, detail=f"Yorum {comment_limit} karakterden uzun olamaz")
+    
+    if len(content.strip()) < 1:
+        raise HTTPException(status_code=400, detail="Yorum boş olamaz")
+    
+    reply = Comment(
+        content=content.strip(),
+        user_id=current_user.id,
+        post_id=post.id,
+        parent_id=comment_id,
+        is_approved=current_user.is_admin  # Admins don't need approval
+    )
+    
+    db.add(reply)
+    db.commit()
+    
+    return RedirectResponse(url=f"/post/{slug}#comment-{comment_id}", status_code=303)
+
 @router.get("/api/post/{slug}/comments")
 async def get_post_comments(
     slug: str, 
@@ -55,21 +100,41 @@ async def get_post_comments(
     if not post:
         raise HTTPException(status_code=404, detail="Post not found")
     
-    comments = db.query(Comment).filter(
+    # Get only parent comments (not replies)
+    parent_comments = db.query(Comment).filter(
         Comment.post_id == post.id,
-        Comment.is_approved == True
+        Comment.is_approved == True,
+        Comment.parent_id == None
     ).order_by(Comment.created_at.asc()).all()
     
-    return JSONResponse({
-        "comments": [{
+    def format_comment(comment):
+        # Get replies for this comment
+        replies = db.query(Comment).filter(
+            Comment.parent_id == comment.id,
+            Comment.is_approved == True
+        ).order_by(Comment.created_at.asc()).all()
+        
+        return {
             "id": comment.id,
             "content": comment.content,
             "user": {
                 "username": comment.user.username,
                 "profile_image": comment.user.profile_image
             },
-            "created_at": comment.created_at.strftime("%d.%m.%Y %H:%M")
-        } for comment in comments]
+            "created_at": comment.created_at.strftime("%d.%m.%Y %H:%M"),
+            "replies": [{
+                "id": reply.id,
+                "content": reply.content,
+                "user": {
+                    "username": reply.user.username,
+                    "profile_image": reply.user.profile_image
+                },
+                "created_at": reply.created_at.strftime("%d.%m.%Y %H:%M")
+            } for reply in replies]
+        }
+    
+    return JSONResponse({
+        "comments": [format_comment(comment) for comment in parent_comments]
     })
 
 # Admin routes for comment management

@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}{% if query %}{{ query }} - Arama Sonuçları{% else %}Arama{% endif %} - AI Blog{% endblock %}
+{% block title %}{% if query %}{{ query }} - Arama Sonuçları{% else %}Arama{% endif %} - {{ site_settings.site_title if site_settings else 'AI Blog' }}{% endblock %}
 
 {% block content %}
 <section class="py-16">

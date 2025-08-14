@@ -84,9 +84,12 @@ class Comment(Base):
     is_approved = Column(Boolean, default=False)
     user_id = Column(Integer, ForeignKey("users.id"))
     post_id = Column(Integer, ForeignKey("posts.id"))
+    parent_id = Column(Integer, ForeignKey("comments.id"), nullable=True)  # For reply system
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
     user = relationship("User", back_populates="comments")
+    parent = relationship("Comment", remote_side=[id], back_populates="replies")
+    replies = relationship("Comment", back_populates="parent")
     post = relationship("Post", back_populates="comments")
 
 class PostLike(Base):
@@ -137,7 +140,11 @@ class Settings(Base):
     favicon = Column(String(200), nullable=True)
     meta_description = Column(String(300), nullable=True)
     meta_keywords = Column(String(300), nullable=True)
-    footer_content = Column(Text, nullable=True)
+    footer_copyright = Column(String(500), nullable=True)
+    footer_column_1 = Column(Text, nullable=True)
+    footer_column_2 = Column(Text, nullable=True)
+    footer_column_3 = Column(Text, nullable=True)
+    footer_column_order = Column(String(20), default="1,2,3")
     comment_limit = Column(Integer, default=500)
     ai_prompt = Column(Text, default="Write a blog post about the given topic")
     ai_content_length = Column(String(50), default="medium")
