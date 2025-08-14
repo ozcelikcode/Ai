@@ -598,9 +598,6 @@ async def admin_settings(request: Request, admin_user: User = Depends(get_admin_
 async def save_settings(
     request: Request,
     site_title: str = Form(...),
-    site_logo: str = Form(""),
-    logo_type: str = Form("text"),
-    logo_icon: str = Form(""),
     favicon: str = Form(""),
     meta_description: str = Form(""),
     meta_keywords: str = Form(""),
@@ -609,7 +606,6 @@ async def save_settings(
     ai_prompt: str = Form(""),
     ai_content_length: str = Form("medium"),
     ai_content_type: str = Form("informative"),
-    logo_file: UploadFile = File(None),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
@@ -619,32 +615,7 @@ async def save_settings(
         settings = Settings()
         db.add(settings)
     
-    # Handle logo file upload
-    logo_url = site_logo
-    if logo_file and logo_file.filename:
-        if not logo_file.content_type.startswith('image/'):
-            return JSONResponse({"success": False, "error": "Sadece resim dosyaları yükleyebilirsiniz"})
-        
-        # Create upload directory
-        upload_dir = Path("uploads/site")
-        upload_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Generate unique filename
-        file_extension = os.path.splitext(logo_file.filename)[1]
-        unique_filename = f"logo_{uuid.uuid4()}{file_extension}"
-        file_path = upload_dir / unique_filename
-        
-        # Save file
-        file_content = await logo_file.read()
-        with open(file_path, "wb") as f:
-            f.write(file_content)
-        
-        logo_url = f"/uploads/site/{unique_filename}"
-    
     settings.site_title = site_title
-    settings.site_logo = logo_url if logo_url else None
-    settings.logo_type = logo_type
-    settings.logo_icon = logo_icon if logo_icon else None
     settings.favicon = favicon if favicon else None
     settings.meta_description = meta_description if meta_description else None
     settings.meta_keywords = meta_keywords if meta_keywords else None
@@ -689,39 +660,60 @@ async def save_customization(
     settings = db.query(Settings).first()
     
     if not settings:
-        settings = Settings()
+        settings = Settings(
+            site_title="My Blog",
+            logo_type="text",
+            ai_prompt="Write a blog post about the given topic",
+            ai_content_length="medium",
+            ai_content_type="informative"
+        )
         db.add(settings)
+        db.flush()
     
-    # Handle logo file upload
-    logo_url = site_logo
-    if logo_file and logo_file.filename:
-        if not logo_file.content_type.startswith('image/'):
-            return JSONResponse({"success": False, "error": "Sadece resim dosyaları yükleyebilirsiniz"})
-        
-        # Create upload directory
-        upload_dir = Path("uploads/site")
-        upload_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Generate unique filename
-        file_extension = os.path.splitext(logo_file.filename)[1]
-        unique_filename = f"logo_{uuid.uuid4()}{file_extension}"
-        file_path = upload_dir / unique_filename
-        
-        # Save file
-        file_content = await logo_file.read()
-        with open(file_path, "wb") as f:
-            f.write(file_content)
-        
-        logo_url = f"/uploads/site/{unique_filename}"
-    
+    # Always clear both fields first, then set based on type
+    settings.site_logo = None
+    settings.logo_icon = None
     settings.logo_type = logo_type
-    settings.logo_icon = logo_icon if logo_icon else None
-    settings.site_logo = logo_url if logo_url else None
-    settings.footer_content = footer_content if footer_content else None
+    
+    if logo_type == "text":
+        # Only site_title is used, both logo fields stay None
+        pass
+        
+    elif logo_type == "icon":
+        # Only icon is used
+        settings.logo_icon = logo_icon.strip() if logo_icon.strip() else "home"
+        
+    elif logo_type == "icon_text":
+        # Icon + text is used
+        settings.logo_icon = logo_icon.strip() if logo_icon.strip() else "home"
+        
+    elif logo_type == "image":
+        # Only image is used
+        if logo_file and logo_file.filename:
+            if not logo_file.content_type.startswith('image/'):
+                return RedirectResponse(url="/admin/customize?error=invalid_file", status_code=303)
+            
+            upload_dir = Path("uploads/site")
+            upload_dir.mkdir(parents=True, exist_ok=True)
+            
+            file_extension = os.path.splitext(logo_file.filename)[1]
+            unique_filename = f"logo_{uuid.uuid4()}{file_extension}"
+            file_path = upload_dir / unique_filename
+            
+            file_content = await logo_file.read()
+            with open(file_path, "wb") as f:
+                f.write(file_content)
+            
+            settings.site_logo = f"/uploads/site/{unique_filename}"
+        elif site_logo and site_logo.strip():
+            settings.site_logo = site_logo.strip()
+    
+    settings.footer_content = footer_content.strip() if footer_content.strip() else None
     
     db.commit()
     
     return RedirectResponse(url="/admin/customize?success=1", status_code=303)
+
 
 # Tag Management Routes
 @router.get("/tags", response_class=HTMLResponse)

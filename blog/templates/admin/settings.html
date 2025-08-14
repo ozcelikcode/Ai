@@ -13,20 +13,24 @@
                 Site Genel Ayarları
             </h3>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="block text-brown-700 font-medium mb-2">Site Başlığı</label>
-                    <input type="text" name="site_title" 
-                           value="{{ settings.site_title if settings else 'AI Blog' }}" 
-                           class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
-                </div>
-                
-                <div>
-                    <label class="block text-brown-700 font-medium mb-2">Site Logo URL</label>
-                    <input type="url" name="site_logo" 
-                           value="{{ settings.site_logo if settings else '' }}" 
-                           placeholder="https://example.com/logo.png"
-                           class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
+            <div>
+                <label class="block text-brown-700 font-medium mb-2">Site Başlığı</label>
+                <input type="text" name="site_title" 
+                       value="{{ settings.site_title if settings else 'AI Blog' }}" 
+                       class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
+            </div>
+            
+            <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <div class="flex items-center">
+                    <i data-lucide="info" class="w-5 h-5 text-blue-600 mr-2"></i>
+                    <div>
+                        <p class="text-blue-800 font-medium">Logo Ayarları</p>
+                        <p class="text-blue-700 text-sm mt-1">
+                            Logo ayarlarını yapmak için 
+                            <a href="/admin/customize" class="font-medium underline hover:no-underline">Site Özelleştirme</a> 
+                            sayfasını kullanın.
+                        </p>
+                    </div>
                 </div>
             </div>
             
@@ -76,71 +80,7 @@
             </div>
         </div>
 
-        <!-- Logo Ayarları -->
-        <div class="bg-white rounded-xl shadow-lg p-6">
-            <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
-                <i data-lucide="image" class="w-5 h-5 mr-2"></i>
-                Logo Ayarları
-            </h3>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-brown-700 font-medium mb-2">Logo Türü</label>
-                    <div class="space-y-2">
-                        <label class="flex items-center">
-                            <input type="radio" name="logo_type" value="text" 
-                                   {{ 'checked' if not settings or settings.logo_type == 'text' else '' }}
-                                   class="mr-2">
-                            Sadece Metin Logo
-                        </label>
-                        <label class="flex items-center">
-                            <input type="radio" name="logo_type" value="image" 
-                                   {{ 'checked' if settings and settings.logo_type == 'image' else '' }}
-                                   class="mr-2">
-                            Sadece Resim Logo
-                        </label>
-                        <label class="flex items-center">
-                            <input type="radio" name="logo_type" value="icon_text" 
-                                   {{ 'checked' if settings and settings.logo_type == 'icon_text' else '' }}
-                                   class="mr-2">
-                            İkon + Metin Logo
-                        </label>
-                        <label class="flex items-center">
-                            <input type="radio" name="logo_type" value="icon" 
-                                   {{ 'checked' if settings and settings.logo_type == 'icon' else '' }}
-                                   class="mr-2">
-                            Sadece İkon Logo
-                        </label>
-                    </div>
-                </div>
-                
-                <div id="logo-icon-field" class="hidden">
-                    <label class="block text-brown-700 font-medium mb-2">Logo İkon (Lucide Icon Name)</label>
-                    <input type="text" name="logo_icon" 
-                           value="{{ settings.logo_icon if settings else '' }}" 
-                           placeholder="home, user, star, etc."
-                           class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
-                    <p class="text-sm text-brown-600 mt-1">Lucide icon ismi girin (örn: home, user, star)</p>
-                </div>
-                
-                <div id="logo-image-field" class="hidden">
-                    <label class="block text-brown-700 font-medium mb-2">Logo Resmi</label>
-                    <div class="space-y-2">
-                        <input type="file" name="logo_file" accept="image/*" 
-                               class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
-                        <input type="url" name="site_logo" 
-                               value="{{ settings.site_logo if settings else '' }}" 
-                               placeholder="veya URL girin"
-                               class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
-                        <button type="button" onclick="openMediaGallery('logo')" 
-                                class="px-4 py-2 bg-cream-100 text-brown-700 rounded-lg hover:bg-cream-200 transition-smooth">
-                            <i data-lucide="folder" class="w-4 h-4 inline mr-2"></i>
-                            Galeriden Seç
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
+
 
         <!-- Footer Ayarları -->
         <div class="bg-white rounded-xl shadow-lg p-6">

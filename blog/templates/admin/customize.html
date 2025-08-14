@@ -11,6 +11,13 @@
 </div>
 {% endif %}
 
+{% if request.query_params.get('error') == 'invalid_file' %}
+<div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-6">
+    <i data-lucide="alert-circle" class="w-5 h-5 inline mr-2"></i>
+    Sadece resim dosyaları yükleyebilirsiniz.
+</div>
+{% endif %}
+
 <form method="POST" action="/admin/customize/save" enctype="multipart/form-data">
     <div class="space-y-8">
         
@@ -223,7 +230,7 @@ document.addEventListener('DOMContentLoaded', function() {
             logoIconField.classList.remove('hidden');
         }
         
-        if (selectedType === 'image' || selectedType === 'icon_text') {
+        if (selectedType === 'image') {
             logoImageField.classList.remove('hidden');
         }
     }

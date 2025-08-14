@@ -114,21 +114,18 @@
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
                     <a href="/" class="flex items-center text-2xl font-bold text-brown-800 hover:text-brown-600 transition-smooth">
-                        {% if site_settings %}
-                            {% if site_settings.logo_type == 'image' and site_settings.site_logo %}
-                                <img src="{{ site_settings.site_logo }}" alt="{{ site_settings.site_title }}" class="h-8 w-auto mr-2">
+                        {% if site_settings and site_settings.logo_type %}
+                            {% if site_settings.logo_type == 'text' %}
+                                <span>{{ site_settings.site_title or 'AI Blog' }}</span>
+                            {% elif site_settings.logo_type == 'image' and site_settings.site_logo %}
+                                <img src="{{ site_settings.site_logo }}" alt="{{ site_settings.site_title or 'AI Blog' }}" class="h-8 w-auto">
                             {% elif site_settings.logo_type == 'icon' and site_settings.logo_icon %}
+                                <i data-lucide="{{ site_settings.logo_icon }}" class="w-8 h-8"></i>
+                            {% elif site_settings.logo_type == 'icon_text' and site_settings.logo_icon %}
                                 <i data-lucide="{{ site_settings.logo_icon }}" class="w-8 h-8 mr-2"></i>
-                            {% elif site_settings.logo_type == 'icon_text' %}
-                                {% if site_settings.logo_icon %}
-                                <i data-lucide="{{ site_settings.logo_icon }}" class="w-8 h-8 mr-2"></i>
-                                {% endif %}
-                                <span>{{ site_settings.site_title }}</span>
-                                {% if site_settings.site_logo %}
-                                <img src="{{ site_settings.site_logo }}" alt="{{ site_settings.site_title }}" class="h-6 w-auto ml-2">
-                                {% endif %}
+                                <span>{{ site_settings.site_title or 'AI Blog' }}</span>
                             {% else %}
-                                <span>{{ site_settings.site_title }}</span>
+                                <span>{{ site_settings.site_title or 'AI Blog' }}</span>
                             {% endif %}
                         {% else %}
                             <span>AI Blog</span>
