@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
+from sqlalchemy import and_
 from app.core.database import get_db
 from app.core.auth import get_current_user_optional
 from app.models.models import Post, Category, Page, Tag, PostTag, Settings
@@ -23,25 +24,71 @@ def get_template_context(request: Request, db: Session, current_user=None):
 
 @router.get("/post/{slug}", response_class=HTMLResponse)
 async def post_detail(request: Request, slug: str, db: Session = Depends(get_db)):
-    post = db.query(Post).filter(Post.slug == slug, Post.is_published == True).first()
-    if not post:
-        raise HTTPException(status_code=404, detail="Post not found")
-    
-    current_user = get_current_user_optional(request, db)
-    
-    # Get related posts
-    related_posts = db.query(Post).filter(
-        Post.category_id == post.category_id,
-        Post.id != post.id,
-        Post.is_published == True
-    ).limit(3).all()
-    
-    context = get_template_context(request, db, current_user)
-    context.update({
-        "post": post,
-        "related_posts": related_posts
-    })
-    return templates.TemplateResponse("blog/post_detail.html", context)
+    try:
+        post = db.query(Post).filter(Post.slug == slug, Post.is_published == True).first()
+        if not post:
+            raise HTTPException(status_code=404, detail="Post not found")
+        
+        current_user = get_current_user_optional(request, db)
+        
+        # Get context with settings
+        context = get_template_context(request, db, current_user)
+        
+        # Get sidebar data safely
+        categories_data = []
+        popular_posts = []
+        tags = []
+        
+        try:
+            # Get categories with post counts
+            categories = db.query(Category).all()
+            for category in categories:
+                post_count = db.query(Post).filter(
+                    Post.category_id == category.id,
+                    Post.is_published == True
+                ).count()
+                categories_data.append({
+                    'id': category.id,
+                    'name': category.name,
+                    'slug': category.slug,
+                    'post_count': post_count
+                })
+        except:
+            categories_data = []
+        
+        try:
+            # Get popular posts (recent published posts)
+            popular_posts = db.query(Post).filter(
+                Post.is_published == True
+            ).order_by(Post.created_at.desc()).limit(5).all()
+        except:
+            popular_posts = []
+        
+        try:
+            # Get all tags
+            tags = db.query(Tag).all()
+        except:
+            tags = []
+        
+        # Add post data and sidebar data for template
+        context.update({
+            "post": post,
+            "related_posts": [],
+            "categories": categories_data,
+            "popular_posts": popular_posts,
+            "tags": tags,
+            "archives": []
+        })
+        
+        return templates.TemplateResponse("blog/post_detail.html", context)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Post detail error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.get("/categories", response_class=HTMLResponse)
 async def categories_list(request: Request, db: Session = Depends(get_db)):
@@ -111,6 +158,32 @@ async def about_page(request: Request, db: Session = Depends(get_db)):
     
     context = get_template_context(request, db, current_user)
     return templates.TemplateResponse("blog/about.html", context)
+
+@router.get("/archive/{year}/{month}", response_class=HTMLResponse)
+async def archive_posts(request: Request, year: str, month: str, db: Session = Depends(get_db)):
+    """Show posts from a specific month and year"""
+    from sqlalchemy import func
+    
+    posts = db.query(Post).filter(
+        func.strftime('%Y', Post.created_at) == year,
+        func.strftime('%m', Post.created_at) == month,
+        Post.is_published == True
+    ).order_by(Post.created_at.desc()).all()
+    
+    current_user = get_current_user_optional(request, db)
+    
+    month_names = ['', 'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran', 
+                   'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık']
+    
+    context = get_template_context(request, db, current_user)
+    context.update({
+        "posts": posts,
+        "year": year,
+        "month": month,
+        "month_name": month_names[int(month)],
+        "archive_title": f"{month_names[int(month)]} {year} Arşivi"
+    })
+    return templates.TemplateResponse("blog/archive.html", context)
 
 @router.get("/sitemap.xml")
 async def sitemap(request: Request, db: Session = Depends(get_db)):

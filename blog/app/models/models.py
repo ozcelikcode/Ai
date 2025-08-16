@@ -145,6 +145,7 @@ class Settings(Base):
     footer_column_2 = Column(Text, nullable=True)
     footer_column_3 = Column(Text, nullable=True)
     footer_column_order = Column(String(20), default="1,2,3")
+    navbar_config = Column(Text, nullable=True)  # JSON config for navbar menu items
     comment_limit = Column(Integer, default=500)
     ai_prompt = Column(Text, default="Write a blog post about the given topic")
     ai_content_length = Column(String(50), default="medium")

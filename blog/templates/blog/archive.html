@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}{{ archive_title }} - {{ site_settings.site_title if site_settings else 'AI Blog' }}{% endblock %}
+
+{% block content %}
+<section class="py-16">
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+            <h1 class="text-4xl font-bold text-brown-900 mb-4">{{ archive_title }}</h1>
+            <p class="text-brown-600">{{ posts|length }} yazı bulundu</p>
+        </div>
+
+        {% if posts %}
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {% for post in posts %}
+            <article class="bg-white rounded-xl shadow-lg overflow-hidden hover-lift transition-smooth">
+                {% if post.featured_image %}
+                <img src="{{ post.featured_image }}" alt="{{ post.title }}" 
+                     class="w-full h-48 object-cover">
+                {% else %}
+                <div class="w-full h-48 bg-gradient-to-br from-cream-200 to-brown-200 flex items-center justify-center">
+                    <i data-lucide="file-text" class="w-12 h-12 text-brown-500"></i>
+                </div>
+                {% endif %}
+                
+                <div class="p-6">
+                    {% if post.category %}
+                    <a href="/category/{{ post.category.slug }}" 
+                       class="inline-block bg-brown-600 text-white px-3 py-1 rounded-full text-xs mb-3 hover:bg-brown-700 transition-smooth">
+                        {{ post.category.name }}
+                    </a>
+                    {% endif %}
+                    
+                    <h2 class="text-xl font-bold text-brown-900 mb-3 hover:text-brown-700 transition-smooth">
+                        <a href="/post/{{ post.slug }}">{{ post.title }}</a>
+                    </h2>
+                    
+                    {% if post.excerpt %}
+                    <p class="text-brown-700 mb-4">{{ post.excerpt[:150] }}...</p>
+                    {% endif %}
+                    
+                    <div class="flex items-center justify-between text-sm text-brown-600">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                            <span>{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                        </div>
+                        
+                        {% if post.reading_time %}
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="clock" class="w-4 h-4"></i>
+                            <span>{{ post.reading_time }} dk</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </article>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i data-lucide="archive" class="w-16 h-16 text-brown-400 mx-auto mb-4"></i>
+            <h2 class="text-2xl font-semibold text-brown-700 mb-2">Bu dönemde yazı bulunamadı</h2>
+            <p class="text-brown-600 mb-6">{{ month_name }} {{ year }} dönemine ait henüz bir yazı yayınlanmamış.</p>
+            <a href="/" class="bg-brown-600 text-white px-6 py-3 rounded-lg hover:bg-brown-700 transition-smooth">
+                Ana Sayfaya Dön
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</section>
+{% endblock %}

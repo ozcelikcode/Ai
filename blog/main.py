@@ -22,15 +22,22 @@ templates = Jinja2Templates(directory="templates")
 
 # Jinja2 filter'ları ekle
 from app.utils.helpers import strip_html_tags, get_excerpt
+import json
+
 templates.env.filters['strip_html'] = strip_html_tags
 templates.env.filters['excerpt'] = get_excerpt
+templates.env.filters['from_json'] = lambda x: json.loads(x) if x else []
 
-# Global template context processor
+# Global template context processor - simplified
 @app.middleware("http")
 async def add_site_settings_to_templates(request, call_next):
     """Add site settings to all template contexts"""
-    response = await call_next(request)
-    return response
+    try:
+        response = await call_next(request)
+        return response
+    except Exception as e:
+        print(f"Middleware error: {e}")
+        raise
 
 # Override TemplateResponse to include site settings
 original_template_response = templates.TemplateResponse

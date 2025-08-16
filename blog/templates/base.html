@@ -133,10 +133,23 @@
                     </a>
                 </div>
                 
-                <div class="hidden md:flex items-center space-x-8">
-                    <a href="/" class="text-brown-700 hover:text-brown-900 transition-smooth">Ana Sayfa</a>
-                    <a href="/categories" class="text-brown-700 hover:text-brown-900 transition-smooth">Kategoriler</a>
-                    <a href="/about" class="text-brown-700 hover:text-brown-900 transition-smooth">Hakkında</a>
+                <div class="hidden md:flex items-center space-x-1">
+                    {% if false %}
+                        <!-- Navbar config disabled for now -->
+                    {% else %}
+                        <a href="/" class="px-4 py-2 text-brown-700 hover:text-brown-900 hover:bg-brown-50 rounded-lg transition-smooth flex items-center space-x-2">
+                            <i data-lucide="home" class="w-4 h-4"></i>
+                            <span>Ana Sayfa</span>
+                        </a>
+                        <a href="/categories" class="px-4 py-2 text-brown-700 hover:text-brown-900 hover:bg-brown-50 rounded-lg transition-smooth flex items-center space-x-2">
+                            <i data-lucide="folder" class="w-4 h-4"></i>
+                            <span>Kategoriler</span>
+                        </a>
+                        <a href="/about" class="px-4 py-2 text-brown-700 hover:text-brown-900 hover:bg-brown-50 rounded-lg transition-smooth flex items-center space-x-2">
+                            <i data-lucide="info" class="w-4 h-4"></i>
+                            <span>Hakkında</span>
+                        </a>
+                    {% endif %}
                 </div>
                 
                 <div class="flex items-center space-x-4">

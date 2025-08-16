@@ -666,6 +666,7 @@ async def save_customization(
     logo_type: str = Form("text"),
     logo_icon: str = Form(""),
     site_logo: str = Form(""),
+    navbar_config: str = Form(""),
     footer_copyright: str = Form(""),
     footer_column_1: str = Form(""),
     footer_column_2: str = Form(""),
@@ -726,6 +727,7 @@ async def save_customization(
         elif site_logo and site_logo.strip():
             settings.site_logo = site_logo.strip()
     
+    settings.navbar_config = navbar_config.strip() if navbar_config.strip() else None
     settings.footer_copyright = footer_copyright.strip() if footer_copyright.strip() else None
     settings.footer_column_1 = footer_column_1.strip() if footer_column_1.strip() else None
     settings.footer_column_2 = footer_column_2.strip() if footer_column_2.strip() else None

@@ -147,6 +147,113 @@
             </div>
         </div>
 
+        <!-- Navbar Özelleştirme -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
+                <i data-lucide="menu" class="w-5 h-5 mr-2"></i>
+                Navbar Özelleştirme
+            </h3>
+            
+            <div class="space-y-6">
+                <!-- Navbar Menu Items Editor -->
+                <div>
+                    <label class="block text-brown-700 font-medium mb-4">Menü Öğeleri</label>
+                    
+                    <div id="navbar-items-gui" class="space-y-2 mb-4">
+                        <!-- Default menu items -->
+                        <div class="navbar-item bg-white border-2 border-cream-300 rounded-lg p-3 flex items-center gap-2" draggable="true">
+                            <i data-lucide="grip-vertical" class="w-4 h-4 text-brown-500 cursor-move"></i>
+                            <input type="text" placeholder="Metin" value="Ana Sayfa" class="flex-1 px-2 py-1 text-sm border rounded">
+                            <input type="text" placeholder="Link" value="/" class="flex-1 px-2 py-1 text-sm border rounded">
+                            <select class="px-2 py-1 text-sm border rounded">
+                                <option value="">İkon Yok</option>
+                                <option value="home" selected>home</option>
+                                <option value="file-text">file-text</option>
+                                <option value="folder">folder</option>
+                                <option value="tag">tag</option>
+                                <option value="user">user</option>
+                                <option value="mail">mail</option>
+                                <option value="info">info</option>
+                            </select>
+                            <button type="button" onclick="removeNavbarItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
+                                <i data-lucide="x" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="navbar-item bg-white border-2 border-cream-300 rounded-lg p-3 flex items-center gap-2" draggable="true">
+                            <i data-lucide="grip-vertical" class="w-4 h-4 text-brown-500 cursor-move"></i>
+                            <input type="text" placeholder="Metin" value="Kategoriler" class="flex-1 px-2 py-1 text-sm border rounded">
+                            <input type="text" placeholder="Link" value="/categories" class="flex-1 px-2 py-1 text-sm border rounded">
+                            <select class="px-2 py-1 text-sm border rounded">
+                                <option value="">İkon Yok</option>
+                                <option value="home">home</option>
+                                <option value="file-text">file-text</option>
+                                <option value="folder" selected>folder</option>
+                                <option value="tag">tag</option>
+                                <option value="user">user</option>
+                                <option value="mail">mail</option>
+                                <option value="info">info</option>
+                            </select>
+                            <button type="button" onclick="removeNavbarItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
+                                <i data-lucide="x" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="navbar-item bg-white border-2 border-cream-300 rounded-lg p-3 flex items-center gap-2" draggable="true">
+                            <i data-lucide="grip-vertical" class="w-4 h-4 text-brown-500 cursor-move"></i>
+                            <input type="text" placeholder="Metin" value="Hakkında" class="flex-1 px-2 py-1 text-sm border rounded">
+                            <input type="text" placeholder="Link" value="/about" class="flex-1 px-2 py-1 text-sm border rounded">
+                            <select class="px-2 py-1 text-sm border rounded">
+                                <option value="">İkon Yok</option>
+                                <option value="home">home</option>
+                                <option value="file-text">file-text</option>
+                                <option value="folder">folder</option>
+                                <option value="tag">tag</option>
+                                <option value="user">user</option>
+                                <option value="mail">mail</option>
+                                <option value="info" selected>info</option>
+                            </select>
+                            <button type="button" onclick="removeNavbarItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
+                                <i data-lucide="x" class="w-3 h-3"></i>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <button type="button" onclick="addNavbarItem()" 
+                            class="w-full px-4 py-2 bg-cream-100 text-brown-700 rounded-lg hover:bg-cream-200 transition-smooth flex items-center justify-center">
+                        <i data-lucide="plus" class="w-4 h-4 mr-2"></i>
+                        Yeni Menü Öğesi Ekle
+                    </button>
+                    
+                    <!-- Hidden input for navbar configuration -->
+                    <input type="hidden" name="navbar_config" id="navbar-config-data">
+                    
+                    <div class="mt-3 text-sm text-brown-600">
+                        <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
+                        Sürükle-bırak ile sıralayın, menü öğelerini düzenleyin
+                    </div>
+                </div>
+                
+                <!-- Navbar Preview -->
+                <div class="border-t border-cream-200 pt-4">
+                    <label class="block text-brown-700 font-medium mb-2">Navbar Önizleme</label>
+                    <div class="bg-brown-900 text-cream-100 p-4 rounded-lg">
+                        <nav class="flex items-center justify-between">
+                            <div class="flex items-center space-x-1">
+                                <span class="text-xl font-bold mr-6">Logo</span>
+                                <div id="navbar-preview" class="flex items-center space-x-1">
+                                    <!-- Preview items will be generated here -->
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <button class="px-4 py-2 bg-cream-100 text-brown-900 rounded-lg text-sm">Giriş Yap</button>
+                            </div>
+                        </nav>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Footer Özelleştirme -->
         <div class="bg-white rounded-xl shadow-lg p-6">
             <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
@@ -166,13 +273,13 @@
                 
                 <!-- Footer Columns GUI Editor -->
                 <div>
-                    <label class="block text-brown-700 font-medium mb-4">Footer Kolonları (Görsel Editör)</label>
+                    <label class="block text-brown-700 font-medium mb-4">Footer Kolonları</label>
                     
                     <div id="footer-columns-gui" class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <!-- Column 1 -->
                         <div class="footer-column-gui bg-white border-2 border-cream-300 rounded-lg p-4 cursor-move" data-column="1">
                             <div class="flex items-center justify-between mb-3">
-                                <input type="text" name="column_1_title" value="Hızlı Linkler" 
+                                <input type="text" name="column_1_title" value="Linkler" 
                                        class="font-medium text-brown-900 bg-transparent border-none outline-none flex-1">
                                 <div class="flex items-center gap-2">
                                     <i data-lucide="grip-vertical" class="w-4 h-4 text-brown-500 cursor-move"></i>
@@ -183,23 +290,23 @@
                             </div>
                             <div id="column-1-items" class="space-y-2">
                                 <div class="flex items-center gap-2 column-item">
-                                    <input type="text" placeholder="Link metni" value="Ana Sayfa" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <input type="text" placeholder="URL" value="/" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                    <input type="text" placeholder="Metin" value="Ana Sayfa" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <input type="text" placeholder="Link" value="/" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
                                         <i data-lucide="x" class="w-3 h-3"></i>
                                     </button>
                                 </div>
                                 <div class="flex items-center gap-2 column-item">
-                                    <input type="text" placeholder="Link metni" value="Kategoriler" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <input type="text" placeholder="URL" value="/categories" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                    <input type="text" placeholder="Metin" value="Kategoriler" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <input type="text" placeholder="Link" value="/categories" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
                                         <i data-lucide="x" class="w-3 h-3"></i>
                                     </button>
                                 </div>
                                 <div class="flex items-center gap-2 column-item">
-                                    <input type="text" placeholder="Link metni" value="Hakkında" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <input type="text" placeholder="URL" value="/about" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                    <input type="text" placeholder="Metin" value="Hakkında" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <input type="text" placeholder="Link" value="/about" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
                                         <i data-lucide="x" class="w-3 h-3"></i>
                                     </button>
                                 </div>
@@ -220,23 +327,23 @@
                             </div>
                             <div id="column-2-items" class="space-y-2">
                                 <div class="flex items-center gap-2 column-item">
-                                    <input type="text" placeholder="Link metni" value="İletişim" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <input type="text" placeholder="URL" value="/contact" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                    <input type="text" placeholder="Metin" value="İletişim" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <input type="text" placeholder="Link" value="/contact" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
                                         <i data-lucide="x" class="w-3 h-3"></i>
                                     </button>
                                 </div>
                                 <div class="flex items-center gap-2 column-item">
-                                    <input type="text" placeholder="Link metni" value="Gizlilik" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <input type="text" placeholder="URL" value="/privacy" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                    <input type="text" placeholder="Metin" value="Gizlilik" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <input type="text" placeholder="Link" value="/privacy" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
                                         <i data-lucide="x" class="w-3 h-3"></i>
                                     </button>
                                 </div>
                                 <div class="flex items-center gap-2 column-item">
-                                    <input type="text" placeholder="Link metni" value="Kullanım Şartları" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <input type="text" placeholder="URL" value="/terms" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                    <input type="text" placeholder="Metin" value="Kullanım Şartları" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <input type="text" placeholder="Link" value="/terms" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
                                         <i data-lucide="x" class="w-3 h-3"></i>
                                     </button>
                                 </div>
@@ -246,7 +353,7 @@
                         <!-- Column 3 -->
                         <div class="footer-column-gui bg-white border-2 border-cream-300 rounded-lg p-4 cursor-move" data-column="3">
                             <div class="flex items-center justify-between mb-3">
-                                <input type="text" name="column_3_title" value="Sosyal Medya" 
+                                <input type="text" name="column_3_title" value="Sosyal" 
                                        class="font-medium text-brown-900 bg-transparent border-none outline-none flex-1">
                                 <div class="flex items-center gap-2">
                                     <i data-lucide="grip-vertical" class="w-4 h-4 text-brown-500 cursor-move"></i>
@@ -264,8 +371,8 @@
                                         <option value="linkedin">LinkedIn</option>
                                         <option value="youtube">YouTube</option>
                                     </select>
-                                    <input type="text" placeholder="URL" value="#" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                    <input type="text" placeholder="Link" value="#" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
                                         <i data-lucide="x" class="w-3 h-3"></i>
                                     </button>
                                 </div>
@@ -277,8 +384,8 @@
                                         <option value="linkedin">LinkedIn</option>
                                         <option value="youtube">YouTube</option>
                                     </select>
-                                    <input type="text" placeholder="URL" value="#" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                    <input type="text" placeholder="Link" value="#" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
                                         <i data-lucide="x" class="w-3 h-3"></i>
                                     </button>
                                 </div>
@@ -290,8 +397,8 @@
                                         <option value="linkedin">LinkedIn</option>
                                         <option value="youtube">YouTube</option>
                                     </select>
-                                    <input type="text" placeholder="URL" value="#" class="flex-1 px-2 py-1 text-sm border rounded">
-                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+                                    <input type="text" placeholder="Link" value="#" class="flex-1 px-2 py-1 text-sm border rounded">
+                                    <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
                                         <i data-lucide="x" class="w-3 h-3"></i>
                                     </button>
                                 </div>
@@ -307,7 +414,7 @@
                     
                     <div class="mt-3 text-sm text-brown-600">
                         <i data-lucide="info" class="w-4 h-4 inline mr-1"></i>
-                        Görsel editör ile footer'ınızı kolayca düzenleyebilirsiniz. + butonlarıyla yeni öğe ekleyebilirsiniz.
+                        Sürükle-bırak ile sıralayın, + ile öğe ekleyin
                     </div>
                 </div>
                 
@@ -389,6 +496,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Footer drag & drop and preview
     initializeFooterEditor();
+    
+    // Navbar drag & drop and preview
+    initializeNavbarEditor();
     
     toggleLogoFields();
 });
@@ -506,24 +616,32 @@ function selectMedia(filePath) {
 
 // Footer GUI Editor Functions
 function initializeFooterEditor() {
+    console.log('Initializing Footer Editor...');
+    
     // Initialize drag and drop
     initializeFooterDragAndDrop();
     
-    // Initialize preview
-    updateFooterPreview();
+    // Add listeners to all GUI inputs FIRST
+    addFooterListeners();
     
     // Add event listeners for real-time preview
     const copyrightInput = document.querySelector('input[name="footer_copyright"]');
-    
     if (copyrightInput) {
         copyrightInput.addEventListener('input', updateFooterPreview);
     }
     
-    // Add listeners to all GUI inputs
-    addFooterListeners();
+    // Add listeners to column title inputs
+    document.querySelectorAll('input[name^="column_"][name$="_title"]').forEach(input => {
+        input.addEventListener('input', updateFooterPreview);
+    });
+    
+    // Initialize preview
+    updateFooterPreview();
     
     // Initialize form data generation before submit
     document.querySelector('form').addEventListener('submit', generateFooterData);
+    
+    console.log('Footer Editor initialized successfully');
 }
 
 function initializeFooterDragAndDrop() {
@@ -596,11 +714,24 @@ function updateColumnOrder() {
 }
 
 function addFooterListeners() {
+    console.log('Adding footer listeners...');
+    
     // Add listeners to all inputs in GUI
-    document.querySelectorAll('#footer-columns-gui input, #footer-columns-gui select').forEach(input => {
-        input.addEventListener('input', updateFooterPreview);
-        input.addEventListener('change', updateFooterPreview);
+    const elements = document.querySelectorAll('#footer-columns-gui input, #footer-columns-gui select');
+    console.log(`Found ${elements.length} elements to add listeners to`);
+    
+    elements.forEach((input, index) => {
+        input.addEventListener('input', function() {
+            console.log(`Input ${index} changed:`, this.value);
+            updateFooterPreview();
+        });
+        input.addEventListener('change', function() {
+            console.log(`Change ${index} triggered:`, this.value);
+            updateFooterPreview();
+        });
     });
+    
+    console.log('Footer listeners added successfully');
 }
 
 function addColumnItem(columnNumber) {
@@ -608,9 +739,9 @@ function addColumnItem(columnNumber) {
     const newItem = document.createElement('div');
     newItem.className = 'flex items-center gap-2 column-item';
     newItem.innerHTML = `
-        <input type="text" placeholder="Link metni" class="flex-1 px-2 py-1 text-sm border rounded">
-        <input type="text" placeholder="URL" class="flex-1 px-2 py-1 text-sm border rounded">
-        <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+        <input type="text" placeholder="Metin" class="flex-1 px-2 py-1 text-sm border rounded">
+        <input type="text" placeholder="Link" class="flex-1 px-2 py-1 text-sm border rounded">
+        <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
             <i data-lucide="x" class="w-3 h-3"></i>
         </button>
     `;
@@ -618,7 +749,11 @@ function addColumnItem(columnNumber) {
     
     // Add listeners to new inputs
     newItem.querySelectorAll('input').forEach(input => {
-        input.addEventListener('input', updateFooterPreview);
+        input.addEventListener('input', function() {
+            console.log('New item input changed:', this.value);
+            updateFooterPreview();
+        });
+        input.addEventListener('change', updateFooterPreview);
     });
     
     lucide.createIcons();
@@ -637,8 +772,8 @@ function addSocialIcon(columnNumber) {
             <option value="linkedin">LinkedIn</option>
             <option value="youtube">YouTube</option>
         </select>
-        <input type="text" placeholder="URL" class="flex-1 px-2 py-1 text-sm border rounded">
-        <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 p-1 flex-shrink-0">
+        <input type="text" placeholder="Link" class="flex-1 px-2 py-1 text-sm border rounded">
+        <button type="button" onclick="removeColumnItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
             <i data-lucide="x" class="w-3 h-3"></i>
         </button>
     `;
@@ -646,8 +781,14 @@ function addSocialIcon(columnNumber) {
     
     // Add listeners to new inputs
     newItem.querySelectorAll('input, select').forEach(input => {
-        input.addEventListener('input', updateFooterPreview);
-        input.addEventListener('change', updateFooterPreview);
+        input.addEventListener('input', function() {
+            console.log('New social item changed:', this.value);
+            updateFooterPreview();
+        });
+        input.addEventListener('change', function() {
+            console.log('New social item changed (change event):', this.value);
+            updateFooterPreview();
+        });
     });
     
     lucide.createIcons();
@@ -655,6 +796,7 @@ function addSocialIcon(columnNumber) {
 }
 
 function removeColumnItem(button) {
+    console.log('Removing item...');
     button.closest('.column-item, .social-item').remove();
     updateFooterPreview();
 }
@@ -697,11 +839,17 @@ function generateFooterData() {
 }
 
 function updateFooterPreview() {
+    console.log('Updating footer preview...');
+    
     const copyrightText = document.querySelector('input[name="footer_copyright"]').value || 
                          '© 2024 AI Blog. Tüm hakları saklıdır.';
     
     // Update copyright
-    document.getElementById('preview-copyright').innerHTML = copyrightText;
+    const copyrightElement = document.getElementById('preview-copyright');
+    if (copyrightElement) {
+        copyrightElement.innerHTML = copyrightText;
+        console.log('Copyright updated:', copyrightText);
+    }
     
     // Update columns based on GUI
     for (let i = 1; i <= 3; i++) {
@@ -735,8 +883,204 @@ function updateFooterPreview() {
             }
         }
         
-        document.getElementById(`preview-column-${i}`).innerHTML = html;
+        const previewElement = document.getElementById(`preview-column-${i}`);
+        if (previewElement) {
+            previewElement.innerHTML = html;
+            console.log(`Column ${i} preview updated:`, html);
+        }
     }
+    
+    // Re-initialize Lucide icons in preview
+    if (typeof lucide !== 'undefined' && lucide.createIcons) {
+        lucide.createIcons();
+    }
+}
+
+// Navbar Editor Functions
+function initializeNavbarEditor() {
+    console.log('Initializing Navbar Editor...');
+    
+    // Initialize drag and drop
+    initializeNavbarDragAndDrop();
+    
+    // Add listeners to all navbar inputs
+    addNavbarListeners();
+    
+    // Initialize preview
+    updateNavbarPreview();
+    
+    // Initialize form data generation before submit
+    const form = document.querySelector('form');
+    const originalSubmit = form.onsubmit;
+    form.addEventListener('submit', function(e) {
+        generateNavbarData();
+        if (originalSubmit) originalSubmit.call(this, e);
+    });
+    
+    console.log('Navbar Editor initialized successfully');
+}
+
+function initializeNavbarDragAndDrop() {
+    const navbarItems = document.getElementById('navbar-items-gui');
+    if (!navbarItems) return;
+    
+    let draggedElement = null;
+    
+    // Add drag event listeners to items
+    function addDragListeners(item) {
+        item.addEventListener('dragstart', function(e) {
+            draggedElement = this;
+            this.style.opacity = '0.5';
+            e.dataTransfer.effectAllowed = 'move';
+        });
+        
+        item.addEventListener('dragend', function() {
+            this.style.opacity = '1';
+            draggedElement = null;
+        });
+        
+        item.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        
+        item.addEventListener('dragenter', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#b45309';
+        });
+        
+        item.addEventListener('dragleave', function() {
+            this.style.borderColor = '#d1d5db';
+        });
+        
+        item.addEventListener('drop', function(e) {
+            e.preventDefault();
+            this.style.borderColor = '#d1d5db';
+            
+            if (draggedElement && draggedElement !== this) {
+                // Insert dragged element before this element
+                this.parentNode.insertBefore(draggedElement, this);
+                
+                // Update preview
+                updateNavbarPreview();
+            }
+        });
+    }
+    
+    // Add listeners to existing items
+    const items = navbarItems.querySelectorAll('.navbar-item');
+    items.forEach(item => addDragListeners(item));
+}
+
+function addNavbarListeners() {
+    console.log('Adding navbar listeners...');
+    
+    // Add listeners to all inputs in navbar GUI
+    const elements = document.querySelectorAll('#navbar-items-gui input, #navbar-items-gui select');
+    console.log(`Found ${elements.length} navbar elements to add listeners to`);
+    
+    elements.forEach((input, index) => {
+        input.addEventListener('input', function() {
+            console.log(`Navbar input ${index} changed:`, this.value);
+            updateNavbarPreview();
+        });
+        input.addEventListener('change', function() {
+            console.log(`Navbar change ${index} triggered:`, this.value);
+            updateNavbarPreview();
+        });
+    });
+    
+    console.log('Navbar listeners added successfully');
+}
+
+function addNavbarItem() {
+    const container = document.getElementById('navbar-items-gui');
+    const newItem = document.createElement('div');
+    newItem.className = 'navbar-item bg-white border-2 border-cream-300 rounded-lg p-3 flex items-center gap-2';
+    newItem.draggable = true;
+    newItem.innerHTML = `
+        <i data-lucide="grip-vertical" class="w-4 h-4 text-brown-500 cursor-move"></i>
+        <input type="text" placeholder="Metin" class="flex-1 px-2 py-1 text-sm border rounded">
+        <input type="text" placeholder="Link" class="flex-1 px-2 py-1 text-sm border rounded">
+        <select class="px-2 py-1 text-sm border rounded">
+            <option value="">İkon Yok</option>
+            <option value="home">home</option>
+            <option value="file-text">file-text</option>
+            <option value="folder">folder</option>
+            <option value="tag">tag</option>
+            <option value="user">user</option>
+            <option value="mail">mail</option>
+            <option value="info">info</option>
+        </select>
+        <button type="button" onclick="removeNavbarItem(this)" class="text-red-600 hover:text-red-800 px-2 py-1 border border-red-300 rounded hover:bg-red-50 flex-shrink-0 flex items-center justify-center">
+            <i data-lucide="x" class="w-3 h-3"></i>
+        </button>
+    `;
+    container.appendChild(newItem);
+    
+    // Add drag listeners to new item
+    initializeNavbarDragAndDrop();
+    
+    // Add input listeners to new inputs
+    newItem.querySelectorAll('input, select').forEach(input => {
+        input.addEventListener('input', updateNavbarPreview);
+        input.addEventListener('change', updateNavbarPreview);
+    });
+    
+    lucide.createIcons();
+    updateNavbarPreview();
+}
+
+function removeNavbarItem(button) {
+    console.log('Removing navbar item...');
+    button.closest('.navbar-item').remove();
+    updateNavbarPreview();
+}
+
+function generateNavbarData() {
+    const items = document.querySelectorAll('#navbar-items-gui .navbar-item');
+    const navbarData = [];
+    
+    items.forEach(item => {
+        const inputs = item.querySelectorAll('input');
+        const select = item.querySelector('select');
+        
+        navbarData.push({
+            text: inputs[0].value,
+            link: inputs[1].value,
+            icon: select.value
+        });
+    });
+    
+    document.getElementById('navbar-config-data').value = JSON.stringify(navbarData);
+}
+
+function updateNavbarPreview() {
+    console.log('Updating navbar preview...');
+    
+    const previewContainer = document.getElementById('navbar-preview');
+    if (!previewContainer) return;
+    
+    const items = document.querySelectorAll('#navbar-items-gui .navbar-item');
+    let html = '';
+    
+    items.forEach(item => {
+        const inputs = item.querySelectorAll('input');
+        const select = item.querySelector('select');
+        
+        const text = inputs[0].value || 'Menu Item';
+        const link = inputs[1].value || '#';
+        const icon = select.value;
+        
+        html += `<a href="${link}" class="px-4 py-2 text-cream-100 hover:bg-brown-800 rounded-lg transition-smooth flex items-center space-x-2">`;
+        if (icon) {
+            html += `<i data-lucide="${icon}" class="w-4 h-4"></i>`;
+        }
+        html += `<span>${text}</span>`;
+        html += `</a>`;
+    });
+    
+    previewContainer.innerHTML = html;
     
     // Re-initialize Lucide icons in preview
     if (typeof lucide !== 'undefined' && lucide.createIcons) {

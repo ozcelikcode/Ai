@@ -5,7 +5,78 @@
 
 {% block content %}
 <article class="py-16">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            <!-- Sol Sidebar -->
+            <aside class="lg:col-span-4">
+                <div class="sticky top-24">
+                    <!-- Tüm İçerik Tek Container'da -->
+                    <div class="bg-cream-50 rounded-2xl shadow-sm border border-cream-100 p-8 space-y-8">
+                        
+                        <!-- Kategoriler -->
+                        <div>
+                            <h3 class="text-xl font-semibold text-brown-800 mb-4 flex items-center">
+                                <i data-lucide="folder" class="w-5 h-5 mr-3 text-brown-600"></i>
+                                Kategoriler
+                            </h3>
+                            <ul class="space-y-2">
+                                {% for category in categories %}
+                                <li>
+                                    <a href="/category/{{ category.slug }}" 
+                                       class="flex items-center justify-between py-2 px-3 text-base text-brown-700 hover:text-brown-900 hover:bg-cream-100 rounded-lg transition-smooth {% if post.category and post.category.id == category.id %}font-semibold text-brown-900 bg-cream-100{% endif %}">
+                                        <span>{{ category.name }}</span>
+                                        <span class="text-sm text-brown-500 bg-white px-2 py-1 rounded-full">({{ category.post_count }})</span>
+                                    </a>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        
+                        <!-- Popüler Yazılar -->
+                        <div>
+                            <h3 class="text-xl font-semibold text-brown-800 mb-4 flex items-center">
+                                <i data-lucide="trending-up" class="w-5 h-5 mr-3 text-brown-600"></i>
+                                Popüler Yazılar
+                            </h3>
+                            <div class="space-y-4">
+                                {% for popular_post in popular_posts %}
+                                <article class="pb-4 border-b border-cream-200 last:border-0 last:pb-0">
+                                    <h4 class="text-base font-semibold text-brown-900 mb-2 leading-snug hover:text-brown-700 transition-smooth">
+                                        <a href="/post/{{ popular_post.slug }}">{{ popular_post.title[:60] }}{% if popular_post.title|length > 60 %}...{% endif %}</a>
+                                    </h4>
+                                    <div class="flex items-center text-sm text-brown-600">
+                                        <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                                        <span>{{ popular_post.created_at.strftime('%d.%m.%Y') }}</span>
+                                    </div>
+                                </article>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        
+                        <!-- Etiketler -->
+                        {% if tags %}
+                        <div>
+                            <h3 class="text-xl font-semibold text-brown-800 mb-4 flex items-center">
+                                <i data-lucide="tag" class="w-5 h-5 mr-3 text-brown-600"></i>
+                                Etiketler
+                            </h3>
+                            <div class="flex flex-wrap gap-2">
+                                {% for tag in tags %}
+                                <a href="/tag/{{ tag.slug }}" 
+                                   class="inline-block bg-white text-brown-600 px-3 py-2 rounded-lg text-sm font-medium hover:bg-brown-100 hover:text-brown-800 transition-smooth border border-cream-200 shadow-sm">
+                                    {{ tag.name }}
+                                </a>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        {% endif %}
+                        
+                    </div>
+                </div>
+            </aside>
+            
+            <!-- Ana İçerik -->
+            <div class="lg:col-span-8">
         <!-- Post Header -->
         <header class="mb-8">
             {% if post.category %}
@@ -185,6 +256,8 @@
             </div>
         </section>
         {% endif %}
+            </div>
+        </div>
     </div>
 </article>
 

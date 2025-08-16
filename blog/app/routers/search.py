@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Request, Query
+from fastapi import APIRouter, Depends, Request, Query, HTTPException
 from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
@@ -30,22 +30,39 @@ async def search_page(
     db: Session = Depends(get_db)
 ):
     """Search page with results"""
-    current_user = get_current_user_optional(request, db)
-    results = []
-    categories = db.query(Category).all()
-    
-    if q.strip():
-        results = search_posts(db, q, category)
-    
-    context = get_template_context(request, db, current_user)
-    context.update({
-        "query": q,
-        "category_filter": category,
-        "results": results,
-        "categories": categories,
-        "result_count": len(results)
-    })
-    return templates.TemplateResponse("blog/search.html", context)
+    try:
+        current_user = get_current_user_optional(request, db)
+        results = []
+        categories = []
+        
+        # Get categories safely
+        try:
+            categories = db.query(Category).all()
+        except:
+            categories = []
+        
+        # Search if query provided
+        if q.strip():
+            try:
+                results = search_posts(db, q, category)
+            except:
+                results = []
+        
+        context = get_template_context(request, db, current_user)
+        context.update({
+            "query": q,
+            "category_filter": category,
+            "results": results,
+            "categories": categories,
+            "result_count": len(results)
+        })
+        return templates.TemplateResponse("blog/search.html", context)
+        
+    except Exception as e:
+        print(f"Search page error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Search error")
 
 @router.get("/api/search")
 async def search_api(
@@ -83,44 +100,39 @@ async def search_api(
     })
 
 def search_posts(db: Session, query: str, category_filter: Optional[str] = None, limit: int = 50):
-    """Search posts by title, content, and tags"""
-    search_terms = query.strip().split()
-    
-    # Base query for published posts
-    base_query = db.query(Post).filter(Post.is_published == True)
-    
-    # Category filter
-    if category_filter:
-        category = db.query(Category).filter(Category.slug == category_filter).first()
-        if category:
-            base_query = base_query.filter(Post.category_id == category.id)
-    
-    # Search conditions
-    search_conditions = []
-    
-    for term in search_terms:
-        term_pattern = f"%{term}%"
+    """Search posts by title, content, and tags - simplified"""
+    try:
+        search_pattern = f"%{query.strip()}%"
         
-        # Search in title, content, excerpt
-        content_conditions = [
-            Post.title.ilike(term_pattern),
-            Post.content.ilike(term_pattern),
-            Post.excerpt.ilike(term_pattern)
-        ]
+        # Base query for published posts
+        base_query = db.query(Post).filter(Post.is_published == True)
         
-        search_conditions.append(or_(*content_conditions))
-    
-    # Combine all search terms with AND
-    if search_conditions:
-        base_query = base_query.filter(and_(*search_conditions))
-    
-    # Order by relevance (title matches first, then by date)
-    results = base_query.order_by(
-        Post.title.ilike(f"%{query}%").desc(),
-        Post.created_at.desc()
-    ).limit(limit).all()
-    
-    return results
+        # Category filter
+        if category_filter:
+            try:
+                category = db.query(Category).filter(Category.slug == category_filter).first()
+                if category:
+                    base_query = base_query.filter(Post.category_id == category.id)
+            except:
+                pass
+        
+        # Simple search in title and content
+        try:
+            results = base_query.filter(
+                or_(
+                    Post.title.ilike(search_pattern),
+                    Post.content.ilike(search_pattern)
+                )
+            ).order_by(Post.created_at.desc()).limit(limit).all()
+            
+            return results
+        except Exception as e:
+            print(f"Search query error: {e}")
+            return []
+            
+    except Exception as e:
+        print(f"Search function error: {e}")
+        return []
 
 @router.get("/api/search/suggestions")
 async def search_suggestions(
