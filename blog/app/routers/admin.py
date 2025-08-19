@@ -355,33 +355,58 @@ async def create_category(
     request: Request,
     name: str = Form(...),
     description: str = Form(""),
+    is_default: bool = Form(False),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
     slug = generate_slug(name, db, model=Category)
     
+    # If this category is set as default, remove default from others
+    if is_default:
+        db.query(Category).update({"is_default": False})
+        db.commit()
+    
     category = Category(
         name=name,
         slug=slug,
-        description=description
+        description=description,
+        is_default=is_default
     )
     
     db.add(category)
     db.commit()
     
-    return RedirectResponse(url="/admin/categories", status_code=303)
+    return RedirectResponse(url="/admin/categories?success=created", status_code=303)
 
 @router.post("/categories/{category_id}/edit")
 async def edit_category(
     category_id: int,
     name: str = Form(...),
     description: str = Form(""),
+    is_default: bool = Form(False),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
     category = db.query(Category).filter(Category.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
+    
+    # Check if trying to remove default from the last default category
+    if category.is_default and not is_default:
+        other_defaults = db.query(Category).filter(
+            Category.is_default == True,
+            Category.id != category_id
+        ).count()
+        
+        if other_defaults == 0:
+            return RedirectResponse(
+                url="/admin/categories?error=last_default", 
+                status_code=303
+            )
+    
+    # If this category is set as default, remove default from others
+    if is_default:
+        db.query(Category).filter(Category.id != category_id).update({"is_default": False})
     
     # Update slug if name changed
     if category.name != name:
@@ -389,21 +414,61 @@ async def edit_category(
     
     category.name = name
     category.description = description
+    category.is_default = is_default
     
     db.commit()
     
-    return RedirectResponse(url="/admin/categories", status_code=303)
+    return RedirectResponse(url="/admin/categories?success=updated", status_code=303)
 
 @router.post("/categories/{category_id}/delete")
-async def delete_category(category_id: int, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+async def delete_category(
+    category_id: int, 
+    replacement_category: int = Form(...),
+    admin_user: User = Depends(get_admin_user), 
+    db: Session = Depends(get_db)
+):
+    # Get the category to delete
     category = db.query(Category).filter(Category.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
     
+    # Check if it's a default category
+    if category.is_default:
+        return RedirectResponse(
+            url="/admin/categories?error=delete_default", 
+            status_code=303
+        )
+    
+    # Get replacement category
+    replacement = db.query(Category).filter(Category.id == replacement_category).first()
+    if not replacement:
+        return RedirectResponse(
+            url="/admin/categories?error=invalid_replacement", 
+            status_code=303
+        )
+    
+    # Update all posts in this category to use replacement category
+    db.query(Post).filter(Post.category_id == category_id).update({"category_id": replacement_category})
+    
+    # Delete the category
     db.delete(category)
     db.commit()
     
-    return RedirectResponse(url="/admin/categories", status_code=303)
+    return RedirectResponse(url="/admin/categories?success=deleted", status_code=303)
+
+# API Routes for categories
+@router.get("/api/categories")
+async def get_categories_api(admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    """Get all categories for API usage"""
+    categories = db.query(Category).all()
+    return JSONResponse({
+        "success": True,
+        "categories": [{
+            "id": category.id,
+            "name": category.name,
+            "is_default": category.is_default
+        } for category in categories]
+    })
 
 # Page Management Routes
 @router.get("/pages", response_class=HTMLResponse)
