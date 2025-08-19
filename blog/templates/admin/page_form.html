@@ -418,6 +418,52 @@ document.getElementById('close-ai-modal').addEventListener('click', function() {
     document.getElementById('ai-modal').classList.add('hidden');
 });
 
+// Format text content for display
+function formatTextContent(text) {
+    if (!text) return '';
+    
+    // Convert line breaks to HTML paragraphs for display
+    return text
+        .split('\n\n')
+        .filter(paragraph => paragraph.trim())
+        .map(paragraph => `<p class="mb-3">${paragraph.trim().replace(/\n/g, '<br>')}</p>`)
+        .join('');
+}
+
+// Convert plain text to proper HTML for WYSIWYG editor
+function convertPlainTextToHTML(text) {
+    if (!text) return '';
+    
+    // Split by double line breaks to get paragraphs
+    const paragraphs = text.split('\n\n').filter(p => p.trim());
+    
+    let html = '';
+    
+    paragraphs.forEach(paragraph => {
+        const trimmed = paragraph.trim();
+        
+        // Check if it's a title/heading (simple heuristics)
+        if (trimmed.length < 100 && (
+            trimmed.includes('Başlık') ||
+            trimmed.includes('Giriş') ||
+            trimmed.includes('Sonuç') ||
+            trimmed.includes('Nedir') ||
+            trimmed.includes('Nasıl') ||
+            trimmed.includes('Ne') ||
+            /^[A-ZÇĞIıÖŞÜ][^.]*[^.]$/.test(trimmed) // Starts with capital, no period at end
+        )) {
+            // Make it a heading
+            html += `<h2>${trimmed}</h2>`;
+        } else {
+            // Regular paragraph - replace single line breaks with <br>
+            const formattedText = trimmed.replace(/\n/g, '<br>');
+            html += `<p>${formattedText}</p>`;
+        }
+    });
+    
+    return html;
+}
+
 // AI ile sayfa içeriği oluşturma
 async function generatePageWithAI(type) {
     const topic = document.getElementById('ai-page-topic').value;
@@ -474,10 +520,10 @@ async function generatePageWithAI(type) {
                 if (type === 'title') {
                     content = `<h3 class="font-semibold text-lg mb-2">Önerilen Başlık:</h3><p class="text-gray-700">${result.data.title || ''}</p>`;
                 } else if (type === 'content') {
-                    content = `<h3 class="font-semibold text-lg mb-2">Önerilen İçerik:</h3><div class="text-gray-700">${result.data.content || ''}</div>`;
+                    content = `<h3 class="font-semibold text-lg mb-2">Önerilen İçerik:</h3><div class="text-gray-700">${formatTextContent(result.data.content || '')}</div>`;
                 } else if (type === 'full') {
                     content = `<h3 class="font-semibold text-lg mb-2">Önerilen Başlık:</h3><p class="text-gray-700 mb-4">${result.data.title || ''}</p>
-                              <h3 class="font-semibold text-lg mb-2">Önerilen İçerik:</h3><div class="text-gray-700 mb-4">${result.data.content || ''}</div>
+                              <h3 class="font-semibold text-lg mb-2">Önerilen İçerik:</h3><div class="text-gray-700 mb-4">${formatTextContent(result.data.content || '')}</div>
                               <h3 class="font-semibold text-lg mb-2">Meta Açıklama:</h3><p class="text-gray-600 text-sm">${result.data.meta_description || ''}</p>`;
                 } else if (type === 'seo') {
                     content = `<h3 class="font-semibold text-lg mb-2">Meta Açıklama:</h3><p class="text-gray-600 text-sm">${result.data.meta_description || ''}</p>`;
@@ -515,12 +561,19 @@ function applyPageAISuggestion() {
         }
     }
     
-    // İçeriği çıkar
+    // İçeriği çıkar (raw text olarak)
     for (let h3 of titleElements) {
         if (h3.textContent.includes('Önerilen İçerik:')) {
             const nextElement = h3.nextElementSibling;
             if (nextElement && nextElement.tagName === 'DIV') {
-                content = nextElement.innerHTML.trim();
+                const paragraphs = nextElement.querySelectorAll('p');
+                if (paragraphs.length > 0) {
+                    content = Array.from(paragraphs)
+                        .map(p => p.textContent.replace(/\n/g, ' ').trim())
+                        .join('\n\n');
+                } else {
+                    content = nextElement.textContent.trim();
+                }
             }
         }
     }
@@ -541,9 +594,10 @@ function applyPageAISuggestion() {
         document.getElementById('title').dispatchEvent(new Event('input'));
     }
     
-    // İçeriği uygula
+    // İçeriği uygula - plain text'i HTML'e çevir
     if (content && window.pageJoditEditor) {
-        window.pageJoditEditor.setEditorValue(content);
+        const htmlContent = convertPlainTextToHTML(content);
+        window.pageJoditEditor.setEditorValue(htmlContent);
         setTimeout(() => {
             if (window.updateWordCount) updateWordCount();
         }, 100);
@@ -551,7 +605,8 @@ function applyPageAISuggestion() {
         // Fallback: sadece metin varsa
         const plainText = aiContentDiv.textContent.trim();
         if (plainText && window.pageJoditEditor) {
-            window.pageJoditEditor.setEditorValue(plainText);
+            const htmlContent = convertPlainTextToHTML(plainText);
+            window.pageJoditEditor.setEditorValue(htmlContent);
             setTimeout(() => {
                 if (window.updateWordCount) updateWordCount();
             }, 100);

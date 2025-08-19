@@ -729,6 +729,36 @@ async def generate_ai_seo(
             "error": "AI servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin."
         })
 
+# Profile Routes
+@router.get("/profile", response_class=HTMLResponse)
+async def admin_profile(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    """Admin profile page with admin-specific settings"""
+    settings = db.query(Settings).first()
+    
+    # Get admin stats
+    total_posts = db.query(Post).filter(Post.author_id == admin_user.id).count()
+    published_posts = db.query(Post).filter(
+        Post.author_id == admin_user.id, 
+        Post.is_published == True
+    ).count()
+    draft_posts = db.query(Post).filter(
+        Post.author_id == admin_user.id, 
+        Post.is_draft == True
+    ).count()
+    
+    # Get recent posts
+    recent_posts = db.query(Post).filter(Post.author_id == admin_user.id).order_by(Post.created_at.desc()).limit(5).all()
+    
+    return templates.TemplateResponse("admin/profile.html", {
+        "request": request,
+        "admin_user": admin_user,
+        "site_settings": settings,
+        "total_posts": total_posts,
+        "published_posts": published_posts,
+        "draft_posts": draft_posts,
+        "recent_posts": recent_posts
+    })
+
 # Settings Routes
 @router.get("/settings", response_class=HTMLResponse)
 async def admin_settings(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):

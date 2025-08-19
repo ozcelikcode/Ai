@@ -1,0 +1,183 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - {{ site_settings.site_title if site_settings and site_settings.site_title else 'AI Blog' }}{% endblock %}
+
+{% block description %}{{ category.description if category.description else category.name + ' kategorisindeki yazılar' }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Main Content -->
+        <div class="lg:col-span-2">
+            <!-- Kategori Header -->
+            <div class="mb-8">
+                <div class="flex items-center mb-4">
+                    <i data-lucide="folder" class="w-6 h-6 text-brown-600 mr-2"></i>
+                    <h1 class="text-3xl font-bold text-brown-900">{{ category.name }}</h1>
+                </div>
+                
+                {% if category.description %}
+                <p class="text-brown-600 text-lg">{{ category.description }}</p>
+                {% endif %}
+                
+                <div class="mt-4 text-sm text-brown-500">
+                    {{ posts|length }} yazı bulundu
+                </div>
+            </div>
+
+            <!-- Breadcrumb -->
+            <nav class="mb-6">
+                <div class="flex items-center space-x-2 text-sm text-brown-600">
+                    <a href="/" class="hover:text-brown-800">Ana Sayfa</a>
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    <a href="/categories" class="hover:text-brown-800">Kategoriler</a>
+                    <i data-lucide="chevron-right" class="w-4 h-4"></i>
+                    <span class="text-brown-900 font-medium">{{ category.name }}</span>
+                </div>
+            </nav>
+
+            <!-- Posts Grid -->
+            {% if posts %}
+            <div class="space-y-8">
+                {% for post in posts %}
+                <article class="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden">
+                    <div class="p-6">
+                        <div class="flex items-center mb-4">
+                            <div class="flex items-center text-sm text-brown-600">
+                                <i data-lucide="calendar" class="w-4 h-4 mr-2"></i>
+                                {% if post.created_at %}{{ post.created_at.strftime('%d.%m.%Y') }}{% else %}Tarih yok{% endif %}
+                                <span class="mx-2">•</span>
+                                <i data-lucide="clock" class="w-4 h-4 mr-2"></i>
+                                5 dk okuma
+                            </div>
+                        </div>
+                        
+                        <h2 class="text-2xl font-bold text-brown-900 mb-3 hover:text-brown-700 transition-colors">
+                            <a href="/post/{{ post.slug }}">{{ post.title }}</a>
+                        </h2>
+                        
+                        {% if post.excerpt %}
+                        <p class="text-brown-600 mb-4 leading-relaxed">
+                            {{ post.excerpt[:200] }}{% if post.excerpt|length > 200 %}...{% endif %}
+                        </p>
+                        {% else %}
+                        <p class="text-brown-600 mb-4 leading-relaxed">
+                            {% set content_text = post.content|strip_html %}
+                            {{ content_text[:200] }}{% if content_text|length > 200 %}...{% endif %}
+                        </p>
+                        {% endif %}
+                        
+                        <div class="flex items-center justify-between">
+                            <a href="/post/{{ post.slug }}" class="inline-flex items-center text-brown-600 hover:text-brown-800 font-medium transition-colors">
+                                Devamını Oku
+                                <i data-lucide="arrow-right" class="w-4 h-4 ml-2"></i>
+                            </a>
+                            
+                            {% if post.tags %}
+                            <div class="flex items-center space-x-2">
+                                {% for post_tag in post.tags[:3] %}
+                                <span class="bg-brown-100 text-brown-700 text-xs px-2 py-1 rounded-full">
+                                    {{ post_tag.tag.name }}
+                                </span>
+                                {% endfor %}
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+            {% else %}
+            <!-- No Posts Found -->
+            <div class="text-center py-12">
+                <div class="bg-cream-50 rounded-xl p-8">
+                    <i data-lucide="folder-x" class="w-16 h-16 text-brown-400 mx-auto mb-4"></i>
+                    <h3 class="text-xl font-semibold text-brown-900 mb-2">Henüz Yazı Yok</h3>
+                    <p class="text-brown-600 mb-6">
+                        {{ category.name }} kategorisinde henüz yayınlanmış bir yazı bulunmuyor.
+                    </p>
+                    <a href="/" class="inline-flex items-center bg-brown-600 text-white px-6 py-3 rounded-lg hover:bg-brown-700 transition-colors">
+                        <i data-lucide="home" class="w-4 h-4 mr-2"></i>
+                        Ana Sayfaya Dön
+                    </a>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar -->
+        <div class="lg:col-span-1">
+            <div class="sticky top-8 space-y-6">
+                <!-- Diğer Kategoriler -->
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
+                        <i data-lucide="folder" class="w-5 h-5 mr-2"></i>
+                        Diğer Kategoriler
+                    </h3>
+                    
+                    {% if categories %}
+                    <div class="space-y-2">
+                        {% for cat in categories %}
+                        {% if cat.id != category.id and cat.post_count > 0 %}
+                        <a href="/category/{{ cat.slug }}" 
+                           class="flex items-center justify-between p-3 rounded-lg hover:bg-cream-50 transition-colors group">
+                            <span class="text-brown-700 group-hover:text-brown-900 font-medium">
+                                {{ cat.name }}
+                            </span>
+                            <span class="bg-brown-100 text-brown-600 text-xs px-2 py-1 rounded-full">
+                                {{ cat.post_count }}
+                            </span>
+                        </a>
+                        {% endif %}
+                        {% endfor %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Son Yazılar -->
+                {% if popular_posts %}
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
+                        <i data-lucide="trending-up" class="w-5 h-5 mr-2"></i>
+                        Son Yazılar
+                    </h3>
+                    
+                    <div class="space-y-4">
+                        {% for post in popular_posts[:5] %}
+                        <article class="group">
+                            <h4 class="text-sm font-medium text-brown-900 group-hover:text-brown-700 transition-colors leading-tight mb-1">
+                                <a href="/post/{{ post.slug }}">{{ post.title }}</a>
+                            </h4>
+                            <div class="flex items-center text-xs text-brown-500">
+                                <i data-lucide="calendar" class="w-3 h-3 mr-1"></i>
+                                {{ post.created_at.strftime('%d.%m.%Y') if post.created_at else 'Tarih yok' }}
+                            </div>
+                        </article>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Etiketler -->
+                {% if tags %}
+                <div class="bg-white rounded-xl shadow-sm p-6">
+                    <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
+                        <i data-lucide="tag" class="w-5 h-5 mr-2"></i>
+                        Etiketler
+                    </h3>
+                    
+                    <div class="flex flex-wrap gap-2">
+                        {% for tag in tags %}
+                        <a href="/tag/{{ tag.slug }}" 
+                           class="bg-brown-100 hover:bg-brown-200 text-brown-700 text-xs px-3 py-1 rounded-full transition-colors">
+                            {{ tag.name }}
+                        </a>
+                        {% endfor %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

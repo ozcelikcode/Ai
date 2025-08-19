@@ -90,13 +90,14 @@ class AIContentGenerator:
                 - Stil: {type_guide.get(content_type, 'profesyonel ve güvenilir')}
                 - Türkçe dilbilgisi kurallarına uygun
                 - Web sayfası formatında (statik sayfa)
-                - Net başlıklar ve paragraflar (HTML etiketleri ile)
+                - SADECE DÜZ METİN kullan, HTML etiketleri kullanma
+                - Net paragraflar ve başlıklar düz metin olarak yaz
                 - Kullanıcı deneyimi odaklı
                 
                 Lütfen yanıtını şu JSON formatında ver:
                 {{
                     "title": "Sayfa için uygun başlık",
-                    "content": "HTML formatında tam sayfa içeriği",
+                    "content": "Düz metin formatında tam sayfa içeriği (HTML etiketleri olmadan)",
                     "meta_description": "SEO için 150-160 karakterlik açıklama"
                 }}
                 """
@@ -194,14 +195,15 @@ class AIContentGenerator:
                 - Türkçe dilbilgisi kurallarına uygun
                 - SEO dostu yapıda
                 - Okuyucuyu meraklandıran giriş
-                - Net alt başlıklar (H2, H3 HTML etiketleri ile)
+                - SADECE DÜZ METİN kullan, HTML etiketleri kullanma
+                - Net alt başlıklar düz metin olarak belirt
                 - Sonuç bölümü
                 
                 Lütfen yanıtını şu JSON formatında ver:
                 {{
                     "title": "Çekici ve SEO dostu başlık",
-                    "content": "HTML formatında tam blog içeriği",
-                    "excerpt": "150-200 kelimelik özet",
+                    "content": "Düz metin formatında tam blog içeriği (HTML etiketleri olmadan)",
+                    "excerpt": "150-200 kelimelik özet (düz metin)",
                     "meta_description": "SEO için 150-160 karakterlik açıklama",
                     "tags": ["etiket1", "etiket2", "etiket3"]
                 }}

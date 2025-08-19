@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - Test{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <h1>{{ category.name }} Kategorisi</h1>
+    
+    <p>{{ posts|length }} yazı bulundu</p>
+    
+    {% for post in posts %}
+    <div class="border p-4 mb-4">
+        <h2>{{ post.title }}</h2>
+        <p>{{ post.created_at }}</p>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

@@ -101,23 +101,73 @@ async def categories_list(request: Request, db: Session = Depends(get_db)):
 
 @router.get("/category/{slug}", response_class=HTMLResponse)
 async def category_posts(request: Request, slug: str, db: Session = Depends(get_db)):
-    category = db.query(Category).filter(Category.slug == slug).first()
-    if not category:
-        raise HTTPException(status_code=404, detail="Category not found")
-    
-    posts = db.query(Post).filter(
-        Post.category_id == category.id,
-        Post.is_published == True
-    ).order_by(Post.created_at.desc()).all()
-    
-    current_user = get_current_user_optional(request, db)
-    
-    context = get_template_context(request, db, current_user)
-    context.update({
-        "category": category,
-        "posts": posts
-    })
-    return templates.TemplateResponse("blog/category_posts.html", context)
+    try:
+        category = db.query(Category).filter(Category.slug == slug).first()
+        if not category:
+            raise HTTPException(status_code=404, detail="Category not found")
+        
+        posts = db.query(Post).filter(
+            Post.category_id == category.id,
+            Post.is_published == True
+        ).order_by(Post.created_at.desc()).all()
+        
+        current_user = get_current_user_optional(request, db)
+        
+        # Get context with settings
+        context = get_template_context(request, db, current_user)
+        
+        # Get sidebar data safely
+        categories_data = []
+        popular_posts = []
+        tags = []
+        
+        try:
+            # Get categories with post counts
+            categories = db.query(Category).all()
+            for cat in categories:
+                post_count = db.query(Post).filter(
+                    Post.category_id == cat.id,
+                    Post.is_published == True
+                ).count()
+                categories_data.append({
+                    'id': cat.id,
+                    'name': cat.name,
+                    'slug': cat.slug,
+                    'post_count': post_count
+                })
+        except:
+            categories_data = []
+        
+        try:
+            # Get popular posts (recent published posts)
+            popular_posts = db.query(Post).filter(
+                Post.is_published == True
+            ).order_by(Post.created_at.desc()).limit(5).all()
+        except:
+            popular_posts = []
+        
+        try:
+            # Get all tags
+            tags = db.query(Tag).all()
+        except:
+            tags = []
+        
+        context.update({
+            "category": category,
+            "posts": posts,
+            "categories": categories_data,
+            "popular_posts": popular_posts,
+            "tags": tags
+        })
+        return templates.TemplateResponse("blog/category_posts.html", context)
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Category posts error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.get("/{slug}", response_class=HTMLResponse)
 async def page_detail(request: Request, slug: str, db: Session = Depends(get_db)):
