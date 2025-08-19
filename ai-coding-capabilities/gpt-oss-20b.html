@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Modern & Responsive Blog</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        /* ────────────────────────────────────────
+   Root Variables
+   ──────────────────────────────────────── */
+        :root {
+            --primary: #1e88e5;
+            --primary-dim: #1662a1;
+            --bg-light: #f9f9fb;
+            --bg-dark: #121212;
+            --accent: #ff7e5f;
+            --text-main: #212121;
+            --text-muted: #555555;
+            --border: #e0e0e0;
+            --shadow: rgba(0, 0, 0, 0.12);
+            --font-base: 'Inter', sans-serif;
+            --transition: 0.2s ease-in-out;
+        }
+
+        /* Dark theme overrides (set via body[data-theme="dark"]) */
+        body[data-theme="dark"] {
+            --bg-light: #121212;
+            --bg-dark: #1e1e1e;
+            --border: #333333;
+            --shadow: rgba(0, 0, 0, 0.5);
+            --text-main: #f9f9fb;
+            --text-muted: #cccccc;
+        }
+
+        /* ────────────────────────────────────────
+   Global Reset
+   ──────────────────────────────────────── */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-base);
+            color: var(--text-main);
+            background: var(--bg-light);
+            line-height: 1.65;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color var(--transition);
+        }
+
+        a:hover {
+            color: var(--primary-dim);
+        }
+
+        img,
+        svg {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        button {
+            cursor: pointer;
+            border: none;
+            outline: none;
+        }
+
+        ul {
+            list-style: none;
+        }
+
+        svg {
+            fill: currentColor;
+        }
+
+        h1,
+        h2,
+        h3 {
+            font-weight: 600;
+            margin-bottom: 0.6rem;
+        }
+
+        p {
+            margin-bottom: 1rem;
+        }
+
+        /* ────────────────────────────────────────
+   Utility Classes
+   ──────────────────────────────────────── */
+        .container {
+            max-width: 1280px;
+            margin: auto;
+            padding: 0 1.5rem;
+        }
+
+        .center {
+            text-align: center;
+        }
+
+        .shadow-elevated {
+            box-shadow: 0 4px 12px var(--shadow);
+        }
+
+        .rounded {
+            border-radius: 0.5rem;
+        }
+
+        .hide {
+            display: none;
+        }
+
+        /* ────────────────────────────────────────
+   Header & Navigation
+   ──────────────────────────────────────── */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            background: var(--bg-light);
+            box-shadow: 0 2px 4px var(--shadow);
+        }
+
+        .navbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.8rem 1.5rem;
+        }
+
+        .logo a {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .nav-items {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .nav-items a {
+            font-size: 0.95rem;
+            font-weight: 600;
+        }
+
+        .theme-switcher {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .theme-icon {
+            transition: transform var(--transition);
+        }
+
+        .theme-switcher:hover .theme-icon {
+            transform: rotate(20deg);
+        }
+
+        /* Mobile hamburger */
+        .hamburger {
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            cursor: pointer;
+        }
+
+        .hamburger span {
+            width: 24px;
+            height: 3px;
+            background: var(--text-main);
+            border-radius: 2px;
+        }
+
+        /* ────────────────────────────────────────
+   Hero Section
+   ──────────────────────────────────────── */
+        .hero {
+            position: relative;
+            height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-top: -4px;
+            /* to avoid double hero space */
+        }
+
+        .hero::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1920&q=80') center/cover no-repeat;
+            opacity: 0.6;
+        }
+
+        .hero .hero-content {
+            position: relative;
+            text-align: center;
+            color: #fff;
+            z-index: 1;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            max-width: 700px;
+            margin: 0 auto 1.5rem;
+        }
+
+        .hero .cta {
+            background: var(--primary);
+            color: #fff;
+            padding: 0.8rem 1.8rem;
+            font-weight: 600;
+            border-radius: 30px;
+            transition: transform var(--transition), background var(--transition);
+        }
+
+        .hero .cta:hover {
+            background: var(--primary-dim);
+            transform: scale(1.05);
+        }
+
+        /* ────────────────────────────────────────
+   Posts Grid
+   ──────────────────────────────────────── */
+        .posts-section {
+            padding: 4rem 0;
+        }
+
+        .posts-section h2 {
+            margin-bottom: 2rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 1.8rem;
+        }
+
+        .card {
+            background: #fff;
+            color: var(--text-main);
+            overflow: hidden;
+            border-radius: 0.5rem;
+            transition: transform var(--transition), box-shadow var(--transition);
+        }
+
+        .card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 24px var(--shadow);
+        }
+
+        .card-header img {
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .card-body {
+            padding: 1.2rem;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+        }
+
+        .card-title {
+            font-size: 1.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-bottom: 0.6rem;
+        }
+
+        .card-excerpt {
+            flex: 1;
+            font-size: 0.92rem;
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+        }
+
+        .card-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .read-btn {
+            color: var(--primary);
+            font-size: 0.85rem;
+        }
+
+        .read-btn:hover {
+            text-decoration: underline;
+        }
+
+        /* Tags */
+        .tags {
+            font-size: 0.83rem;
+            color: var(--text-muted);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+
+        .tag {
+            color: var(--primary);
+        }
+
+        /* Pagination */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-top: 2rem;
+            gap: 0.5rem;
+        }
+
+        .page-link {
+            padding: 0.6rem 1rem;
+            background: #fff;
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            font-weight: 600;
+            transition: background var(--transition), color var(--transition);
+        }
+
+        .page-link:hover {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        /* ────────────────────────────────────────
+   Footer
+   ──────────────────────────────────────── */
+        footer {
+            background: var(--bg-dark);
+            color: #fff;
+            padding: 2rem 0;
+        }
+
+        footer .footer-inner {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        footer a {
+            color: #fff;
+        }
+
+        footer a:hover {
+            color: var(--primary);
+        }
+
+        /* ────────────────────────────────────────
+   Back‑to‑Top Button
+   ──────────────────────────────────────── */
+        .back-to-top {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--primary);
+            color: #fff;
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0.75;
+            transition: opacity var(--transition);
+        }
+
+        .back-to-top:hover {
+            opacity: 1;
+        }
+
+        /* ────────────────────────────────────────
+   Responsive Breakpoints
+   ──────────────────────────────────────── */
+        @media (max-width: 1024px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-items {
+                position: fixed;
+                top: 70px;
+                right: -270px;
+                width: 260px;
+                height: calc(100% - 70px);
+                background: var(--bg-light);
+                flex-direction: column;
+                align-items: start;
+                gap: 1.5rem;
+                padding: 1.5rem;
+                transition: right var(--transition);
+            }
+
+            .nav-items.open {
+                right: 0;
+            }
+
+            .hamburger {
+                display: flex;
+            }
+
+            .theme-switcher {
+                margin-left: auto;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .hero {
+                height: 55vh;
+            }
+        }
+    </style>
+</head>
+
+<body data-theme="light">
+
+    <!-- =========================
+     HEADER & NAVIGATION
+   ========================= -->
+    <header>
+        <div class="navbar container">
+            <div class="logo"><a href="#">BlogSite</a></div>
+
+            <nav id="nav" class="nav-items">
+                <a href="#home">Anasayfa</a>
+                <a href="#about">Hakkında</a>
+                <a href="#services">Hizmetler</a>
+                <a href="#contact">İletişim</a>
+
+                <!-- Theme toggle -->
+                <div id="theme-toggle" class="theme-switcher" aria-label="Tüm sayfalarda koyu/aydınlık moduna geç">
+                    <svg class="theme-icon" width="24" height="24" viewBox="0 0 24 24">
+                        <path
+                            d="M12 4V2a1 1 0 0 1 2 0v2a1 1 0 0 1-2 0zm6.536 1.464 1.414-1.414a1 1 0 0 1 1.414 1.414l-1.414 1.414a1 1 0 0 1-1.414-1.414zm1.464 6.536a1 1 0 0 1 0 2h-2a1 1 0 0 1 0-2h2zm-1.464 6.536 1.414 1.414a1 1 0 0 1-1.414 1.414l-1.414-1.414a1 1 0 0 1 1.414-1.414zm-6.536 1.464a1 1 0 0 1-2 0v-2a1 1 0 0 1 2 0v2zm-6.536-1.464-1.414 1.414a1 1 0 0 1-1.414-1.414l1.414-1.414a1 1 0 0 1 1.414 1.414zm-1.464-6.536a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2h-2zm1.464-6.536-1.414-1.414a1 1 0 0 1 1.414-1.414l1.414 1.414a1 1 0 0 1-1.414 1.414z" />
+                    </svg>
+                    <span id="theme-label">Koyu</span>
+                </div>
+            </nav>
+
+            <div class="hamburger" role="button" aria-label="Menü" aria-expanded="false" id="hamburger">
+                <span></span><span></span><span></span>
+            </div>
+        </div>
+    </header>
+
+    <!-- =========================
+     HERO SECTION
+   ========================= -->
+    <section id="home" class="hero">
+        <div class="hero-content center">
+            <h1>Anlamsız Kelimelerle Dolu Bir Blog</h1>
+            <p>Yazılım, tasarım, içerik üretimi ve daha fazlası… <br>Her gün sizin için yeni bir yazı yazarız.</p>
+            <button class="cta">Başlangıç</button>
+        </div>
+    </section>
+
+    <!-- =========================
+     Posts Section
+   ========================= -->
+    <section class="posts-section">
+        <div class="container">
+            <h2 class="center">Son Yazılar</h2>
+            <div class="grid">
+                <!-- Card 1 -->
+                <article class="card">
+                    <div class="card-header">
+                        <img src="https://images.unsplash.com/photo-1557684326-673183ae2a7d?auto=format&fit=crop&w=800&q=80"
+                            alt="JavaScript">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">JavaScript ile Modern Web Geliştirme</h3>
+                        <div class="card-meta">18 Apre 2025 • 8 dk</div>
+                        <p class="card-excerpt">JavaScript’in modern sürümlerinin sunduğu yeni özellikleri keşif…</p>
+                        <div class="card-footer">
+                            <div class="avatar"><img src="https://i.pravatar.cc/36?u=author1" alt="Author"></div>
+                            <a href="#" class="read-btn">Devamını Oku →</a>
+                        </div>
+                    </div>
+                </article>
+                <!-- Card 2 -->
+                <article class="card">
+                    <div class="card-header">
+                        <img src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=800&q=80"
+                            alt="Design">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">CSS Grid ile Tasarımın Geleceği</h3>
+                        <div class="card-meta">15 Apre 2025 • 6 dk</div>
+                        <p class="card-excerpt">Web sayfalarınızı esnek ve duyarlı bir şekilde oluşturmak için CSS
+                            Grid’i kullanın.</p>
+                        <div class="card-footer">
+                            <div class="avatar"><img src="https://i.pravatar.cc/36?u=author2" alt="Author"></div>
+                            <a href="#" class="read-btn">Devamını Oku →</a>
+                        </div>
+                    </div>
+                </article>
+                <!-- Card 3 -->
+                <article class="card">
+                    <div class="card-header">
+                        <img src="https://images.unsplash.com/photo-1515879218367-8466d910c4ba?auto=format&fit=crop&w=800&q=80"
+                            alt="SEO">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">SEO En İyi Uygulamaları 2025</h3>
+                        <div class="card-meta">11 Apre 2025 • 5 dk</div>
+                        <p class="card-excerpt">Arama motoru optimizasyonunu nasıl baştan sona güncel tutarsınız?</p>
+                        <div class="card-footer">
+                            <div class="avatar"><img src="https://i.pravatar.cc/36?u=author3" alt="Author"></div>
+                            <a href="#" class="read-btn">Devamını Oku →</a>
+                        </div>
+                    </div>
+                </article>
+                <!-- Card 4 -->
+                <article class="card">
+                    <div class="card-header">
+                        <img src="https://images.unsplash.com/photo-1521790366678-3cfbde2c78c7?auto=format&fit=crop&w=800&q=80"
+                            alt="Node">
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-title">Node.js ile Sunucu Taraflı JavaScript</h3>
+                        <div class="card-meta">05 Apre 2025 • 7 dk</div>
+                        <p class="card-excerpt">Node.js’in sunduğu avantajlar ve REST API örnekleri ile derinlemesine
+                            bir bakış.</p>
+                        <div class="card-footer">
+                            <div class="avatar"><img src="https://i.pravatar.cc/36?u=author4" alt="Author"></div>
+                            <a href="#" class="read-btn">Devamını Oku →</a>
+                        </div>
+                    </div>
+                </article>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination" aria-label="Sayfa Navigasyonu">
+                <a href="#" class="page-link">← Önceki</a>
+                <a href="#" class="page-link">1</a>
+                <a href="#" class="page-link">2</a>
+                <a href="#" class="page-link">3</a>
+                <a href="#" class="page-link">Sonraki →</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- =========================
+     FOOTER
+   ========================= -->
+    <footer>
+        <div class="container footer-inner">
+            <p>© 2025 BlogSite – Tüm Hakları Saklıdır</p>
+            <div>
+                <a href="#">Gizlilik</a> |
+                <a href="#">Kullanım Sözleşmesi</a> |
+                <a href="#">İletişim</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Back‑to‑Top button -->
+    <button id="back-top" class="back-to-top" aria-label="Yukarı Dön">
+        <svg width="24" height="24" viewBox="0 0 24 24">
+            <path d="M12 4l-8 8h5v8h6v-8h5z" fill="currentColor" />
+        </svg>
+    </button>
+
+    <!-- =========================
+     JavaScript
+   ========================= -->
+    <script>
+        /* ------------ Mobile Menu ------------ */
+        const hamburger = document.getElementById('hamburger');
+        const nav = document.getElementById('nav');
+        hamburger.addEventListener('click', () => {
+            const expanded = hamburger.getAttribute('aria-expanded') === 'true' || false;
+            hamburger.setAttribute('aria-expanded', !expanded);
+            nav.classList.toggle('open');
+        });
+
+        /* ------------ Theme Switch ------------ */
+        const themeToggle = document.getElementById('theme-toggle');
+        const themeLabel = document.getElementById('theme-label');
+        const currentTheme = localStorage.getItem('theme') || 'light';
+
+        const setTheme = (theme) => {
+            document.body.setAttribute('data-theme', theme);
+            localStorage.setItem('theme', theme);
+            themeLabel.textContent = theme === 'light' ? 'Koyu' : 'Aydınlık';
+        };
+
+        if (currentTheme === 'dark') setTheme('dark');
+        themeToggle.addEventListener('click', () => {
+            const newTheme = document.body.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            setTheme(newTheme);
+        });
+
+        /* ------------ Back‑to‑Top ------------ */
+        const backTopBtn = document.getElementById('back-top');
+        window.addEventListener('scroll', () => {
+            backTopBtn.style.visibility = window.scrollY > 200 ? 'visible' : 'hidden';
+            backTopBtn.style.opacity = window.scrollY > 200 ? '1' : '0';
+        });
+        backTopBtn.addEventListener('click', () => {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+    </script>
+</body>
+
+</html>
