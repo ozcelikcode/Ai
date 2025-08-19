@@ -1,0 +1,680 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Blog | Güncel Yazılar ve İpuçları</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ===== TEMEL AYARLAR ===== */
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1d4ed8;
+            --secondary: #f97316;
+            --dark: #1e293b;
+            --light: #f8fafc;
+            --gray: #e2e8f0;
+            --card-shadow: 0 10px 30px -15px rgba(0, 0, 0, 0.1);
+            --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            color: var(--dark);
+            line-height: 1.6;
+            background-color: #fff;
+            overflow-x: hidden;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            line-height: 1.2;
+        }
+
+        img {
+            max-width: 100%;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        .btn {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            padding: 0.8rem 1.8rem;
+            border-radius: 8px;
+            font-weight: 500;
+            text-decoration: none;
+            transition: var(--transition);
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.25);
+        }
+
+        .btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 2px solid var(--primary);
+            color: var(--primary);
+            box-shadow: none;
+        }
+
+        .btn-outline:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        /* ===== HEADER ===== */
+        header {
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            padding: 1.2rem 0;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo-icon {
+            font-size: 2rem;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--dark);
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--primary);
+            transition: var(--transition);
+        }
+
+        .nav-links a:hover::after {
+            width: 100%;
+        }
+
+        .mobile-menu {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        /* ===== HERO SECTION ===== */
+        .hero {
+            background: linear-gradient(135deg, #e0f2fe 0%, #dbeafe 100%);
+            padding: 6rem 0 4rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 600px;
+            height: 600px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #bfdbfe, transparent);
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            max-width: 650px;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--dark);
+        }
+
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            color: #475569;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+
+        /* ===== SECTIONS ===== */
+        section {
+            padding: 5rem 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .section-title {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: var(--secondary);
+            border-radius: 2px;
+        }
+
+        .section-subtitle {
+            color: #64748b;
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+        }
+
+        /* ===== FEATURED POST ===== */
+        .featured-post {
+            background: white;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: var(--card-shadow);
+            transition: var(--transition);
+            height: 100%;
+        }
+
+        .featured-post:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.2);
+        }
+
+        .post-image {
+            height: 280px;
+            overflow: hidden;
+        }
+
+        .post-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: var(--transition);
+        }
+
+        .featured-post:hover .post-image img {
+            transform: scale(1.05);
+        }
+
+        .post-content {
+            padding: 1.8rem;
+        }
+
+        .post-category {
+            display: inline-block;
+            background: #dbeafe;
+            color: var(--primary);
+            font-size: 0.85rem;
+            padding: 0.3rem 0.8rem;
+            border-radius: 20px;
+            font-weight: 500;
+            margin-bottom: 1rem;
+        }
+
+        .post-title {
+            font-size: 1.6rem;
+            margin-bottom: 1rem;
+            transition: var(--transition);
+        }
+
+        .post-title:hover {
+            color: var(--primary);
+        }
+
+        .post-excerpt {
+            color: #64748b;
+            margin-bottom: 1.5rem;
+            font-size: 1.05rem;
+        }
+
+        .post-meta {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: #64748b;
+            font-size: 0.95rem;
+        }
+
+        .post-author {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .author-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        /* ===== POST GRID ===== */
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+        }
+
+        /* ===== NEWSLETTER ===== */
+        .newsletter {
+            background: linear-gradient(135deg, var(--primary), #1e40af);
+            border-radius: 16px;
+            padding: 3rem;
+            color: white;
+            text-align: center;
+        }
+
+        .newsletter h2 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+        }
+
+        .newsletter p {
+            max-width: 600px;
+            margin: 0 auto 1.8rem;
+            opacity: 0.9;
+        }
+
+        .newsletter-form {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .newsletter-form input {
+            flex: 1;
+            padding: 0.9rem 1.2rem;
+            border-radius: 8px;
+            border: none;
+            font-size: 1rem;
+        }
+
+        .newsletter-form button {
+            padding: 0 1.8rem;
+        }
+
+        /* ===== FOOTER ===== */
+        footer {
+            background: var(--dark);
+            color: white;
+            padding: 4rem 0 2rem;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .footer-column h3 {
+            font-size: 1.4rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        .footer-column h3::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 2px;
+            background: var(--primary);
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .footer-links a {
+            color: #cbd5e1;
+            text-decoration: none;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: white;
+            padding-left: 3px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: white;
+            transition: var(--transition);
+        }
+
+        .social-links a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .copyright {
+            text-align: center;
+            padding-top: 2rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #94a3b8;
+            font-size: 0.9rem;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 992px) {
+            .hero h1 {
+                font-size: 2.8rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu {
+                display: block;
+            }
+
+            .hero {
+                padding: 4rem 0 3rem;
+            }
+
+            .hero h1 {
+                font-size: 2.3rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                width: 100%;
+            }
+
+            .section-title {
+                font-size: 1.8rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 0 1.2rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .newsletter-form {
+                flex-direction: column;
+            }
+
+            .newsletter-form input,
+            .newsletter-form button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- HEADER -->
+    <header>
+        <div class="container">
+            <nav class="navbar">
+                <a href="#" class="logo">
+                    <i class="fas fa-feather-alt logo-icon"></i>
+                    ModernBlog
+                </a>
+                <ul class="nav-links">
+                    <li><a href="#">Anasayfa</a></li>
+                    <li><a href="#">Teknoloji</a></li>
+                    <li><a href="#">Tasarım</a></li>
+                    <li><a href="#">Kişisel Gelişim</a></li>
+                    <li><a href="#">İletişim</a></li>
+                </ul>
+                <div class="mobile-menu">
+                    <i class="fas fa-bars"></i>
+                </div>
+            </nav>
+        </div>
+    </header>
+
+    <!-- HERO SECTION -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1>Dünyayı Keşfetmeye Hazır mısınız?</h1>
+                <p>En son trendlerden ilham verici hikayelere, teknoloji dünyasından kişisel gelişim ipuçlarına kadar her şey burada.</p>
+                <div class="hero-buttons">
+                    <a href="#" class="btn">Tüm Yazıları Gör</a>
+                    <a href="#" class="btn btn-outline">Abone Ol</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- FEATURED POSTS -->
+    <section>
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Öne Çıkan Yazılar</h2>
+                <p class="section-subtitle">En son eklenen ve en çok okunan makalelerimiz</p>
+            </div>
+
+            <div class="posts-grid">
+                <!-- Post 1 -->
+                <article class="featured-post">
+                    <div class="post-image">
+                        <img src="https://images.unsplash.com/photo-1551650975-87deedd944c3?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Yapay Zeka Yazı">
+                    </div>
+                    <div class="post-content">
+                        <span class="post-category">Teknoloji</span>
+                        <h3 class="post-title">Yapay Zeka Geleceğin İş Dünyasını Nasıl Değiştiriyor?</h3>
+                        <p class="post-excerpt">Son 5 yılda yapay zeka teknolojilerinde yaşanan gelişmeler iş süreçlerini kökten değiştirdi. İşte bu dönüşümün detayları...</p>
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <img src="https://randomuser.me/api/portraits/women/45.jpg" alt="Yazar" class="author-avatar">
+                                <span>Ayşe Yılmaz</span>
+                            </div>
+                            <span>15 Ağustos 2023</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Post 2 -->
+                <article class="featured-post">
+                    <div class="post-image">
+                        <img src="https://images.unsplash.com/photo-1547658719-da2b51169166?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Tasarım Yazı">
+                    </div>
+                    <div class="post-content">
+                        <span class="post-category">Tasarım</span>
+                        <h3 class="post-title">2023'te Trend Olacak Web Tasarım Teknikleri</h3>
+                        <p class="post-excerpt">Minimalizmden neomorfizme, bu yıl sitenizi öne çıkaracak tasarımı yakalamak için neler yapmalısınız?</p>
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <img src="https://randomuser.me/api/portraits/men/32.jpg" alt="Yazar" class="author-avatar">
+                                <span>Mehmet Aksoy</span>
+                            </div>
+                            <span>12 Ağustos 2023</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Post 3 -->
+                <article class="featured-post">
+                    <div class="post-image">
+                        <img src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" alt="Kişisel Gelişim Yazı">
+                    </div>
+                    <div class="post-content">
+                        <span class="post-category">Kişisel Gelişim</span>
+                        <h3 class="post-title">Ürün Odaklı Çalışma Alışkanlıkları</h3>
+                        <p class="post-excerpt">Zamanınızı verimli kullanmak ve daha fazla üretken olmak için deneyebileceğiniz 7 pratik yöntem.</p>
+                        <div class="post-meta">
+                            <div class="post-author">
+                                <img src="https://randomuser.me/api/portraits/women/65.jpg" alt="Yazar" class="author-avatar">
+                                <span>Zeynep Kaya</span>
+                            </div>
+                            <span>8 Ağustos 2023</span>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- NEWSLETTER -->
+    <section>
+        <div class="container">
+            <div class="newsletter">
+                <h2>Güncel İçeriklerden Haberdar Olun</h2>
+                <p>Haftalık en iyi içerikleri ve özel fırsatları e-posta kutunuzda görün. Abonelik tamamen ücretsiz!</p>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="E-posta adresinizi girin" required>
+                    <button type="submit" class="btn">Abone Ol</button>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-column">
+                    <h3>ModernBlog</h3>
+                    <p>Dünya çapında düşünürlerin fikirlerini bir araya getiren modern bir içerik platformu.</p>
+                    <div class="social-links">
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                        <a href="#"><i class="fab fa-medium"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Kategoriler</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Teknoloji</a></li>
+                        <li><a href="#">Tasarım</a></li>
+                        <li><a href="#">Yazılım Geliştirme</a></li>
+                        <li><a href="#">Kişisel Gelişim</a></li>
+                        <li><a href="#">Sağlık ve Fitness</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-column">
+                    <h3>Hızlı Erişim</h3>
+                    <ul class="footer-links">
+                        <li><a href="#">Anasayfa</a></li>
+                        <li><a href="#">Popüler Yazılar</a></li>
+                        <li><a href="#">Yazarlar</a></li>
+                        <li><a href="#">İletişim</a></li>
+                        <li><a href="#">Hakkımızda</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="copyright">
+                &copy; 2023 ModernBlog. Tüm hakları saklıdır.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Basit mobil menü açma/kapama
+        document.querySelector('.mobile-menu').addEventListener('click', function() {
+            const navLinks = document.querySelector('.nav-links');
+            navLinks.style.display = navLinks.style.display === 'flex' ? 'none' : 'flex';
+            navLinks.style.flexDirection = 'column';
+            navLinks.style.position = 'absolute';
+            navLinks.style.top = '100%';
+            navLinks.style.right = '2rem';
+            navLinks.style.background = 'white';
+            navLinks.style.padding = '1.5rem';
+            navLinks.style.borderRadius = '12px';
+            navLinks.style.boxShadow = '0 10px 30px rgba(0,0,0,0.1)';
+        });
+    </script>
+</body>
+</html>

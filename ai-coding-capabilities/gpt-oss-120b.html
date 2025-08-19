@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <!-- Gerekli meta etiketler -->
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO & Sosyal Medya -->
+    <title>Profesyonel Blog | Örnek Başlık</title>
+    <meta name="description"
+        content="Temiz, modern ve tamamen responsive bir blog teması. İçeriklerinizi şık bir tasarımla sunun.">
+    <meta name="author" content="Adınız Soyadınız">
+
+    <!-- Open Graph (Facebook, LinkedIn vb.) -->
+    <meta property="og:title" content="Profesyonel Blog | Örnek Başlık">
+    <meta property="og:description" content="Temiz, modern ve tamamen responsive bir blog teması.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ornek.com/">
+    <meta property="og:image" content="https://ornek.com/images/hero.jpg">
+
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Merriweather:wght@400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Stil dosyası -->
+    <style>
+        /* ====================== Reset & Genel Stiller ====================== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            font-size: 62.5%;
+            /* 1rem = 10px */
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f9f9f9;
+        }
+
+        /* Container (max-width + padding) */
+        .container {
+            max-width: 1240px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* ====================== Tipografi ====================== */
+        h1,
+        h2,
+        h3,
+        h4,
+        h5,
+        h6 {
+            font-family: 'Merriweather', serif;
+            color: #222;
+        }
+
+        h1 {
+            font-size: 3.6rem;
+            margin-bottom: 1.6rem;
+        }
+
+        h2 {
+            font-size: 2.8rem;
+            margin-bottom: 1.2rem;
+        }
+
+        h3 {
+            font-size: 2.2rem;
+            margin-bottom: 1rem;
+        }
+
+        p {
+            font-size: 1.6rem;
+            margin-bottom: 1.6rem;
+        }
+
+        /* ====================== Header ====================== */
+        .header {
+            background: #fff;
+            border-bottom: 1px solid #eaeaea;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header__container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            height: 6.5rem;
+        }
+
+        .logo img {
+            height: 4rem;
+        }
+
+        /* Navigasyon */
+        .nav {
+            display: flex;
+        }
+
+        .nav__list {
+            display: flex;
+            gap: 2.4rem;
+            list-style: none;
+        }
+
+        .nav__link {
+            text-decoration: none;
+            color: #555;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav__link:hover,
+        .nav__link.active {
+            color: #0077cc;
+        }
+
+        /* Mobil menü butonu */
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+
+        .hamburger,
+        .hamburger::before,
+        .hamburger::after {
+            width: 2.4rem;
+            height: 0.3rem;
+            background: #333;
+            display: block;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .hamburger::before,
+        .hamburger::after {
+            content: '';
+            position: absolute;
+            left: 0;
+        }
+
+        .hamburger::before {
+            top: -0.8rem;
+        }
+
+        .hamburger::after {
+            top: 0.8rem;
+        }
+
+        /* ====================== Hero (Kapak) ====================== */
+        .hero {
+            background: url('../images/hero.jpg') center/cover no-repeat;
+            color: #fff;
+            text-align: center;
+            padding: 12rem 2rem;
+            position: relative;
+        }
+
+        .hero::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.45);
+        }
+
+        .hero__container {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero__title {
+            font-size: 4.8rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero__subtitle {
+            font-size: 2rem;
+            margin-bottom: 2.5rem;
+        }
+
+        /* Butonlar */
+        .btn {
+            display: inline-block;
+            padding: 1rem 2.4rem;
+            border-radius: 0.4rem;
+            font-weight: 500;
+            text-decoration: none;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        .btn--primary {
+            background: #0077cc;
+            color: #fff;
+        }
+
+        .btn--primary:hover {
+            background: #005fa3;
+        }
+
+        .btn--secondary {
+            background: #fff;
+            color: #0077cc;
+            border: 1px solid #0077cc;
+        }
+
+        .btn--secondary:hover {
+            background: #0077cc;
+            color: #fff;
+        }
+
+        /* ====================== Blog Gösterimi ====================== */
+        .blog {
+            padding: 6rem 0;
+            background: #fff;
+        }
+
+        .blog__container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(34rem, 1fr));
+            gap: 4rem;
+        }
+
+        /* Post Card */
+        .post-card {
+            background: #fff;
+            border: 1px solid #eaeaea;
+            border-radius: 0.8rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.2s;
+        }
+
+        .post-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        .post-card__image {
+            width: 100%;
+            height: 20rem;
+            object-fit: cover;
+        }
+
+        .post-card__content {
+            padding: 2rem;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .post-card__title {
+            font-size: 2.2rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .post-card__title a {
+            color: #222;
+            text-decoration: none;
+        }
+
+        .post-card__title a:hover {
+            color: #0077cc;
+        }
+
+        .post-card__meta {
+            font-size: 1.4rem;
+            color: #777;
+            margin-bottom: 1.2rem;
+        }
+
+        .post-card__excerpt {
+            flex-grow: 1;
+            margin-bottom: 2rem;
+            color: #555;
+        }
+
+        .post-card .btn {
+            align-self: flex-start;
+        }
+
+        /* ====================== Footer ====================== */
+        .footer {
+            background: #212121;
+            color: #ddd;
+            padding: 5rem 0 2rem;
+        }
+
+        .footer__container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4rem;
+        }
+
+        .footer__col {
+            flex: 1 1 20rem;
+        }
+
+        .footer__title {
+            font-size: 2rem;
+            margin-bottom: 1.6rem;
+            color: #fff;
+        }
+
+        .footer__list {
+            list-style: none;
+        }
+
+        .footer__list a {
+            color: #bbb;
+            text-decoration: none;
+            font-size: 1.6rem;
+            display: block;
+            margin-bottom: 0.6rem;
+        }
+
+        .footer__list a:hover {
+            color: #fff;
+        }
+
+        .newsletter-form {
+            display: flex;
+            gap: 0.6rem;
+        }
+
+        .newsletter-form input {
+            flex: 1;
+            padding: 0.8rem 1.2rem;
+            border-radius: 0.4rem;
+            border: none;
+        }
+
+        .newsletter-form button {
+            white-space: nowrap;
+        }
+
+        .footer__bottom {
+            text-align: center;
+            margin-top: 4rem;
+            font-size: 1.4rem;
+            color: #aaa;
+        }
+
+        /* ====================== Responsive Ayarlar ====================== */
+        @media (max-width: 1024px) {
+            .hero {
+                padding: 9rem 2rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header__container {
+                justify-content: space-between;
+            }
+
+            .nav {
+                position: absolute;
+                top: 100%;
+                right: 0;
+                background: #fff;
+                width: 100%;
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease-out;
+                border-bottom: 1px solid #eaeaea;
+            }
+
+            .nav.open {
+                max-height: 20rem;
+                /* Menü yüksekliği ihtiyacına göre ayarlayın */
+            }
+
+            .nav__list {
+                flex-direction: column;
+                padding: 1rem 2rem;
+            }
+
+            .nav-toggle {
+                display: block;
+            }
+        }
+
+        @media (max-width: 500px) {
+            .hero__title {
+                font-size: 3.6rem;
+            }
+
+            .hero__subtitle {
+                font-size: 1.6rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- ====================== Header ====================== -->
+    <header class="header">
+        <div class="container header__container">
+            <!-- Logo -->
+            <a href="/" class="logo">
+                <img src="images/logo.png" alt="Blog Logosu">
+            </a>
+
+            <!-- Navigasyon -->
+            <nav class="nav" id="nav">
+                <ul class="nav__list">
+                    <li class="nav__item"><a href="#" class="nav__link active">Ana Sayfa</a></li>
+                    <li class="nav__item"><a href="#" class="nav__link">Hakkımızda</a></li>
+                    <li class="nav__item"><a href="#" class="nav__link">Kategoriler</a></li>
+                    <li class="nav__item"><a href="#" class="nav__link">İletişim</a></li>
+                </ul>
+            </nav>
+
+            <!-- Mobil menü butonu -->
+            <button class="nav-toggle" id="navToggle" aria-label="Menüyü aç/kapat">
+                <span class="hamburger"></span>
+            </button>
+        </div>
+    </header>
+
+    <!-- ====================== Hero (Kapak) ====================== -->
+    <section class="hero">
+        <div class="container hero__container">
+            <h1 class="hero__title">Profesyonel Blog</h1>
+            <p class="hero__subtitle">
+                İçeriklerinizi şık bir tasarımla paylaşın, okuyucularınızı etkileyin.
+            </p>
+            <a href="#posts" class="btn btn--primary">Blogu Keşfet</a>
+        </div>
+    </section>
+
+    <!-- ====================== Blog Yazıları ====================== -->
+    <main id="posts" class="blog">
+        <div class="container blog__container">
+
+            <!-- Yazı Kartı #1 -->
+            <article class="post-card">
+                <a href="post-1.html" class="post-card__image-link">
+                    <img src="images/post-1.jpg" alt="Yazı 1 Görseli" class="post-card__image">
+                </a>
+                <div class="post-card__content">
+                    <h2 class="post-card__title"><a href="post-1.html">İlk Blog Yazısı Başlığı</a></h2>
+                    <p class="post-card__meta">
+                        <span>30 Ağustos 2025</span> | <span>Web Tasarım</span>
+                    </p>
+                    <p class="post-card__excerpt">
+                        Bu örnek yazının kısa bir özetidir. Buraya birkaç cümle ekleyerek okuyucunun ilgisini
+                        çekebilirsiniz.
+                    </p>
+                    <a href="post-1.html" class="btn btn--secondary">Devamını Oku →</a>
+                </div>
+            </article>
+
+            <!-- Yazı Kartı #2 -->
+            <article class="post-card">
+                <a href="post-2.html" class="post-card__image-link">
+                    <img src="images/post-2.jpg" alt="Yazı 2 Görseli" class="post-card__image">
+                </a>
+                <div class="post-card__content">
+                    <h2 class="post-card__title"><a href="post-2.html">Responsive Tasarımın Önemi</a></h2>
+                    <p class="post-card__meta">
+                        <span>25 Ağustos 2025</span> | <span>UX/UI</span>
+                    </p>
+                    <p class="post-card__excerpt">
+                        Mobil cihazların yükselişiyle birlikte responsive (duyarlı) tasarım artık bir tercih değil,
+                        zorunluluk haline geldi.
+                    </p>
+                    <a href="post-2.html" class="btn btn--secondary">Devamını Oku →</a>
+                </div>
+            </article>
+
+            <!-- Yazı Kartı #3 -->
+            <article class="post-card">
+                <a href="post-3.html" class="post-card__image-link">
+                    <img src="images/post-3.jpg" alt="Yazı 3 Görseli" class="post-card__image">
+                </a>
+                <div class="post-card__content">
+                    <h2 class="post-card__title"><a href="post-3.html">SEO 101: Temel Stratejiler</a></h2>
+                    <p class="post-card__meta">
+                        <span>20 Ağustos 2025</span> | <span>SEO</span>
+                    </p>
+                    <p class="post-card__excerpt">
+                        Arama motoru optimizasyonu (SEO), içeriklerinizin Google’da daha görünür olmasını sağlayan temel
+                        yöntemleri içerir.
+                    </p>
+                    <a href="post-3.html" class="btn btn--secondary">Devamını Oku →</a>
+                </div>
+            </article>
+
+            <!-- Daha fazla kart eklemek için aynı yapıyı kopyalayabilirsiniz -->
+        </div>
+    </main>
+
+    <!-- ====================== Footer ====================== -->
+    <footer class="footer">
+        <div class="container footer__container">
+            <div class="footer__col">
+                <h3 class="footer__title">Hakkımızda</h3>
+                <p>
+                    2025 yılında kurulan blogumuz, web, tasarım ve dijital pazarlama konularında
+                    güncel, anlaşılır ve pratik içerikler sunar.
+                </p>
+            </div>
+
+            <div class="footer__col">
+                <h3 class="footer__title">Hızlı Bağlantılar</h3>
+                <ul class="footer__list">
+                    <li><a href="#">Ana Sayfa</a></li>
+                    <li><a href="#">Hakkımızda</a></li>
+                    <li><a href="#">Kategoriler</a></li>
+                    <li><a href="#">İletişim</a></li>
+                </ul>
+            </div>
+
+            <div class="footer__col">
+                <h3 class="footer__title">Bülten</h3>
+                <form class="newsletter-form" action="#" method="post">
+                    <input type="email" placeholder="E-posta adresiniz" required>
+                    <button type="submit" class="btn btn--primary">Kaydol</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="footer__bottom">
+            <p>&copy; 2025 Profesyonel Blog. Tüm hakları saklıdır.</p>
+        </div>
+    </footer>
+
+    <!-- JavaScript dosyası -->
+    <script src="js/script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Modern Blog</title>
+    <link rel="stylesheet" href="style.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <style>
+        /* Reset ve Temel Stiller */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #fafafa;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+
+        .page-wrapper {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 2rem;
+        }
+
+        /* Header */
+        .site-header {
+            background: #ffffff;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .logo h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .main-nav ul {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+
+        .main-nav a {
+            text-decoration: none;
+            color: #666;
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .main-nav a:hover,
+        .main-nav a.active {
+            color: #1a1a1a;
+        }
+
+        .main-nav a.active::after {
+            content: '';
+            position: absolute;
+            bottom: -5px;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background: #667eea;
+        }
+
+        .search-box {
+            display: flex;
+            align-items: center;
+            background: #f5f5f5;
+            border-radius: 30px;
+            padding: 0.5rem 1rem;
+        }
+
+        .search-box input {
+            border: none;
+            background: transparent;
+            padding: 0.5rem;
+            font-family: inherit;
+            outline: none;
+            width: 150px;
+        }
+
+        .search-box button {
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        /* Featured Post */
+        .featured-post {
+            margin: 3rem auto;
+            max-width: 1200px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            padding: 0 2rem;
+        }
+
+        .featured-image img {
+            width: 100%;
+            height: auto;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .featured-image img:hover {
+            transform: scale(1.02);
+        }
+
+        .featured-text {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .category-tag {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            width: fit-content;
+        }
+
+        .featured-text h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            line-height: 1.2;
+        }
+
+        .excerpt {
+            color: #555;
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+
+        .post-meta {
+            display: flex;
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        .read-button {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 0.8rem 2rem;
+            border-radius: 30px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: background 0.3s ease, transform 0.2s ease;
+            width: fit-content;
+        }
+
+        .read-button:hover {
+            background: #5a6fd8;
+            transform: translateY(-2px);
+        }
+
+        /* Posts Grid */
+        .posts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            padding: 0 2rem;
+            max-width: 1200px;
+            margin: 3rem auto;
+        }
+
+        .post-card {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .post-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.15);
+        }
+
+        .post-image img {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+        }
+
+        .post-content {
+            padding: 1.5rem;
+        }
+
+        .category-tag.small {
+            font-size: 0.7rem;
+            padding: 0.3rem 0.8rem;
+            margin-bottom: 0.8rem;
+        }
+
+        .post-content h3 {
+            font-size: 1.3rem;
+            margin-bottom: 0.8rem;
+            line-height: 1.3;
+        }
+
+        .post-content .excerpt {
+            font-size: 0.95rem;
+            margin-bottom: 1rem;
+        }
+
+        .post-content .post-meta {
+            font-size: 0.8rem;
+            gap: 1rem;
+            margin-bottom: 0;
+        }
+
+        /* Newsletter */
+        .newsletter {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-align: center;
+            padding: 3rem 2rem;
+            margin: 4rem auto;
+            border-radius: 12px;
+            max-width: 800px;
+        }
+
+        .newsletter h3 {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .newsletter p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .newsletter-form {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .newsletter-form input {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 30px;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            min-width: 300px;
+        }
+
+        .newsletter-form button {
+            padding: 1rem 2rem;
+            background: white;
+            color: #667eea;
+            border: none;
+            border-radius: 30px;
+            font-family: inherit;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .newsletter-form button:hover {
+            transform: scale(1.05);
+        }
+
+        /* Footer */
+        .site-footer {
+            background: #1a1a1a;
+            color: #ddd;
+            margin-top: auto;
+        }
+
+        .footer-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            padding: 3rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-section h4 {
+            color: white;
+            margin-bottom: 1rem;
+            font-size: 1.2rem;
+        }
+
+        .footer-section ul {
+            list-style: none;
+        }
+
+        .footer-section ul li {
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-section a {
+            color: #aaa;
+            text-decoration: none;
+            transition: color 0.3s ease;
+        }
+
+        .footer-section a:hover {
+            color: white;
+        }
+
+        .social-links {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding: 1.5rem;
+            border-top: 1px solid #333;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-container {
+                flex-direction: column;
+                gap: 1rem;
+                padding: 1rem;
+            }
+
+            .main-nav ul {
+                gap: 1rem;
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            .featured-post {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                margin: 2rem auto;
+            }
+
+            .featured-text h2 {
+                font-size: 1.8rem;
+            }
+
+            .posts-grid {
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                gap: 1.5rem;
+            }
+
+            .newsletter {
+                padding: 2rem 1rem;
+            }
+
+            .newsletter-form input {
+                min-width: 250px;
+            }
+
+            .newsletter-form {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .logo h1 {
+                font-size: 1.5rem;
+            }
+
+            .search-box input {
+                width: 120px;
+            }
+
+            .post-image img {
+                height: 150px;
+            }
+
+            .post-content h3 {
+                font-size: 1.1rem;
+            }
+        }
+    </style>
+    <div class="page-wrapper">
+        <header class="site-header">
+            <div class="header-container">
+                <div class="logo">
+                    <h1>BlogSpace</h1>
+                </div>
+                <nav class="main-nav">
+                    <ul>
+                        <li><a href="#" class="active">Anasayfa</a></li>
+                        <li><a href="#">Teknoloji</a></li>
+                        <li><a href="#">Tasarım</a></li>
+                        <li><a href="#">Gelişim</a></li>
+                        <li><a href="#">Hakkımda</a></li>
+                    </ul>
+                </nav>
+                <div class="search-box">
+                    <input type="text" placeholder="Ara..." />
+                    <button>🔍</button>
+                </div>
+            </div>
+        </header>
+
+        <main class="main-content">
+            <section class="featured-post">
+                <div class="featured-image">
+                    <img src="https://picsum.photos/1200/500?random=1" alt="Öne Çıkan Gönderi">
+                </div>
+                <div class="featured-text">
+                    <span class="category-tag">TEKNOLOJİ</span>
+                    <h2>Yapay Zeka ile Geleceğin Web Uygulamaları</h2>
+                    <p class="excerpt">Yapay zeka teknolojilerinin web geliştirme süreçlerine entegrasyonu, kullanıcı
+                        deneyimini ve uygulama performansını nasıl dönüştürüyor? Bu yazıda detaylı inceleyelim...</p>
+                    <div class="post-meta">
+                        <span class="author">Yazar: Ahmet Yılmaz</span>
+                        <span class="date">12 Nisan 2025</span>
+                        <span class="read-time">8 dakika okuma</span>
+                    </div>
+                    <a href="#" class="read-button">Devamını Oku</a>
+                </div>
+            </section>
+
+            <section class="posts-grid">
+                <article class="post-card">
+                    <div class="post-image">
+                        <img src="https://picsum.photos/600/400?random=2" alt="Post 2">
+                    </div>
+                    <div class="post-content">
+                        <span class="category-tag small">TASARIM</span>
+                        <h3>CSS'in Geleceği: Container Queries</h3>
+                        <p class="excerpt">Responsive design artık sadece ekran boyutuna değil, container boyutuna da
+                            göre şekilleniyor. Container Queries ile gelen yeni çözüm...</p>
+                        <div class="post-meta">
+                            <span class="date">10 Nisan 2025</span>
+                            <span class="read-time">5 dakika</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="post-card">
+                    <div class="post-image">
+                        <img src="https://picsum.photos/600/400?random=3" alt="Post 3">
+                    </div>
+                    <div class="post-content">
+                        <span class="category-tag small">GELİŞİM</span>
+                        <h3>Remote Çalışma Kültürünü Yeniden Tanımlamak</h3>
+                        <p class="excerpt">Pandemi sonrası remote çalışma artık norm haline geldi. Ancak etkili remote
+                            çalışma için neler gerekiyor?</p>
+                        <div class="post-meta">
+                            <span class="date">8 Nisan 2025</span>
+                            <span class="read-time">6 dakika</span>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="post-card">
+                    <div class="post-image">
+                        <img src="https://picsum.photos/600/400?random=4" alt="Post 4">
+                    </div>
+                    <div class="post-content">
+                        <span class="category-tag small">TEKNOLOJİ</span>
+                        <h3>WebAssembly ile Performans Artışı</h3>
+                        <p class="excerpt">JavaScript'in sınırlarını zorlayan WebAssembly, web uygulamalarında nasıl
+                            devrim yaratıyor?</p>
+                        <div class="post-meta">
+                            <span class="date">5 Nisan 2025</span>
+                            <span class="read-time">7 dakika</span>
+                        </div>
+                    </div>
+                </article>
+            </section>
+
+            <section class="newsletter">
+                <h3>Bültenimize Abone Olun</h3>
+                <p>Yeni yazılarımızdan haberdar olmak için e-posta adresinizi bırakın.</p>
+                <form class="newsletter-form">
+                    <input type="email" placeholder="E-posta adresiniz" required>
+                    <button type="submit">Abone Ol</button>
+                </form>
+            </section>
+        </main>
+
+        <footer class="site-footer">
+            <div class="footer-container">
+                <div class="footer-section">
+                    <h4>BlogSpace</h4>
+                    <p>Güncel teknoloji ve tasarım konularında kaliteli içerikler sunuyoruz.</p>
+                </div>
+                <div class="footer-section">
+                    <h4>Menü</h4>
+                    <ul>
+                        <li><a href="#">Anasayfa</a></li>
+                        <li><a href="#">Kategoriler</a></li>
+                        <li><a href="#">Hakkımda</a></li>
+                        <li><a href="#">İletişim</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>Sosyal Medya</h4>
+                    <div class="social-links">
+                        <a href="#">Twitter</a>
+                        <a href="#">Instagram</a>
+                        <a href="#">LinkedIn</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 BlogSpace. Tüm hakları saklıdır.</p>
+            </div>
+        </footer>
+    </div>
+</body>
+
+</html>

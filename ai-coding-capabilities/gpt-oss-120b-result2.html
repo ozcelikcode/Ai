@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="tr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MyBlog – Modern Blog Şablonu</title>
+
+    <!-- Google Font – Poppins -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome – Sosyal ikonlar -->
+    <script src="https://kit.fontawesome.com/yourkitid.js" crossorigin="anonymous"></script>
+
+    <style>
+        /* ==================== 0. GLOBAL ==================== */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            line-height: 1.6;
+            background: #fafafa;
+            color: #333;
+        }
+
+        /* ---------- CSS Variables ---------- */
+        :root {
+            --primary: #4a90e2;
+            --primary-dark: #357ABD;
+            --accent: #ff6b6b;
+            --bg-light: #ffffff;
+            --bg-dark: #f4f4f4;
+            --text-primary: #222222;
+            --text-muted: #666666;
+            --radius: 8px;
+            --transition: .3s ease;
+        }
+
+        /* Dark‑mode vars (vars are overwritten by .dark-mode) */
+        .dark-mode {
+            --bg-light: #1c1c1c;
+            --bg-dark: #111111;
+            --text-primary: #fafafa;
+            --text-muted: #bbbbbb;
+            --primary: #4fb3ff;
+            --primary-dark: #2a9ae5;
+            --accent: #ff8c8c;
+        }
+
+        /* ==================== 1. CONTAINER ==================== */
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: auto;
+        }
+
+        /* ==================== 2. NAVBAR ==================== */
+        .navbar {
+            background: var(--bg-light);
+            border-bottom: 1px solid #e1e1e1;
+            position: sticky;
+            top: 0;
+            z-index: 999;
+        }
+
+        .nav-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.8rem 0;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .nav-menu ul {
+            list-style: none;
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 500;
+            transition: color var(--transition);
+        }
+
+        .nav-menu a:hover {
+            color: var(--primary);
+        }
+
+        .nav-toggle {
+            display: none;
+            flex-direction: column;
+            justify-content: space-between;
+            width: 24px;
+            height: 18px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+        }
+
+        .nav-toggle .bar {
+            height: 2px;
+            width: 100%;
+            background: var(--text-primary);
+            border-radius: 2px;
+        }
+
+        .dark-toggle {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            cursor: pointer;
+        }
+
+        /* Burger menüsü (mobil) */
+        @media (max-width:900px) {
+            .nav-menu {
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--bg-light);
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height var(--transition);
+                border-bottom: 1px solid #e1e1e1;
+            }
+
+            .nav-menu.open {
+                max-height: 300px;
+            }
+
+            .nav-menu ul {
+                flex-direction: column;
+                gap: 0;
+            }
+
+            .nav-menu li {
+                border-top: 1px solid #e1e1e1;
+            }
+
+            .nav-menu a {
+                padding: .9rem;
+                display: block;
+            }
+
+            .nav-toggle {
+                display: flex;
+            }
+        }
+
+        /* ==================== 3. HERO ==================== */
+        .hero {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: #fff;
+            padding: 6rem 0 4rem;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            margin-bottom: 1rem;
+        }
+
+        .hero p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+        }
+
+        .btn-primary {
+            display: inline-block;
+            background: var(--accent);
+            color: #fff;
+            padding: .8rem 1.6rem;
+            border-radius: var(--radius);
+            text-decoration: none;
+            font-weight: 600;
+            transition: background var(--transition);
+        }
+
+        .btn-primary:hover {
+            background: #e05555;
+        }
+
+        /* ==================== 4. FEATURED CAROUSEL ==================== */
+        .featured-carousel {
+            background: var(--bg-light);
+            padding: 2rem 0 3rem;
+            position: relative;
+        }
+
+        .featured-carousel .section-title {
+            text-align: center;
+            margin-bottom: 1.5rem;
+            color: var(--text-primary);
+        }
+
+        .carousel {
+            display: flex;
+            overflow: hidden;
+            scroll-behavior: smooth;
+        }
+
+        .carousel-item {
+            min-width: 100%;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        .carousel-item img {
+            width: 100%;
+            height: 400px;
+            object-fit: cover;
+            border-radius: var(--radius);
+        }
+
+        .carousel-caption {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            color: #fff;
+            background: rgba(0, 0, 0, .4);
+            padding: .5rem 1rem;
+            border-radius: var(--radius);
+        }
+
+        .carousel-control {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(0, 0, 0, .5);
+            border: none;
+            color: #fff;
+            font-size: 1.5rem;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .carousel-control.prev {
+            left: 10px;
+        }
+
+        .carousel-control.next {
+            right: 10px;
+        }
+
+        /* ==================== 5. POSTS GRID ==================== */
+        .posts-section {
+            padding: 4rem 0;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 2rem;
+            text-align: center;
+            color: var(--text-primary);
+        }
+
+        .posts-grid {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        }
+
+        .post-card {
+            background: var(--bg-light);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, .07);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            transition: transform .2s, box-shadow .2s;
+        }
+
+        .post-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, .12);
+        }
+
+        .post-card img {
+            width: 100%;
+            height: 180px;
+            object-fit: cover;
+        }
+
+        .post-info {
+            padding: 1rem;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+        }
+
+        .post-info h3 {
+            font-size: 1.25rem;
+            margin-bottom: .4rem;
+            line-height: 1.3;
+        }
+
+        .post-info h3 a {
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: color var(--transition);
+        }
+
+        .post-info h3 a:hover {
+            color: var(--primary);
+        }
+
+        .meta {
+            font-size: .85rem;
+            color: var(--text-muted);
+            margin-bottom: .8rem;
+        }
+
+        .category {
+            background: var(--primary);
+            color: #fff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: .75rem;
+        }
+
+        .excerpt {
+            flex-grow: 1;
+            margin-bottom: 1rem;
+            font-size: .95rem;
+            color: var(--text-muted);
+        }
+
+        .read-more {
+            align-self: flex-start;
+            font-weight: 600;
+            color: var(--primary);
+            text-decoration: none;
+            transition: color var(--transition);
+        }
+
+        .read-more:hover {
+            color: var(--primary-dark);
+        }
+
+        /* =============== Pagination =============== */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            gap: .5rem;
+            margin-top: 2rem;
+        }
+
+        .page-link {
+            padding: .5rem .9rem;
+            border: 1px solid var(--primary);
+            border-radius: var(--radius);
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all var(--transition);
+        }
+
+        .page-link:hover,
+        .page-link.active {
+            background: var(--primary);
+            color: #fff;
+        }
+
+        /* ==================== 6. AUTHOR BIO ==================== */
+        .author-bio {
+            background: var(--bg-light);
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        .author-bio .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .author-img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid var(--primary);
+        }
+
+        .author-info h3 {
+            margin: 0;
+            font-size: 1.6rem;
+            color: var(--primary);
+        }
+
+        .author-info p {
+            max-width: 600px;
+            line-height: 1.6;
+            color: var(--text-muted);
+        }
+
+        .author-social a {
+            margin: 0 .5rem;
+            font-size: 1.4rem;
+            color: var(--text-primary);
+            transition: color var(--transition);
+        }
+
+        .author-social a:hover {
+            color: var(--primary);
+        }
+
+        /* ==================== 7. NEWSLETTER ==================== */
+        .newsletter {
+            background: var(--primary);
+            color: #fff;
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        .newsletter h2 {
+            margin-bottom: .8rem;
+            font-size: 2rem;
+        }
+
+        .newsletter p {
+            margin-bottom: 1.5rem;
+        }
+
+        .newsletter-form {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: .8rem;
+        }
+
+        .newsletter-form input[type="email"] {
+            padding: .8rem 1rem;
+            border: none;
+            border-radius: var(--radius);
+            min-width: 260px;
+            font-size: 1rem;
+        }
+
+        .newsletter-form button {
+            background: #fff;
+            color: var(--primary);
+            border: none;
+            padding: .8rem 1.2rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+
+        .newsletter-form button:hover {
+            background: #f5f5f5;
+        }
+
+        .form-msg {
+            margin-top: .5rem;
+            font-size: .9rem;
+        }
+
+        /* ==================== 8. TAG CLOUD ==================== */
+        .tag-cloud {
+            background: var(--bg-light);
+            padding: 2rem 0;
+            text-align: center;
+        }
+
+        .tag-cloud .tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: .6rem;
+            justify-content: center;
+        }
+
+        .tag {
+            background: var(--primary);
+            color: #fff;
+            padding: .4rem .8rem;
+            border-radius: var(--radius);
+            text-decoration: none;
+            font-size: .9rem;
+            transition: background var(--transition);
+        }
+
+        .tag:hover {
+            background: var(--primary-dark);
+        }
+
+        /* ==================== 9. CONTACT FORM ==================== */
+        .contact {
+            background: var(--bg-light);
+            padding: 3rem 0;
+            text-align: center;
+        }
+
+        .contact-form {
+            max-width: 600px;
+            margin: auto;
+            display: flex;
+            flex-direction: column;
+            gap: .8rem;
+        }
+
+        .contact-form input,
+        .contact-form textarea {
+            width: 100%;
+            padding: .8rem 1rem;
+            border: 1px solid #ccc;
+            border-radius: var(--radius);
+            font-size: 1rem;
+            resize: vertical;
+        }
+
+        .contact-form button {
+            align-self: flex-start;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            padding: .8rem 1.5rem;
+            border-radius: var(--radius);
+            font-weight: 600;
+            cursor: pointer;
+            transition: background var(--transition);
+        }
+
+        .contact-form button:hover {
+            background: var(--primary-dark);
+        }
+
+        #contact-msg {
+            margin-top: .5rem;
+            font-size: .9rem;
+        }
+
+        /* ==================== 10. FOOTER ==================== */
+        .site-footer {
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            padding: 3rem 0 1.5rem;
+        }
+
+        .footer-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            justify-content: space-between;
+        }
+
+        .footer-about,
+        .footer-links,
+        .footer-social {
+            flex: 1 1 220px;
+        }
+
+        .footer-about h3 {
+            font-size: 1.6rem;
+            margin-bottom: .8rem;
+            color: var(--primary);
+        }
+
+        .footer-about p {
+            font-size: .95rem;
+            line-height: 1.5;
+        }
+
+        .footer-links h4,
+        .footer-social h4 {
+            font-size: 1.2rem;
+            margin-bottom: .6rem;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links a {
+            text-decoration: none;
+            color: var(--text-primary);
+            font-size: .95rem;
+            display: block;
+            margin: .3rem 0;
+            transition: color var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+
+        .footer-social a {
+            font-size: 1.4rem;
+            margin-right: .8rem;
+            color: var(--text-primary);
+            transition: color var(--transition);
+        }
+
+        .footer-social a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            margin-top: 2rem;
+            font-size: .85rem;
+            color: var(--text-muted);
+        }
+
+        /* ==================== 11. RESPONSIVE ==================== */
+        @media (max-width:600px) {
+            .hero h1 {
+                font-size: 1.8rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .author-bio .container {
+                flex-direction: column;
+            }
+
+            .newsletter-form {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <!--------------------- NAVBAR --------------------->
+    <header class="navbar">
+        <div class="container nav-container">
+            <a href="#" class="logo">MyBlog</a>
+
+            <nav class="nav-menu" id="nav-menu">
+                <ul>
+                    <li><a href="#">Ana Sayfa</a></li>
+                    <li><a href="#">Hakkımda</a></li>
+                    <li><a href="#">Kategoriler</a></li>
+                    <li><a href="#">İletişim</a></li>
+                </ul>
+            </nav>
+
+            <button class="nav-toggle" id="nav-toggle" aria-label="Menüyü aç/kapat">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+
+            <!-- Dark‑Mode Toggle -->
+            <button class="dark-toggle" id="dark-toggle" aria-label="Karanlık Mod">
+                <i class="fas fa-moon"></i>
+            </button>
+        </div>
+    </header>
+
+    <!--------------------- HERO --------------------->
+    <section class="hero">
+        <div class="container hero-content">
+            <h1>Bloguma Hoş Geldiniz!</h1>
+            <p>Teknoloji, seyahat, yaşam tarzı ve daha fazlası hakkında güncel yazılar.</p>
+            <a href="#" class="btn-primary">Son Yazılara Göz At</a>
+        </div>
+    </section>
+
+    <!--------------------- FEATURED CAROUSEL --------------------->
+    <section class="featured-carousel">
+        <div class="container">
+            <h2 class="section-title">Öne Çıkan Yazılar</h2>
+
+            <div class="carousel" id="carousel">
+                <!-- Örnek Slider Item -->
+                <a href="#" class="carousel-item">
+                    <img src="https://picsum.photos/seed/featured1/800/400" alt="Featured 1">
+                    <div class="carousel-caption">
+                        <h3>AI‑Driven Web Development</h3>
+                    </div>
+                </a>
+                <a href="#" class="carousel-item">
+                    <img src="https://picsum.photos/seed/featured2/800/400" alt="Featured 2">
+                    <div class="carousel-caption">
+                        <h3>2025’te Keşfedilecek En Yeni Şehirler</h3>
+                    </div>
+                </a>
+                <a href="#" class="carousel-item">
+                    <img src="https://picsum.photos/seed/featured3/800/400" alt="Featured 3">
+                    <div class="carousel-caption">
+                        <h3>Minimalist Yaşam Rehberi</h3>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Slider kontrol düğmeleri -->
+            <button class="carousel-control prev" id="prevBtn"><i class="fas fa-chevron-left"></i></button>
+            <button class="carousel-control next" id="nextBtn"><i class="fas fa-chevron-right"></i></button>
+        </div>
+    </section>
+
+    <!--------------------- BLOG POST LIST --------------------->
+    <main class="posts-section">
+        <div class="container">
+            <h2 class="section-title">En Yeni Yazılar</h2>
+
+            <div class="posts-grid">
+                <!-- ------------------------------------------------- -->
+                <!--   Tek bir post‑kartını kopyalayıp içerik girin   -->
+                <!-- ------------------------------------------------- -->
+                <article class="post-card">
+                    <img src="https://picsum.photos/seed/1/600/400" alt="Yazı görseli">
+                    <div class="post-info">
+                        <h3><a href="#">JavaScript ile Modern Web Uygulamaları</a></h3>
+                        <p class="meta">12 Ağustos 2025 • <span class="category">Kodlama</span></p>
+                        <p class="excerpt">
+                            JavaScript’in yeni özellikleri ve bunları gerçek dünyada nasıl kullanabileceğinizi
+                            keşfedin...
+                        </p>
+                        <a href="#" class="read-more">Devamını Oku →</a>
+                    </div>
+                </article>
+
+                <!-- (Diğer post‑kartları aynı yapıdadır) -->
+                <!-- …… -->
+            </div>
+
+            <!-- ---------- Pagination ---------- -->
+            <nav class="pagination">
+                <a href="#" class="page-link prev-page">« Önceki</a>
+                <a href="#" class="page-link active">1</a>
+                <a href="#" class="page-link">2</a>
+                <a href="#" class="page-link">3</a>
+                <a href="#" class="page-link next-page">Sonraki »</a>
+            </nav>
+        </div>
+    </main>
+
+    <!--------------------- AUTHOR BIO --------------------->
+    <section class="author-bio">
+        <div class="container">
+            <img src="https://i.pravatar.cc/150?u=author" alt="Yazar Fotoğrafı" class="author-img">
+            <div class="author-info">
+                <h3>Ahmet Yıldız</h3>
+                <p>
+                    Merhaba! Ben Ahmet, 8 yıldır frontend ve backend alanında çalışıyorum.
+                    Blogumda teknoloji trendleri, yolculuk anıları ve kişisel gelişim konularını
+                    paylaşıyorum. 🎯
+                </p>
+                <div class="author-social">
+                    <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                    <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+                    <a href="#" aria-label="GitHub"><i class="fab fa-github"></i></a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!--------------------- NEWSLETTER --------------------->
+    <section class="newsletter">
+        <div class="container">
+            <h2>Yeni Yazılardan Anında Haberdar Ol!</h2>
+            <p>E‑posta adresinizi girin, haftalık özet ve özel içeriklerden anında faydalanın.</p>
+
+            <form id="newsletter-form" class="newsletter-form" novalidate>
+                <input type="email" name="email" placeholder="E‑posta adresiniz" required>
+                <button type="submit" class="btn-primary">Kayıt Ol</button>
+                <p class="form-msg" id="form-msg"></p>
+            </form>
+        </div>
+    </section>
+
+    <!--------------------- TAG CLOUD --------------------->
+    <section class="tag-cloud">
+        <div class="container">
+            <h2>Popüler Etiketler</h2>
+            <div class="tags">
+                <a href="#" class="tag">#JavaScript</a>
+                <a href="#" class="tag">#Seyahat</a>
+                <a href="#" class="tag">#Minimalizm</a>
+                <a href="#" class="tag">#AI</a>
+                <a href="#" class="tag">#Sağlık</a>
+                <a href="#" class="tag">#WebDesign</a>
+            </div>
+        </div>
+    </section>
+
+    <!--------------------- CONTACT FORM --------------------->
+    <section class="contact">
+        <div class="container">
+            <h2>Benimle İletişime Geç</h2>
+            <form id="contact-form" class="contact-form" novalidate>
+                <input type="text" name="name" placeholder="Adınız" required>
+                <input type="email" name="email" placeholder="E‑posta" required>
+                <textarea name="message" rows="4" placeholder="Mesajınız" required></textarea>
+                <button type="submit" class="btn-primary">Gönder</button>
+                <p class="form-msg" id="contact-msg"></p>
+            </form>
+        </div>
+    </section>
+
+    <!--------------------- FOOTER --------------------->
+    <footer class="site-footer">
+        <div class="container footer-container">
+            <div class="footer-about">
+                <h3>MyBlog</h3>
+                <p>Teknoloji, seyahat, yaşam tarzı ve kişisel gelişim üzerine kaliteli içerikler üretiriz.</p>
+            </div>
+
+            <div class="footer-links">
+                <h4>Hızlı Bağlantılar</h4>
+                <ul>
+                    <li><a href="#">Ana Sayfa</a></li>
+                    <li><a href="#">Hakkımda</a></li>
+                    <li><a href="#">Kategoriler</a></li>
+                    <li><a href="#">İletişim</a></li>
+                </ul>
+            </div>
+
+            <div class="footer-social">
+                <h4>Bizi Takip Edin</h4>
+                <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin"></i></a>
+            </div>
+        </div>
+
+        <div class="footer-bottom">
+            © 2025 MyBlog • Tüm hakları saklıdır.
+        </div>
+    </footer>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
