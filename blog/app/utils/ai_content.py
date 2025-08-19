@@ -9,12 +9,135 @@ load_dotenv()
 # Configure Gemini API
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "AIzaSyA7kpevybllWyvF-Vxjob2tjKW65mgEwqM")
 if GEMINI_API_KEY:
-    genai.configure(api_key=GEMINI_API_KEY)
+    try:
+        genai.configure(api_key=GEMINI_API_KEY)
+    except Exception as e:
+        print(f"Error configuring Gemini API: {e}")
+else:
+    print("Warning: No Gemini API key provided")
 
 class AIContentGenerator:
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-2.5-pro')
+        try:
+            # Check if API is configured first
+            if not GEMINI_API_KEY:
+                self.model = None
+                self.is_available = False
+                return
+                
+            # Gemini-2.5-flash is the current model
+            self.model = genai.GenerativeModel('gemini-2.5-flash')
+            self.is_available = True
+        except Exception as e:
+            print(f"AI model initialization error: {e}")
+            import traceback
+            traceback.print_exc()
+            self.model = None
+            self.is_available = False
         
+    def generate_page_content(
+        self,
+        topic: str,
+        content_length: str = "medium",
+        content_type: str = "professional",
+        custom_prompt: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """
+        Generate page content using AI (for static pages)
+        
+        Args:
+            topic: The page topic/type (e.g., "Hakkımızda", "İletişim")
+            content_length: "short", "medium", "long"
+            content_type: "professional", "friendly", "formal", "informative"
+            custom_prompt: Optional custom prompt to override defaults
+            
+        Returns:
+            Dict containing title, content, meta_description
+        """
+        
+        try:
+            # Check if AI is available
+            if not self.is_available or not self.model:
+                return {
+                    "success": False,
+                    "error": "AI servisi şu anda kullanılamıyor. Lütfen API anahtarınızı kontrol edin.",
+                    "data": self._generate_fallback_page_content(topic)
+                }
+            
+            # Length guidelines for pages
+            length_guide = {
+                "short": "200-400 kelime",
+                "medium": "400-700 kelime", 
+                "long": "700-1000 kelime"
+            }
+            
+            # Content type guidelines for pages
+            type_guide = {
+                "professional": "profesyonel ve güvenilir",
+                "friendly": "samimi ve yakın",
+                "formal": "resmi ve kurumsal",
+                "informative": "bilgilendirici ve açıklayıcı"
+            }
+            
+            if custom_prompt:
+                prompt = custom_prompt
+            else:
+                prompt = f"""
+                Türkçe olarak "{topic}" konusunda {type_guide.get(content_type, 'profesyonel')} bir web sayfası içeriği yaz.
+                
+                Gereksinimler:
+                - İçerik uzunluğu: {length_guide.get(content_length, '400-700 kelime')}
+                - Stil: {type_guide.get(content_type, 'profesyonel ve güvenilir')}
+                - Türkçe dilbilgisi kurallarına uygun
+                - Web sayfası formatında (statik sayfa)
+                - Net başlıklar ve paragraflar (HTML etiketleri ile)
+                - Kullanıcı deneyimi odaklı
+                
+                Lütfen yanıtını şu JSON formatında ver:
+                {{
+                    "title": "Sayfa için uygun başlık",
+                    "content": "HTML formatında tam sayfa içeriği",
+                    "meta_description": "SEO için 150-160 karakterlik açıklama"
+                }}
+                """
+            
+            response = self.model.generate_content(prompt)
+            
+            # Try to parse JSON response
+            try:
+                # Clean the response text
+                response_text = response.text.strip()
+                
+                # Remove markdown code blocks if present
+                if response_text.startswith('```json'):
+                    response_text = response_text[7:]
+                if response_text.endswith('```'):
+                    response_text = response_text[:-3]
+                
+                result = json.loads(response_text)
+                
+                # Validate required fields
+                required_fields = ['title', 'content', 'meta_description']
+                for field in required_fields:
+                    if field not in result:
+                        result[field] = self._generate_fallback_page_content(topic, field)
+                
+                return {
+                    "success": True,
+                    "data": result
+                }
+                
+            except json.JSONDecodeError:
+                # If JSON parsing fails, try to extract content manually
+                return self._parse_text_response(response.text, topic)
+                
+        except Exception as e:
+            return {
+                "success": False,
+                "error": str(e),
+                "data": self._generate_fallback_page_content(topic)
+            }
+
     def generate_blog_post(
         self,
         topic: str,
@@ -36,6 +159,14 @@ class AIContentGenerator:
         """
         
         try:
+            # Check if AI is available
+            if not self.is_available or not self.model:
+                return {
+                    "success": False,
+                    "error": "AI servisi şu anda kullanılamıyor. Lütfen API anahtarınızı kontrol edin.",
+                    "data": self._generate_fallback_content(topic)
+                }
+            
             # Length guidelines
             length_guide = {
                 "short": "300-500 kelime",
@@ -116,6 +247,10 @@ class AIContentGenerator:
     def generate_title_suggestions(self, topic: str, count: int = 5) -> list:
         """Generate multiple title suggestions for a topic"""
         try:
+            # Check if AI is available
+            if not self.is_available or not self.model:
+                return self._generate_fallback_titles(topic, count)
+            
             prompt = f"""
             "{topic}" konusu için {count} adet çekici ve SEO dostu blog başlığı öner.
             Her başlık:
@@ -132,18 +267,16 @@ class AIContentGenerator:
             return titles[:count]
             
         except Exception as e:
-            # Fallback titles
-            return [
-                f"{topic} Hakkında Bilmeniz Gerekenler",
-                f"{topic} Rehberi: Başlangıçtan İleri Seviyeye",
-                f"{topic} ile İlgili En Güncel Bilgiler",
-                f"{topic}: Kapsamlı Analiz ve İncelemesi",
-                f"{topic} Konusunda Uzman Görüşleri"
-            ]
+            print(f"AI title generation error: {e}")
+            return self._generate_fallback_titles(topic, count)
     
     def improve_content(self, content: str, instruction: str) -> str:
         """Improve existing content based on instruction"""
         try:
+            # Check if AI is available
+            if not self.is_available or not self.model:
+                return content  # Return original content if AI is not available
+            
             prompt = f"""
             Aşağıdaki blog yazısını "{instruction}" talimatına göre geliştir:
             
@@ -159,7 +292,89 @@ class AIContentGenerator:
             return response.text
             
         except Exception as e:
+            print(f"AI content improvement error: {e}")
             return content  # Return original content if improvement fails
+    
+    def generate_seo_data(self, title: str, content: str = "") -> Dict[str, Any]:
+        """Generate SEO meta description and tags for existing content"""
+        try:
+            # Check if AI is available
+            if not self.is_available or not self.model:
+                return {
+                    "success": False,
+                    "error": "AI servisi şu anda kullanılamıyor. Lütfen API anahtarınızı kontrol edin.",
+                    "data": {
+                        "meta_description": title[:150],
+                        "tags": [title.lower()]
+                    }
+                }
+            
+            content_info = f"\n\nİçerik Özeti:\n{content[:500]}..." if content else ""
+            
+            prompt = f"""
+            Aşağıdaki blog yazısı için SEO optimized meta açıklama ve etiketler oluştur:
+            
+            Başlık: {title}{content_info}
+            
+            Gereksinimler:
+            - Meta açıklama 150-160 karakter arası olsun
+            - SEO dostu ve tıklanma oranını artıracak şekilde yazılsın
+            - 5-8 adet ilgili etiket öner
+            - Türkçe dilbilgisi kurallarına uygun olsun
+            
+            Lütfen yanıtını şu JSON formatında ver:
+            {{
+                "meta_description": "SEO için 150-160 karakterlik açıklama",
+                "tags": ["etiket1", "etiket2", "etiket3", "etiket4", "etiket5"]
+            }}
+            """
+            
+            response = self.model.generate_content(prompt)
+            
+            # Try to parse JSON response
+            try:
+                # Clean the response text
+                response_text = response.text.strip()
+                
+                # Remove markdown code blocks if present
+                if response_text.startswith('```json'):
+                    response_text = response_text[7:]
+                if response_text.endswith('```'):
+                    response_text = response_text[:-3]
+                
+                result = json.loads(response_text)
+                
+                # Validate required fields
+                if 'meta_description' not in result:
+                    result['meta_description'] = title[:150]
+                if 'tags' not in result or not result['tags']:
+                    result['tags'] = [title.lower()]
+                
+                return {
+                    "success": True,
+                    "data": result
+                }
+                
+            except json.JSONDecodeError:
+                # If JSON parsing fails, create fallback
+                return {
+                    "success": True,
+                    "data": {
+                        "meta_description": title[:150],
+                        "tags": [word.lower() for word in title.split() if len(word) > 3][:5]
+                    }
+                }
+                
+        except Exception as e:
+            print(f"AI SEO generation error: {e}")
+            return {
+                "success": False,
+                "error": str(e),
+                "data": {
+                    "meta_description": title[:150],
+                    "tags": [title.lower()]
+                }
+            }
     
     def _parse_text_response(self, text: str, topic: str) -> Dict[str, Any]:
         """Parse non-JSON AI response and extract content"""
@@ -197,6 +412,28 @@ class AIContentGenerator:
             "excerpt": f"{topic} hakkında AI tarafından oluşturulan içerik.",
             "meta_description": f"{topic} hakkında detaylı bilgi.",
             "tags": [topic.lower()]
+        }
+        
+        if field:
+            return fallback_data.get(field, "")
+        return fallback_data
+    
+    def _generate_fallback_titles(self, topic: str, count: int = 5) -> list:
+        """Generate fallback titles when AI is not available"""
+        return [
+            f"{topic} Hakkında Bilmeniz Gerekenler",
+            f"{topic} Rehberi: Başlangıçtan İleri Seviyeye",
+            f"{topic} ile İlgili En Güncel Bilgiler",
+            f"{topic}: Kapsamlı Analiz ve İncelemesi",
+            f"{topic} Konusunda Uzman Görüşleri"
+        ][:count]
+    
+    def _generate_fallback_page_content(self, topic: str, field: str = None) -> Any:
+        """Generate fallback content for pages when AI fails"""
+        fallback_data = {
+            "title": f"{topic}",
+            "content": f"<h2>{topic}</h2><p>Bu sayfa içeriği AI tarafından oluşturulmuştur. Detaylar için lütfen manuel olarak düzenleyin.</p>",
+            "meta_description": f"{topic} hakkında detaylı bilgi."
         }
         
         if field:

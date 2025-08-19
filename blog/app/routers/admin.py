@@ -533,21 +533,42 @@ async def generate_ai_content(
     custom_prompt: str = Form(""),
     admin_user: User = Depends(get_admin_user)
 ):
-    """Generate AI content for a blog post"""
+    """Generate AI content for a blog post or page"""
     try:
-        result = ai_generator.generate_blog_post(
-            topic=topic,
-            content_length=content_length,
-            content_type=content_type,
-            custom_prompt=custom_prompt if custom_prompt else None
-        )
+        # Check if topic is provided and not empty
+        if not topic or not topic.strip():
+            return JSONResponse({
+                "success": False,
+                "error": "Lütfen bir konu/başlık girin."
+            })
+        
+        # Check if this is a page content request based on content_type values
+        page_types = ["professional", "friendly", "formal"]
+        
+        if content_type in page_types:
+            # Use page content generator
+            result = ai_generator.generate_page_content(
+                topic=topic.strip(),
+                content_length=content_length,
+                content_type=content_type,
+                custom_prompt=custom_prompt.strip() if custom_prompt.strip() else None
+            )
+        else:
+            # Use blog post generator
+            result = ai_generator.generate_blog_post(
+                topic=topic.strip(),
+                content_length=content_length,
+                content_type=content_type,
+                custom_prompt=custom_prompt.strip() if custom_prompt.strip() else None
+            )
         
         return JSONResponse(result)
         
     except Exception as e:
+        print(f"AI content generation endpoint error: {e}")
         return JSONResponse({
             "success": False,
-            "error": str(e)
+            "error": "AI servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin."
         })
 
 @router.post("/ai/generate-titles")
@@ -559,7 +580,14 @@ async def generate_ai_titles(
 ):
     """Generate AI title suggestions"""
     try:
-        titles = ai_generator.generate_title_suggestions(topic, count)
+        # Check if topic is provided and not empty
+        if not topic or not topic.strip():
+            return JSONResponse({
+                "success": False,
+                "error": "Lütfen bir konu girin."
+            })
+        
+        titles = ai_generator.generate_title_suggestions(topic.strip(), count)
         
         return JSONResponse({
             "success": True,
@@ -567,9 +595,10 @@ async def generate_ai_titles(
         })
         
     except Exception as e:
+        print(f"AI title generation endpoint error: {e}")
         return JSONResponse({
             "success": False,
-            "error": str(e)
+            "error": "AI servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin."
         })
 
 @router.post("/ai/improve-content")
@@ -581,7 +610,20 @@ async def improve_ai_content(
 ):
     """Improve existing content with AI"""
     try:
-        improved_content = ai_generator.improve_content(content, instruction)
+        # Check if content and instruction are provided and not empty
+        if not content or not content.strip():
+            return JSONResponse({
+                "success": False,
+                "error": "İyileştirilecek içerik boş olamaz."
+            })
+        
+        if not instruction or not instruction.strip():
+            return JSONResponse({
+                "success": False,
+                "error": "Lütfen iyileştirme talimatı girin."
+            })
+        
+        improved_content = ai_generator.improve_content(content.strip(), instruction.strip())
         
         return JSONResponse({
             "success": True,
@@ -589,9 +631,37 @@ async def improve_ai_content(
         })
         
     except Exception as e:
+        print(f"AI content improvement endpoint error: {e}")
         return JSONResponse({
             "success": False,
-            "error": str(e)
+            "error": "AI servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin."
+        })
+
+@router.post("/ai/generate-seo")
+async def generate_ai_seo(
+    request: Request,
+    title: str = Form(...),
+    content: str = Form(""),
+    admin_user: User = Depends(get_admin_user)
+):
+    """Generate SEO meta description and tags for existing content"""
+    try:
+        # Check if title is provided and not empty
+        if not title or not title.strip():
+            return JSONResponse({
+                "success": False,
+                "error": "Başlık gereklidir."
+            })
+        
+        result = ai_generator.generate_seo_data(title.strip(), content.strip())
+        
+        return JSONResponse(result)
+        
+    except Exception as e:
+        print(f"AI SEO generation endpoint error: {e}")
+        return JSONResponse({
+            "success": False,
+            "error": "AI servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin."
         })
 
 # Settings Routes

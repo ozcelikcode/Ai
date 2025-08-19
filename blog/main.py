@@ -9,6 +9,7 @@ from app.models import models
 from app.routers import auth, blog, admin, media, users
 from app.routers.comments import get_comments_routers
 from app.routers.search import get_search_routers
+from app.utils.ai_content import ai_generator  # Ensure AI is initialized at startup
 import os
 
 models.Base.metadata.create_all(bind=engine)

@@ -276,15 +276,19 @@
                 </div>
             </div>
             
-            <div class="flex space-x-3">
-                <button type="button" onclick="generateWithAI('title')" class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-smooth">
+            <div class="grid grid-cols-2 gap-3">
+                <button type="button" onclick="generateWithAI('title')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-smooth">
                     Sadece Başlık Üret
                 </button>
-                <button type="button" onclick="generateWithAI('content')" class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-smooth">
+                <button type="button" onclick="generateWithAI('content')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-smooth">
                     Sadece İçerik Üret
                 </button>
-                <button type="button" onclick="generateWithAI('full')" class="flex-1 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-smooth">
-                    Tam Yazı Üret
+                <button type="button" onclick="generateWithAI('full')" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-smooth">
+                    Tam Yazı Üret (Meta+Etiket)
+                </button>
+                <button type="button" onclick="generateWithAI('seo')" class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-smooth">
+                    <i data-lucide="search" class="w-4 h-4 mr-1 inline"></i>
+                    SEO Otomatik Doldur
                 </button>
             </div>
         </div>
@@ -296,13 +300,13 @@
                     Uygula
                 </button>
             </div>
-            <div id="ai-content" class="text-brown-700 whitespace-pre-wrap"></div>
+            <div id="ai-content" class="text-brown-700 prose prose-sm max-w-none"></div>
         </div>
         
         <div id="ai-loading" class="hidden mt-6 text-center">
             <div class="inline-flex items-center">
                 <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-purple-600 mr-3"></div>
-                <span class="text-brown-600">AI içerik oluşturuyor...</span>
+                <span class="text-brown-600">AI içerik oluşturuyor, lütfen bekleyin...</span>
             </div>
         </div>
     </div>
@@ -447,23 +451,59 @@ async function generateWithAI(type) {
     document.getElementById('ai-result').classList.add('hidden');
     
     try {
-        const response = await fetch('/admin/ai/generate', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                type: type,
-                topic: topic,
-                length: length,
-                tone: tone
-            })
-        });
+        let response;
+        
+        if (type === 'seo') {
+            // SEO için farklı endpoint ve parametreler
+            const currentTitle = document.getElementById('title').value;
+            const currentContent = window.joditEditor ? window.joditEditor.getEditorValue() : '';
+            
+            if (!currentTitle.trim()) {
+                alert('SEO oluşturmak için önce başlık giriniz!');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('title', currentTitle);
+            formData.append('content', currentContent);
+            
+            response = await fetch('/admin/ai/generate-seo', {
+                method: 'POST',
+                body: formData
+            });
+        } else {
+            // Normal içerik oluşturma
+            const formData = new FormData();
+            formData.append('topic', topic);
+            formData.append('content_length', length);
+            formData.append('content_type', tone);
+            
+            response = await fetch('/admin/ai/generate-content', {
+                method: 'POST',
+                body: formData
+            });
+        }
         
         const result = await response.json();
         
         if (result.success) {
-            document.getElementById('ai-content').textContent = result.content;
+            let content = '';
+            if (result.data) {
+                if (type === 'title') {
+                    content = `<h3 class="font-semibold text-lg mb-2">Önerilen Başlık:</h3><p class="text-gray-700">${result.data.title || ''}</p>`;
+                } else if (type === 'content') {
+                    content = `<h3 class="font-semibold text-lg mb-2">Önerilen İçerik:</h3><div class="text-gray-700">${result.data.content || ''}</div>`;
+                } else if (type === 'full') {
+                    content = `<h3 class="font-semibold text-lg mb-2">Önerilen Başlık:</h3><p class="text-gray-700 mb-4">${result.data.title || ''}</p>
+                              <h3 class="font-semibold text-lg mb-2">Önerilen İçerik:</h3><div class="text-gray-700 mb-4">${result.data.content || ''}</div>
+                              <h3 class="font-semibold text-lg mb-2">Meta Açıklama:</h3><p class="text-gray-600 text-sm mb-4">${result.data.meta_description || ''}</p>
+                              <h3 class="font-semibold text-lg mb-2">Etiketler:</h3><p class="text-gray-600 text-sm">${(result.data.tags || []).join(', ')}</p>`;
+                } else if (type === 'seo') {
+                    content = `<h3 class="font-semibold text-lg mb-2">Meta Açıklama:</h3><p class="text-gray-600 text-sm mb-4">${result.data.meta_description || ''}</p>
+                              <h3 class="font-semibold text-lg mb-2">Etiketler:</h3><p class="text-gray-600 text-sm">${(result.data.tags || []).join(', ')}</p>`;
+                }
+            }
+            document.getElementById('ai-content').innerHTML = content;
             document.getElementById('ai-result').classList.remove('hidden');
         } else {
             alert('AI içerik oluşturulamadı: ' + (result.error || 'Bilinmeyen hata'));
@@ -478,36 +518,92 @@ async function generateWithAI(type) {
 
 // AI önerisini uygula
 function applyAISuggestion() {
-    const aiContent = document.getElementById('ai-content').textContent;
+    const aiContentDiv = document.getElementById('ai-content');
     const currentTitle = document.getElementById('title').value;
     
-    if (aiContent.includes('Başlık:')) {
-        // Başlık ve içerik ayrı
-        const parts = aiContent.split('\n\n');
-        const title = parts[0].replace('Başlık: ', '');
-        const content = parts.slice(1).join('\n\n');
-        
-        document.getElementById('title').value = title;
-        document.getElementById('title').dispatchEvent(new Event('input')); // Slug güncelle
-        
-        if (content && window.applyContentToEditor) {
-            window.applyContentToEditor(content);
+    // HTML içeriğinden veri çıkar - CSS selector kullanarak
+    let title = '', content = '', metaDesc = '', tags = '';
+    
+    // Başlığı çıkar
+    const titleElements = aiContentDiv.querySelectorAll('h3');
+    for (let h3 of titleElements) {
+        if (h3.textContent.includes('Önerilen Başlık:')) {
+            const nextElement = h3.nextElementSibling;
+            if (nextElement && nextElement.tagName === 'P') {
+                title = nextElement.textContent.trim();
+            }
         }
-    } else {
-        // Sadece içerik
-        if (!currentTitle) {
-            // Eğer başlık yoksa ilk satırı başlık yap
-            const lines = aiContent.split('\n');
-            document.getElementById('title').value = lines[0];
-            document.getElementById('title').dispatchEvent(new Event('input'));
+    }
+    
+    // İçeriği çıkar
+    for (let h3 of titleElements) {
+        if (h3.textContent.includes('Önerilen İçerik:')) {
+            const nextElement = h3.nextElementSibling;
+            if (nextElement && nextElement.tagName === 'DIV') {
+                content = nextElement.innerHTML.trim();
+            }
+        }
+    }
+    
+    // Meta açıklamayı çıkar
+    for (let h3 of titleElements) {
+        if (h3.textContent.includes('Meta Açıklama:')) {
+            const nextElement = h3.nextElementSibling;
+            if (nextElement && nextElement.tagName === 'P') {
+                metaDesc = nextElement.textContent.trim();
+            }
+        }
+    }
+    
+    // Etiketleri çıkar
+    for (let h3 of titleElements) {
+        if (h3.textContent.includes('Etiketler:')) {
+            const nextElement = h3.nextElementSibling;
+            if (nextElement && nextElement.tagName === 'P') {
+                tags = nextElement.textContent.trim();
+            }
+        }
+    }
+    
+    // Başlığı uygula
+    if (title && !currentTitle) {
+        document.getElementById('title').value = title;
+        document.getElementById('title').dispatchEvent(new Event('input'));
+    }
+    
+    // İçeriği uygula
+    if (content && window.applyContentToEditor) {
+        window.applyContentToEditor(content);
+    } else if (!content && !title && aiContentDiv.textContent) {
+        // Fallback: sadece metin varsa
+        const plainText = aiContentDiv.textContent.trim();
+        if (plainText && window.applyContentToEditor) {
+            window.applyContentToEditor(plainText);
+        }
+    }
+    
+    // Meta açıklamayı doldur
+    if (metaDesc) {
+        const metaDescField = document.getElementById('meta_description');
+        if (metaDescField) {
+            metaDescField.value = metaDesc;
+        }
+    }
+    
+    // Etiketleri doldur
+    if (tags) {
+        const tagsContainer = document.getElementById('tags-container');
+        const tagsInput = document.getElementById('tags-input');
+        if (tagsContainer && tagsInput && window.addTag) {
+            // Mevcut etiketleri temizle
+            const existingTags = tagsContainer.querySelectorAll('.tag-item');
+            existingTags.forEach(tag => tag.remove());
             
-            if (window.applyContentToEditor) {
-                window.applyContentToEditor(lines.slice(1).join('\n'));
-            }
-        } else {
-            if (window.applyContentToEditor) {
-                window.applyContentToEditor(aiContent);
-            }
+            // Yeni etiketleri ekle
+            const newTags = tags.split(',').map(tag => tag.trim()).filter(tag => tag);
+            newTags.forEach(tagName => {
+                addTag(tagName);
+            });
         }
     }
     
