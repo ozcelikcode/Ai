@@ -4,11 +4,11 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_admin_user
-from app.models.models import Post, Category, User, Settings
+from app.models.models import Post, Category, User, Settings, Page
 from app.utils.helpers import generate_slug, calculate_reading_time
 from app.utils.ai_content import ai_generator
 from app.utils.image_optimizer import optimize_uploaded_image
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Optional, List
 import os
 import uuid
@@ -329,8 +329,9 @@ async def delete_post(post_id: int, admin_user: User = Depends(get_admin_user), 
         # Delete likes
         db.query(PostLike).filter(PostLike.post_id == post_id).delete()
         
-        # Now delete the post
-        db.delete(post)
+        # Soft delete - move to deleted items
+        post.is_deleted = True
+        post.deleted_at = datetime.now()
         db.commit()
         
         return RedirectResponse(url="/admin/posts", status_code=303)
@@ -509,6 +510,7 @@ async def create_page(
     
     # Action'a göre publish durumunu belirle
     is_published = action == "publish"
+    is_draft = action == "draft"
     
     slug = generate_slug(title, db, model=Page)
     
@@ -519,6 +521,7 @@ async def create_page(
         meta_title=meta_title or title,
         meta_description=meta_description or content[:160],
         is_published=is_published,
+        is_draft=is_draft,
         show_updated_date=show_updated_date
     )
     
@@ -560,6 +563,7 @@ async def update_page(
     
     # Action'a göre publish durumunu belirle
     is_published = action == "publish"
+    is_draft = action == "draft"
     
     # Update slug if title changed
     if page.title != title:
@@ -568,6 +572,7 @@ async def update_page(
     page.title = title
     page.content = content
     page.is_published = is_published
+    page.is_draft = is_draft
     page.meta_title = meta_title or title
     page.meta_description = meta_description or content[:160]
     page.show_updated_date = show_updated_date
@@ -583,7 +588,9 @@ async def delete_page(page_id: int, admin_user: User = Depends(get_admin_user), 
     if not page:
         raise HTTPException(status_code=404, detail="Page not found")
     
-    db.delete(page)
+    # Soft delete - move to deleted items
+    page.is_deleted = True
+    page.deleted_at = datetime.now()
     db.commit()
     
     return RedirectResponse(url="/admin/pages", status_code=303)
@@ -971,6 +978,96 @@ async def delete_tag(tag_id: int, admin_user: User = Depends(get_admin_user), db
     db.commit()
     
     return RedirectResponse(url="/admin/tags", status_code=303)
+
+# Deleted Items Routes
+@router.get("/deleted", response_class=HTMLResponse)
+async def admin_deleted(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    """Show deleted posts and pages"""
+    now = datetime.now()
+    
+    # Get deleted posts
+    deleted_posts = db.query(Post).filter(Post.is_deleted == True).order_by(Post.deleted_at.desc()).all()
+    
+    # Get deleted pages
+    deleted_pages = db.query(Page).filter(Page.is_deleted == True).order_by(Page.deleted_at.desc()).all()
+    
+    # Count items expiring soon (within 3 days)
+    expiring_soon_count = 0
+    for post in deleted_posts:
+        if post.deleted_at:
+            expiry_date = post.deleted_at + timedelta(days=30)
+            days_left = (expiry_date - now).days
+            if 0 <= days_left <= 3:
+                expiring_soon_count += 1
+    
+    for page in deleted_pages:
+        if page.deleted_at:
+            expiry_date = page.deleted_at + timedelta(days=30)
+            days_left = (expiry_date - now).days
+            if 0 <= days_left <= 3:
+                expiring_soon_count += 1
+    
+    site_settings = db.query(Settings).first()
+    return templates.TemplateResponse("admin/deleted.html", {
+        "request": request,
+        "admin_user": admin_user,
+        "site_settings": site_settings,
+        "deleted_posts": deleted_posts,
+        "deleted_pages": deleted_pages,
+        "expiring_soon_count": expiring_soon_count,
+        "now": now,
+        "timedelta": timedelta
+    })
+
+@router.post("/deleted/restore/post/{post_id}")
+async def restore_post(post_id: int, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    """Restore a deleted post"""
+    post = db.query(Post).filter(Post.id == post_id, Post.is_deleted == True).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Silinmiş yazı bulunamadı")
+    
+    post.is_deleted = False
+    post.deleted_at = None
+    db.commit()
+    
+    return RedirectResponse(url="/admin/deleted?restored=post", status_code=303)
+
+@router.post("/deleted/restore/page/{page_id}")
+async def restore_page(page_id: int, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    """Restore a deleted page"""
+    page = db.query(Page).filter(Page.id == page_id, Page.is_deleted == True).first()
+    if not page:
+        raise HTTPException(status_code=404, detail="Silinmiş sayfa bulunamadı")
+    
+    page.is_deleted = False
+    page.deleted_at = None
+    db.commit()
+    
+    return RedirectResponse(url="/admin/deleted?restored=page", status_code=303)
+
+@router.post("/deleted/permanent/post/{post_id}")
+async def permanent_delete_post(post_id: int, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    """Permanently delete a post"""
+    post = db.query(Post).filter(Post.id == post_id, Post.is_deleted == True).first()
+    if not post:
+        raise HTTPException(status_code=404, detail="Silinmiş yazı bulunamadı")
+    
+    db.delete(post)
+    db.commit()
+    
+    return RedirectResponse(url="/admin/deleted?deleted=post", status_code=303)
+
+@router.post("/deleted/permanent/page/{page_id}")
+async def permanent_delete_page(page_id: int, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    """Permanently delete a page"""
+    page = db.query(Page).filter(Page.id == page_id, Page.is_deleted == True).first()
+    if not page:
+        raise HTTPException(status_code=404, detail="Silinmiş sayfa bulunamadı")
+    
+    db.delete(page)
+    db.commit()
+    
+    return RedirectResponse(url="/admin/deleted?deleted=page", status_code=303)
 
 # API Routes for Media Gallery
 @router.get("/api/media")

@@ -31,9 +31,10 @@ async def login(request: Request, username: str = Form(...), password: str = For
         context["error"] = "Invalid username or password"
         return templates.TemplateResponse("blog/login.html", context)
     
-    access_token_expires = timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
+    # Use user's preferred session duration or default
+    session_duration = user.session_duration if user.session_duration else ACCESS_TOKEN_EXPIRE_MINUTES
     access_token = create_access_token(
-        data={"sub": user.username}, expires_delta=access_token_expires
+        data={"sub": user.username}, user_session_duration=session_duration
     )
     
     response = RedirectResponse(url="/admin" if user.is_admin else "/", status_code=303)
@@ -66,11 +67,8 @@ async def register(request: Request, username: str = Form(...), email: str = For
     db.add(user)
     db.commit()
     
-    return templates.TemplateResponse("blog/login.html", {
-        "request": request, 
-        "site_settings": site_settings,
-        "success": "Account created successfully. Please login."
-    })
+    context["success"] = "Account created successfully. Please login."
+    return templates.TemplateResponse("blog/login.html", context)
 
 @router.get("/logout")
 async def logout():

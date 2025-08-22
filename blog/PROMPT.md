@@ -55,6 +55,7 @@
     - başlık, etiket, kategori, yazı içeriği yapay zeka ile doldurulsun seçeneği ile yapay zekaya tam destekli içerik yazdırılabilecek (sayfalar yönetimi kısmı yapay zeka için dahildir). Manuel ve yapay zeka ile yap seçeneği olmalı. Gemini (2.5 Pro) API ile yapılacaktır: AIzaSyA7kpevybllWyvF-Vxjob2tjKW65mgEwqM
   - **kategoriler sayfası** olacak
   - **sayfa yönetimi** olacak. Özel sayfa oluşturmak mümkün olacak
+  - **Silinenler sayfası** olacak (Admin panelde menü olarak görünecek)
   - **ayarlar sayfası** olacak
     - site başlık (yükleme ile logo, url ile seçim), favicon, site meta tagları gibi olması gereken kısımlar bulunacak ve tam fonksiyon çalışacak
     - profil resimleri seçimleri sonsuz eklenebilir olmalı. Resim yükleme ve url ile seçim seçenekleri ile ekleme seçenekleri olmalı (her biri için)
@@ -64,9 +65,22 @@
     - kullanıcılar için **login ve register sayfası** özel bir sayfada olacaktır (/login, /register şeklinde)
   - **İçerik yönetimi**
     - İçerik ekleme ve düzenleme, sayfa ekleme ve düzenleme gibi işlevler tek sayfada dinamik bir şekilde olacaktır
-    - taslak sistemi olacak
+    - **Taslak sistemi** detaylı olarak çalışacak
+      - İçerik ekleme ve sayfa ekleme sayfalarında "Taslak olarak kaydet" butonu olacak
+      - İçerik düzenleme ve sayfa düzenleme sayfalarında "Taslak olarak kaydet" seçeneği olacak
+      - Taslak olarak kaydedilen içerik ve sayfalar yayınlanmayacak
+      - Düzenleme sırasında "Taslak olarak kaydet" seçilirse mevcut yayınlanan içerik taslak durumuna geçecek
+      - Taslak içerikler admin panelde ayrı listede gösterilecek
+      - Taslak içerikler daha sonra düzenlenip yayınlanabilecek
     - slug sistemi olacaktır, başlık yazıldıkça slug otomatik olarak değişecektir ve önizlemesi gösterilecektir. Değiştirilebilir olmalıdır (sayfa yönetimi de dahildir)
     - Güncellenme tarihi gösterilecek fakat isteğe bağlı olarak açılıp kapanabilecek, varsayılan açık olacak (sayfa yönetimi kısmı dahildir)
+    - **Silinenler sayfası** olacak
+      - Admin panelde ayrı bir "Silinenler" sayfası bulunacak
+      - İçerik ve sayfalar silindiğinde silme geçmişine alınacak
+      - Silme geçmişinde 30 gün boyunca saklanacak
+      - 30 gün sonra otomatik olarak kalıcı silinecek
+      - Silme geçmişinden geri yükleme mümkün olacak
+      - Silme geçmişinde silme tarihi ve kalan gün sayısı gösterilecek
     - **Medya galerisi** sayfası olacak
   - **Yazı okuma süresi hesaplayıcı** olacak
     - Tamamen bütün cihazlara uyumlu bir **responsive tasarım** olmalıdır

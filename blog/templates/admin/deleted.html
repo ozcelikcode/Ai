@@ -1,0 +1,234 @@
+{% extends "admin/base.html" %}
+
+{% block title %}Silinenler - {{ site_settings.site_title if site_settings else "Admin Panel" }}{% endblock %}
+
+{% block content %}
+<div class="flex flex-col h-full">
+    <!-- Header -->
+    <div class="mb-8">
+        <div class="flex items-center justify-between">
+            <div>
+                <h1 class="text-3xl font-bold text-amber-900 mb-2">Silinenler</h1>
+                <p class="text-amber-700">Silinmiş içerikler ve sayfalar (30 gün sonra otomatik olarak kalıcı silinir)</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white rounded-xl shadow-sm border border-amber-100 p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-red-100 text-red-600 mr-4">
+                    <i data-lucide="file-text" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Silinmiş İçerikler</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ deleted_posts|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-amber-100 p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-red-100 text-red-600 mr-4">
+                    <i data-lucide="file" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Silinmiş Sayfalar</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ deleted_pages|length }}</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-amber-100 p-6">
+            <div class="flex items-center">
+                <div class="p-3 rounded-full bg-yellow-100 text-yellow-600 mr-4">
+                    <i data-lucide="clock" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <p class="text-sm font-medium text-gray-600">Yakında Silinecek</p>
+                    <p class="text-2xl font-bold text-gray-900">{{ expiring_soon_count }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="flex border-b border-amber-200 mb-6">
+        <button onclick="showTab('posts')" id="posts-tab" class="px-6 py-3 text-sm font-medium border-b-2 border-amber-500 text-amber-600 bg-amber-50 rounded-t-lg">
+            Silinmiş İçerikler
+        </button>
+        <button onclick="showTab('pages')" id="pages-tab" class="px-6 py-3 text-sm font-medium text-gray-500 hover:text-amber-600 border-b-2 border-transparent hover:border-amber-200 transition-smooth">
+            Silinmiş Sayfalar
+        </button>
+    </div>
+
+    <!-- Deleted Posts Tab -->
+    <div id="posts-content" class="tab-content">
+        {% if deleted_posts %}
+        <div class="bg-white rounded-xl shadow-sm border border-amber-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-amber-100">
+                    <thead class="bg-amber-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">İçerik</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Kategori</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Silinme Tarihi</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Kalan Süre</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-amber-50">
+                        {% for post in deleted_posts %}
+                        <tr class="hover:bg-amber-25 transition-smooth">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ post.title }}</div>
+                                    <div class="text-xs text-gray-500">{{ post.slug }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                    {{ post.category.name if post.category else 'Kategori Yok' }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ post.deleted_at.strftime('%d.%m.%Y %H:%M') if post.deleted_at else '' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% set days_left = ((post.deleted_at + timedelta(days=30)) - now()).days if post.deleted_at else 0 %}
+                                {% if days_left > 0 %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                        {% if days_left <= 3 %}bg-red-100 text-red-800{% elif days_left <= 7 %}bg-yellow-100 text-yellow-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                        {{ days_left }} gün
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        Süresi dolmuş
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <form method="post" action="/admin/deleted/restore/post/{{ post.id }}" class="inline">
+                                    <button type="submit" class="text-green-600 hover:text-green-900 mr-3 transition-smooth">
+                                        <i data-lucide="undo" class="w-4 h-4 inline mr-1"></i>Geri Yükle
+                                    </button>
+                                </form>
+                                <form method="post" action="/admin/deleted/permanent/post/{{ post.id }}" class="inline" 
+                                      onsubmit="return confirm('Bu içerik kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misiniz?')">
+                                    <button type="submit" class="text-red-600 hover:text-red-900 transition-smooth">
+                                        <i data-lucide="x" class="w-4 h-4 inline mr-1"></i>Kalıcı Sil
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i data-lucide="trash-2" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Silinmiş içerik bulunamadı</h3>
+            <p class="text-gray-500">Henüz silinmiş bir içerik bulunmuyor.</p>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Deleted Pages Tab -->
+    <div id="pages-content" class="tab-content hidden">
+        {% if deleted_pages %}
+        <div class="bg-white rounded-xl shadow-sm border border-amber-100 overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-amber-100">
+                    <thead class="bg-amber-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Sayfa</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Silinme Tarihi</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">Kalan Süre</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-amber-700 uppercase tracking-wider">İşlemler</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-amber-50">
+                        {% for page in deleted_pages %}
+                        <tr class="hover:bg-amber-25 transition-smooth">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div>
+                                    <div class="text-sm font-medium text-gray-900">{{ page.title }}</div>
+                                    <div class="text-xs text-gray-500">{{ page.slug }}</div>
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                                {{ page.deleted_at.strftime('%d.%m.%Y %H:%M') if page.deleted_at else '' }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                {% set days_left = ((page.deleted_at + timedelta(days=30)) - now()).days if page.deleted_at else 0 %}
+                                {% if days_left > 0 %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium 
+                                        {% if days_left <= 3 %}bg-red-100 text-red-800{% elif days_left <= 7 %}bg-yellow-100 text-yellow-800{% else %}bg-green-100 text-green-800{% endif %}">
+                                        {{ days_left }} gün
+                                    </span>
+                                {% else %}
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                        Süresi dolmuş
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                <form method="post" action="/admin/deleted/restore/page/{{ page.id }}" class="inline">
+                                    <button type="submit" class="text-green-600 hover:text-green-900 mr-3 transition-smooth">
+                                        <i data-lucide="undo" class="w-4 h-4 inline mr-1"></i>Geri Yükle
+                                    </button>
+                                </form>
+                                <form method="post" action="/admin/deleted/permanent/page/{{ page.id }}" class="inline" 
+                                      onsubmit="return confirm('Bu sayfa kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misiniz?')">
+                                    <button type="submit" class="text-red-600 hover:text-red-900 transition-smooth">
+                                        <i data-lucide="x" class="w-4 h-4 inline mr-1"></i>Kalıcı Sil
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <div class="text-center py-12">
+            <i data-lucide="file" class="w-16 h-16 text-gray-300 mx-auto mb-4"></i>
+            <h3 class="text-lg font-medium text-gray-900 mb-2">Silinmiş sayfa bulunamadı</h3>
+            <p class="text-gray-500">Henüz silinmiş bir sayfa bulunmuyor.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function showTab(tabName) {
+    // Hide all tab contents
+    document.querySelectorAll('.tab-content').forEach(content => {
+        content.classList.add('hidden');
+    });
+    
+    // Remove active classes from all tabs
+    document.querySelectorAll('[id$="-tab"]').forEach(tab => {
+        tab.classList.remove('border-amber-500', 'text-amber-600', 'bg-amber-50');
+        tab.classList.add('border-transparent', 'text-gray-500');
+    });
+    
+    // Show selected tab content
+    document.getElementById(tabName + '-content').classList.remove('hidden');
+    
+    // Add active classes to selected tab
+    const activeTab = document.getElementById(tabName + '-tab');
+    activeTab.classList.remove('border-transparent', 'text-gray-500');
+    activeTab.classList.add('border-amber-500', 'text-amber-600', 'bg-amber-50');
+}
+
+// Initialize icons after content loads
+document.addEventListener('DOMContentLoaded', function() {
+    lucide.createIcons();
+});
+</script>
+{% endblock %}

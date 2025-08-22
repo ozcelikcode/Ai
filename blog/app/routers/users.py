@@ -98,6 +98,7 @@ async def profile_settings(
 async def update_profile_settings(
     request: Request,
     profile_image: str = Form(""),
+    session_duration: int = Form(1440),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
@@ -106,6 +107,13 @@ async def update_profile_settings(
     # Update profile image
     if profile_image:
         current_user.profile_image = profile_image
+    else:
+        current_user.profile_image = None
+    
+    # Update session duration with validation
+    valid_durations = [30, 60, 120, 360, 720, 1440, 2880, 4320, 10080, 43200]
+    if session_duration in valid_durations:
+        current_user.session_duration = session_duration
     
     db.commit()
     

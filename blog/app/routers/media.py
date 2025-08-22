@@ -19,7 +19,7 @@ router = APIRouter(prefix="/admin", tags=["media"])
 templates = Jinja2Templates(directory="templates")
 
 # Allowed file extensions and max size
-ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg', '.pdf', '.doc', '.docx'}
+ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.heic', '.heif', '.bmp', '.tiff', '.svg', '.pdf', '.doc', '.docx'}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 @router.get("/media", response_class=HTMLResponse)
@@ -267,6 +267,8 @@ async def upload_from_url(
 @router.post("/media/{media_id}/update")
 async def update_media(
     media_id: int,
+    title: str = Form(""),
+    description: str = Form(""),
     alt_text: str = Form(""),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
@@ -275,7 +277,9 @@ async def update_media(
     if not media:
         raise HTTPException(status_code=404, detail="Media not found")
     
-    media.alt_text = alt_text
+    media.title = title if title else None
+    media.description = description if description else None
+    media.alt_text = alt_text if alt_text else None
     db.commit()
     
     return JSONResponse({"success": True})
@@ -303,6 +307,39 @@ async def delete_media(
     
     return JSONResponse({"success": True})
 
+@router.post("/media/bulk-delete")
+async def bulk_delete_media(
+    request: Request,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    try:
+        data = await request.json()
+        media_ids = data.get('media_ids', [])
+        
+        if not media_ids:
+            return JSONResponse({"success": False, "error": "No media selected"})
+        
+        # Get media files to delete
+        media_files = db.query(Media).filter(Media.id.in_(media_ids)).all()
+        
+        # Delete files from filesystem
+        for media in media_files:
+            try:
+                if os.path.exists(media.file_path):
+                    os.unlink(media.file_path)
+            except:
+                pass
+        
+        # Delete from database
+        db.query(Media).filter(Media.id.in_(media_ids)).delete(synchronize_session=False)
+        db.commit()
+        
+        return JSONResponse({"success": True, "deleted_count": len(media_files)})
+        
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)})
+
 @router.get("/media/api")
 async def get_media_api(
     request: Request,
@@ -319,6 +356,8 @@ async def get_media_api(
             "id": media.id,
             "filename": media.filename,
             "original_name": media.original_name,
+            "title": media.title or "",
+            "description": media.description or "",
             "url": f"/uploads/media/{media.filename}",
             "file_size": format_file_size(media.file_size),
             "alt_text": media.alt_text or "",
