@@ -32,6 +32,19 @@
         transition: opacity 0.2s ease;
         background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.4) 50%, transparent 100%);
     }
+    .preview-modal {
+        backdrop-filter: blur(8px);
+        background: rgba(0, 0, 0, 0.8);
+    }
+    .preview-image {
+        max-width: 90vw;
+        max-height: 80vh;
+        object-fit: contain;
+    }
+    .preview-details {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+    }
 </style>
 {% endblock %}
 
@@ -39,7 +52,17 @@
 <!-- Başlık ve Kontrol Butonları -->
 <div class="flex items-center justify-between mb-6">
     <div class="flex items-center space-x-4">
-        <h3 class="text-lg font-semibold text-brown-900">Medya Dosyaları</h3>
+        <div>
+            <h3 class="text-lg font-semibold text-brown-900">Medya Dosyaları</h3>
+            <div class="flex items-center space-x-3 text-xs text-brown-500 mt-1">
+                <span><i data-lucide="files" class="w-3 h-3 inline mr-1"></i>{{ stats.total_files }} dosya</span>
+                <span><i data-lucide="hard-drive" class="w-3 h-3 inline mr-1"></i>{{ stats.total_size }}</span>
+                <span><i data-lucide="image" class="w-3 h-3 inline mr-1"></i>{{ stats.image_files }} resim</span>
+                {% if stats.other_files > 0 %}
+                <span><i data-lucide="file" class="w-3 h-3 inline mr-1"></i>{{ stats.other_files }} diğer</span>
+                {% endif %}
+            </div>
+        </div>
         <div class="flex items-center space-x-2" id="bulk-controls" style="display: none;">
             <span class="text-sm text-brown-600" id="selected-count">0 seçildi</span>
             <button id="bulk-delete-btn" class="bg-red-600 text-white px-3 py-1 text-sm rounded hover:bg-red-700 transition-smooth">
@@ -179,6 +202,95 @@
     </div>
 </div>
 
+<!-- Preview Modal -->
+<div id="preview-modal" class="hidden fixed inset-0 preview-modal flex items-center justify-center z-50">
+    <div class="relative w-full h-full flex items-center justify-center p-4">
+        <!-- Close Button -->
+        <button id="close-preview" class="absolute top-4 right-4 z-10 bg-black bg-opacity-50 text-white p-2 rounded-full hover:bg-opacity-70 transition-smooth">
+            <i data-lucide="x" class="w-6 h-6"></i>
+        </button>
+        
+        <!-- Image Container -->
+        <div class="flex flex-col lg:flex-row items-center lg:items-start gap-6 max-w-7xl w-full">
+            <!-- Main Image -->
+            <div class="flex-1 flex items-center justify-center">
+                <img id="preview-image" src="" alt="" class="preview-image rounded-lg shadow-2xl">
+            </div>
+            
+            <!-- Details Panel -->
+            <div class="preview-details w-full lg:w-80 rounded-xl p-6 shadow-xl">
+                <h3 class="text-lg font-semibold text-brown-900 mb-4">Dosya Detayları</h3>
+                
+                <div class="space-y-3">
+                    <div>
+                        <label class="text-xs font-medium text-brown-600 uppercase tracking-wide">Dosya Adı</label>
+                        <p id="preview-filename" class="text-sm text-brown-900 font-medium break-all"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="text-xs font-medium text-brown-600 uppercase tracking-wide">Başlık</label>
+                        <p id="preview-title" class="text-sm text-brown-900"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="text-xs font-medium text-brown-600 uppercase tracking-wide">Açıklama</label>
+                        <p id="preview-description" class="text-sm text-brown-900"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="text-xs font-medium text-brown-600 uppercase tracking-wide">Alt Metni</label>
+                        <p id="preview-alt-text" class="text-sm text-brown-900"></p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div>
+                            <label class="text-xs font-medium text-brown-600 uppercase tracking-wide">Boyut</label>
+                            <p id="preview-size" class="text-sm text-brown-900 font-medium"></p>
+                        </div>
+                        
+                        <div>
+                            <label class="text-xs font-medium text-brown-600 uppercase tracking-wide">Tür</label>
+                            <p id="preview-type" class="text-sm text-brown-900 font-medium"></p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="text-xs font-medium text-brown-600 uppercase tracking-wide">Yüklenme Tarihi</label>
+                        <p id="preview-date" class="text-sm text-brown-900"></p>
+                    </div>
+                    
+                    <div>
+                        <label class="text-xs font-medium text-brown-600 uppercase tracking-wide">URL</label>
+                        <div class="flex items-center space-x-2">
+                            <input id="preview-url" type="text" readonly 
+                                   class="flex-1 text-xs bg-cream-50 border border-cream-200 rounded px-2 py-1 text-brown-700">
+                            <button onclick="copyPreviewUrl()" 
+                                    class="text-brown-600 hover:text-brown-800 transition-smooth">
+                                <i data-lucide="copy" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Actions -->
+                <div class="flex items-center justify-between mt-6 pt-4 border-t border-cream-200">
+                    <button id="preview-edit-btn" onclick="openEditFromPreview()"
+                            class="flex items-center text-brown-600 hover:text-brown-800 text-sm transition-smooth">
+                        <i data-lucide="edit" class="w-4 h-4 mr-1"></i>
+                        Düzenle
+                    </button>
+                    
+                    <button id="preview-delete-btn" onclick="deleteFromPreview()"
+                            class="flex items-center text-red-600 hover:text-red-800 text-sm transition-smooth">
+                        <i data-lucide="trash-2" class="w-4 h-4 mr-1"></i>
+                        Sil
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Media Grid -->
 <div id="media-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
     {% if media_files %}
@@ -188,7 +300,8 @@
              data-filename="{{ media.filename }}"
              data-title="{{ media.title or '' }}"
              data-description="{{ media.description or '' }}"
-             data-alt-text="{{ media.alt_text or '' }}">
+             data-alt-text="{{ media.alt_text or '' }}"
+             data-created="{{ media.created_at.strftime('%d.%m.%Y %H:%M') if media.created_at else '' }}">
             
             <!-- Selection Checkbox -->
             <div class="media-checkbox absolute top-2 left-2 z-10 hidden">
@@ -206,6 +319,10 @@
                 <div class="media-overlay absolute inset-0 flex items-end">
                     <div class="p-2 w-full">
                         <div class="flex items-center justify-between">
+                            <button onclick="previewMedia(this)" 
+                                    class="text-white hover:text-cream-200 transition-smooth p-1 rounded bg-black bg-opacity-50">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
                             <button onclick="copyUrl('{{ media.filename }}')" 
                                     class="text-white hover:text-cream-200 transition-smooth p-1 rounded bg-black bg-opacity-50">
                                 <i data-lucide="copy" class="w-4 h-4"></i>
@@ -230,6 +347,10 @@
                 <div class="media-overlay absolute inset-0 flex items-end">
                     <div class="p-2 w-full">
                         <div class="flex items-center justify-between">
+                            <button onclick="previewMedia(this)" 
+                                    class="text-white hover:text-cream-200 transition-smooth p-1 rounded bg-black bg-opacity-50">
+                                <i data-lucide="eye" class="w-4 h-4"></i>
+                            </button>
                             <button onclick="copyUrl('{{ media.filename }}')" 
                                     class="text-white hover:text-cream-200 transition-smooth p-1 rounded bg-black bg-opacity-50">
                                 <i data-lucide="copy" class="w-4 h-4"></i>
@@ -723,6 +844,94 @@ document.getElementById('url-form').addEventListener('submit', async function(e)
     
     document.getElementById('url-modal').classList.add('hidden');
 });
+
+// Preview media function
+function previewMedia(button) {
+    const mediaItem = button.closest('.media-item');
+    const id = mediaItem.dataset.id;
+    const filename = mediaItem.dataset.filename;
+    const title = mediaItem.dataset.title || '';
+    const description = mediaItem.dataset.description || '';
+    const altText = mediaItem.dataset.altText || '';
+    
+    // Get additional data from the media item
+    const img = mediaItem.querySelector('img');
+    const sizeElement = mediaItem.querySelector('.text-xs.text-brown-600');
+    const titleElement = mediaItem.querySelector('.text-xs.font-medium');
+    
+    const fileUrl = `/uploads/media/${filename}`;
+    const fullUrl = window.location.origin + fileUrl;
+    
+    // Set preview image
+    document.getElementById('preview-image').src = fileUrl;
+    document.getElementById('preview-image').alt = altText || title || filename;
+    
+    // Set preview details
+    document.getElementById('preview-filename').textContent = filename;
+    document.getElementById('preview-title').textContent = title || 'Başlık belirtilmemiş';
+    document.getElementById('preview-description').textContent = description || 'Açıklama belirtilmemiş';
+    document.getElementById('preview-alt-text').textContent = altText || 'Alt metni belirtilmemiş';
+    document.getElementById('preview-size').textContent = sizeElement ? sizeElement.textContent : 'Bilinmiyor';
+    document.getElementById('preview-type').textContent = filename.split('.').pop().toUpperCase();
+    document.getElementById('preview-url').value = fullUrl;
+    
+    // Set creation date
+    const createdDate = mediaItem.dataset.created || 'Bilinmiyor';
+    document.getElementById('preview-date').textContent = createdDate;
+    
+    // Store current media ID for actions
+    document.getElementById('preview-modal').dataset.mediaId = id;
+    
+    // Show modal
+    document.getElementById('preview-modal').classList.remove('hidden');
+}
+
+// Close preview modal
+document.getElementById('close-preview').addEventListener('click', function() {
+    document.getElementById('preview-modal').classList.add('hidden');
+});
+
+// Close preview on background click
+document.getElementById('preview-modal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        this.classList.add('hidden');
+    }
+});
+
+// Copy URL from preview
+function copyPreviewUrl() {
+    const url = document.getElementById('preview-url').value;
+    navigator.clipboard.writeText(url).then(function() {
+        showNotification('URL başarıyla kopyalandı');
+    }).catch(function() {
+        showNotification('URL kopyalanamadı', 'error');
+    });
+}
+
+// Open edit modal from preview
+function openEditFromPreview() {
+    const mediaId = document.getElementById('preview-modal').dataset.mediaId;
+    const mediaItem = document.querySelector(`[data-id="${mediaId}"]`);
+    
+    if (mediaItem) {
+        // Close preview modal
+        document.getElementById('preview-modal').classList.add('hidden');
+        
+        // Open edit modal
+        editMediaFromData(mediaItem.querySelector('[data-lucide="edit"]').closest('button'));
+    }
+}
+
+// Delete from preview
+function deleteFromPreview() {
+    const mediaId = document.getElementById('preview-modal').dataset.mediaId;
+    
+    // Close preview modal
+    document.getElementById('preview-modal').classList.add('hidden');
+    
+    // Delete media
+    deleteMedia(parseInt(mediaId));
+}
 
 // Copy URL function
 function copyUrl(filename) {

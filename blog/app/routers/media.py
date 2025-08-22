@@ -25,10 +25,36 @@ MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 @router.get("/media", response_class=HTMLResponse)
 async def media_gallery(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
     media_files = db.query(Media).order_by(Media.created_at.desc()).all()
+    
+    # Calculate statistics
+    total_files = len(media_files)
+    total_size = sum(media.file_size for media in media_files)
+    image_files = len([media for media in media_files if media.mime_type.startswith('image/')])
+    other_files = total_files - image_files
+    
+    # Convert total size to readable format
+    def format_file_size(size_bytes):
+        if size_bytes == 0:
+            return "0 B"
+        size_names = ["B", "KB", "MB", "GB"]
+        i = 0
+        while size_bytes >= 1024 and i < len(size_names) - 1:
+            size_bytes /= 1024.0
+            i += 1
+        return f"{size_bytes:.1f} {size_names[i]}"
+    
+    total_size_formatted = format_file_size(total_size)
+    
     return templates.TemplateResponse("admin/media.html", {
         "request": request,
         "admin_user": admin_user,
-        "media_files": media_files
+        "media_files": media_files,
+        "stats": {
+            "total_files": total_files,
+            "total_size": total_size_formatted,
+            "image_files": image_files,
+            "other_files": other_files
+        }
     })
 
 @router.post("/media/upload")
