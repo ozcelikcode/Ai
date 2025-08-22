@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_admin_user
-from app.models.models import Media, User
+from app.models.models import Media, User, MediaFolder
 from app.utils.helpers import format_file_size
 from app.utils.image_optimizer import optimize_uploaded_image, PRESETS
 import os
@@ -23,8 +23,27 @@ ALLOWED_EXTENSIONS = {'.jpg', '.jpeg', '.png', '.gif', '.webp', '.avif', '.heic'
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 @router.get("/media", response_class=HTMLResponse)
-async def media_gallery(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
-    media_files = db.query(Media).order_by(Media.created_at.desc()).all()
+async def media_gallery(request: Request, folder_id: int = None, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    # Get current folder info
+    current_folder = None
+    if folder_id:
+        current_folder = db.query(MediaFolder).filter(MediaFolder.id == folder_id).first()
+        if not current_folder:
+            folder_id = None  # Invalid folder ID, reset to root
+    
+    # Get folders in current location
+    if folder_id:
+        # Get subfolders (if we implement nested folders later)
+        folders_in_current = []
+        # Get media files in current folder
+        media_files = db.query(Media).filter(Media.folder_id == folder_id).order_by(Media.created_at.desc()).all()
+    else:
+        # Get root level folders and unassigned media files
+        folders_in_current = db.query(MediaFolder).order_by(MediaFolder.name).all()
+        media_files = db.query(Media).filter(Media.folder_id == None).order_by(Media.created_at.desc()).all()
+    
+    # Get all folders for sidebar/operations
+    all_folders = db.query(MediaFolder).order_by(MediaFolder.name).all()
     
     # Calculate statistics
     total_files = len(media_files)
@@ -45,10 +64,26 @@ async def media_gallery(request: Request, admin_user: User = Depends(get_admin_u
     
     total_size_formatted = format_file_size(total_size)
     
+    # Calculate folder statistics for folders in current view
+    for folder in folders_in_current:
+        folder.file_count = db.query(Media).filter(Media.folder_id == folder.id).count()
+        folder.total_size = sum(media.file_size for media in db.query(Media).filter(Media.folder_id == folder.id).all())
+        folder.total_size_formatted = format_file_size(folder.total_size)
+    
+    # Calculate statistics for all folders (for sidebar)
+    for folder in all_folders:
+        folder.file_count = db.query(Media).filter(Media.folder_id == folder.id).count()
+        folder.total_size = sum(media.file_size for media in db.query(Media).filter(Media.folder_id == folder.id).all())
+        folder.total_size_formatted = format_file_size(folder.total_size)
+    
     return templates.TemplateResponse("admin/media.html", {
         "request": request,
         "admin_user": admin_user,
         "media_files": media_files,
+        "folders_in_current": folders_in_current,
+        "all_folders": all_folders,
+        "current_folder": current_folder,
+        "folder_id": folder_id,
         "stats": {
             "total_files": total_files,
             "total_size": total_size_formatted,
@@ -61,6 +96,7 @@ async def media_gallery(request: Request, admin_user: User = Depends(get_admin_u
 async def upload_media(
     request: Request,
     files: List[UploadFile] = File(...),
+    folder_id: int = Form(None),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
@@ -134,7 +170,8 @@ async def upload_media(
                 original_name=file.filename,
                 file_path=str(file_path),
                 file_size=len(processed_content),  # Processed size
-                mime_type=mime_type
+                mime_type=mime_type,
+                folder_id=folder_id if folder_id else None
             )
             
             db.add(media)
@@ -391,3 +428,113 @@ async def get_media_api(
             "created_at": media.created_at.isoformat()
         } for media in media_files]
     })
+
+# Folder Management Routes
+@router.post("/media/folders/create")
+async def create_folder(
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(""),
+    color: str = Form("#944f37"),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Create a new media folder"""
+    
+    # Check if folder name already exists
+    existing_folder = db.query(MediaFolder).filter(MediaFolder.name == name).first()
+    if existing_folder:
+        return JSONResponse({"success": False, "error": "Bu isimde bir klasör zaten mevcut"})
+    
+    folder = MediaFolder(
+        name=name,
+        description=description,
+        color=color
+    )
+    
+    db.add(folder)
+    db.commit()
+    
+    return JSONResponse({"success": True, "folder_id": folder.id})
+
+@router.post("/media/folders/{folder_id}/update")
+async def update_folder(
+    folder_id: int,
+    request: Request,
+    name: str = Form(...),
+    description: str = Form(""),
+    color: str = Form("#944f37"),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Update a media folder"""
+    
+    folder = db.query(MediaFolder).filter(MediaFolder.id == folder_id).first()
+    if not folder:
+        return JSONResponse({"success": False, "error": "Klasör bulunamadı"})
+    
+    # Check if name is taken by another folder
+    existing_folder = db.query(MediaFolder).filter(
+        MediaFolder.name == name, 
+        MediaFolder.id != folder_id
+    ).first()
+    if existing_folder:
+        return JSONResponse({"success": False, "error": "Bu isimde bir klasör zaten mevcut"})
+    
+    folder.name = name
+    folder.description = description
+    folder.color = color
+    db.commit()
+    
+    return JSONResponse({"success": True})
+
+@router.post("/media/folders/{folder_id}/delete")
+async def delete_folder(
+    folder_id: int,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a media folder"""
+    
+    folder = db.query(MediaFolder).filter(MediaFolder.id == folder_id).first()
+    if not folder:
+        return JSONResponse({"success": False, "error": "Klasör bulunamadı"})
+    
+    # Move all files in this folder to no folder (null)
+    db.query(Media).filter(Media.folder_id == folder_id).update({"folder_id": None})
+    
+    # Delete the folder
+    db.delete(folder)
+    db.commit()
+    
+    return JSONResponse({"success": True})
+
+@router.post("/media/{media_id}/move")
+async def move_media_to_folder(
+    media_id: int,
+    request: Request,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Move media file to a folder"""
+    
+    try:
+        data = await request.json()
+        folder_id = data.get('folder_id')  # None for root folder
+        
+        media = db.query(Media).filter(Media.id == media_id).first()
+        if not media:
+            return JSONResponse({"success": False, "error": "Dosya bulunamadı"})
+        
+        if folder_id:
+            folder = db.query(MediaFolder).filter(MediaFolder.id == folder_id).first()
+            if not folder:
+                return JSONResponse({"success": False, "error": "Klasör bulunamadı"})
+        
+        media.folder_id = folder_id
+        db.commit()
+        
+        return JSONResponse({"success": True})
+        
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)})

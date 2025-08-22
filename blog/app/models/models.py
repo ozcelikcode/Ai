@@ -124,6 +124,17 @@ class Page(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
+class MediaFolder(Base):
+    __tablename__ = "media_folders"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    description = Column(Text, nullable=True)
+    color = Column(String(7), default="#944f37")  # Hex color for folder
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    media_files = relationship("Media", back_populates="folder")
+
 class Media(Base):
     __tablename__ = "media"
     
@@ -136,7 +147,10 @@ class Media(Base):
     file_size = Column(Integer, nullable=False)
     mime_type = Column(String(100), nullable=False)
     alt_text = Column(String(200), nullable=True)
+    folder_id = Column(Integer, ForeignKey("media_folders.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    folder = relationship("MediaFolder", back_populates="media_files")
 
 class Settings(Base):
     __tablename__ = "settings"
