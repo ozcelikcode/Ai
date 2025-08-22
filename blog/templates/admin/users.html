@@ -1,0 +1,329 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}Kullanıcı Yönetimi{% endblock %}
+{% block page_description %}Kayıtlı kullanıcıları görüntüleyin ve yönetin{% endblock %}
+
+{% block extra_head %}
+<style>
+    .user-card {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .user-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+    }
+    .status-badge {
+        animation: pulse 2s infinite;
+    }
+    .status-badge.admin {
+        background: linear-gradient(135deg, #dc2626, #b91c1c);
+    }
+    .status-badge.user {
+        background: linear-gradient(135deg, #059669, #047857);
+    }
+    .user-avatar {
+        border: 3px solid #f3f0eb;
+        transition: border-color 0.3s ease;
+    }
+    .user-card:hover .user-avatar {
+        border-color: #944f37;
+    }
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Başlık ve İstatistikler -->
+<div class="flex items-center justify-between mb-8">
+    <div>
+        <h3 class="text-lg font-semibold text-brown-900">Kullanıcı Yönetimi</h3>
+        <p class="text-brown-600 mt-1">Toplam {{ total_users }} kullanıcı</p>
+    </div>
+    
+    <div class="flex items-center space-x-4">
+        <!-- İstatistik Kartları -->
+        <div class="bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-lg shadow-lg">
+            <div class="text-xs font-medium opacity-90">Admin</div>
+            <div class="text-lg font-bold">{{ admin_count }}</div>
+        </div>
+        <div class="bg-gradient-to-r from-green-500 to-green-600 text-white px-4 py-2 rounded-lg shadow-lg">
+            <div class="text-xs font-medium opacity-90">Kullanıcı</div>
+            <div class="text-lg font-bold">{{ user_count }}</div>
+        </div>
+    </div>
+</div>
+
+<!-- Arama ve Filtreler -->
+<div class="bg-white rounded-xl shadow-lg p-6 mb-6">
+    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+        <div class="flex-1">
+            <div class="relative">
+                <i data-lucide="search" class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-brown-400"></i>
+                <input type="text" id="search-users" placeholder="Kullanıcı ara (isim, email)..."
+                       class="w-full pl-10 pr-4 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-brown-500">
+            </div>
+        </div>
+        
+        <div class="flex items-center space-x-3">
+            <select id="filter-role" class="px-4 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-brown-500">
+                <option value="all">Tüm Roller</option>
+                <option value="admin">Sadece Admin</option>
+                <option value="user">Sadece Kullanıcı</option>
+            </select>
+            
+            <select id="sort-users" class="px-4 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-brown-500">
+                <option value="newest">En Yeni</option>
+                <option value="oldest">En Eski</option>
+                <option value="name">İsme Göre A-Z</option>
+                <option value="name-desc">İsme Göre Z-A</option>
+            </select>
+        </div>
+    </div>
+</div>
+
+<!-- Kullanıcı Listesi -->
+<div id="users-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for user in users %}
+    <div class="user-card bg-white rounded-xl shadow-lg overflow-hidden" 
+         data-username="{{ user.username.lower() }}" 
+         data-email="{{ user.email.lower() }}" 
+         data-role="{{ 'admin' if user.is_admin else 'user' }}"
+         data-created="{{ user.created_at.timestamp() }}">
+        
+        <!-- Kullanıcı Header -->
+        <div class="relative p-6 bg-gradient-to-br from-cream-100 to-cream-200">
+            <!-- Rol Badge -->
+            <div class="absolute top-4 right-4">
+                {% if user.is_admin %}
+                <span class="status-badge admin px-2 py-1 rounded-full text-xs font-medium text-white shadow-lg">
+                    <i data-lucide="shield" class="w-3 h-3 inline mr-1"></i>
+                    Admin
+                </span>
+                {% else %}
+                <span class="status-badge user px-2 py-1 rounded-full text-xs font-medium text-white shadow-lg">
+                    <i data-lucide="user" class="w-3 h-3 inline mr-1"></i>
+                    Kullanıcı
+                </span>
+                {% endif %}
+            </div>
+            
+            <!-- Profil Resmi ve Bilgiler -->
+            <div class="flex items-center space-x-4">
+                <div class="user-avatar w-16 h-16 bg-brown-200 rounded-full flex items-center justify-center">
+                    {% if user.profile_image %}
+                    <img src="{{ user.profile_image }}" alt="{{ user.username }}" 
+                         class="w-16 h-16 rounded-full object-cover">
+                    {% else %}
+                    <i data-lucide="user" class="w-8 h-8 text-brown-600"></i>
+                    {% endif %}
+                </div>
+                
+                <div class="flex-1 min-w-0">
+                    <h3 class="font-semibold text-brown-900 truncate">{{ user.username }}</h3>
+                    <p class="text-sm text-brown-600 truncate">{{ user.email }}</p>
+                    <p class="text-xs text-brown-500 mt-1">
+                        Üyelik: {{ user.created_at.strftime('%d.%m.%Y') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Kullanıcı Detayları -->
+        <div class="p-6">
+            <div class="grid grid-cols-2 gap-4 text-sm">
+                <div class="bg-cream-50 rounded-lg p-3 text-center">
+                    <div class="font-semibold text-brown-900">{{ user.posts|length if user.posts else 0 }}</div>
+                    <div class="text-brown-600 text-xs">Gönderi</div>
+                </div>
+                
+                <div class="bg-cream-50 rounded-lg p-3 text-center">
+                    <div class="font-semibold text-brown-900">{{ user.comments|length if user.comments else 0 }}</div>
+                    <div class="text-brown-600 text-xs">Yorum</div>
+                </div>
+            </div>
+            
+            <!-- Oturum Süresi -->
+            <div class="mt-4 p-3 bg-blue-50 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs text-blue-700 font-medium">Oturum Süresi</span>
+                    <span class="text-xs text-blue-600">
+                        {% set duration = user.session_duration or 1440 %}
+                        {% if duration == 30 %}30 dakika
+                        {% elif duration == 60 %}1 saat
+                        {% elif duration == 120 %}2 saat
+                        {% elif duration == 360 %}6 saat
+                        {% elif duration == 720 %}12 saat
+                        {% elif duration == 1440 %}24 saat
+                        {% elif duration == 2880 %}48 saat
+                        {% elif duration == 4320 %}3 gün
+                        {% elif duration == 10080 %}1 hafta
+                        {% elif duration == 43200 %}1 ay
+                        {% else %}{{ duration }} dakika
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+            
+            <!-- Eylemler -->
+            <div class="mt-4 flex items-center justify-between">
+                <a href="/profile/{{ user.username }}" target="_blank"
+                   class="flex items-center text-brown-600 hover:text-brown-800 text-sm transition-smooth">
+                    <i data-lucide="external-link" class="w-4 h-4 mr-1"></i>
+                    Profili Gör
+                </a>
+                
+                {% if user.id != admin_user.id %}
+                <div class="flex items-center space-x-2">
+                    {% if not user.is_admin %}
+                    <button onclick="toggleAdminStatus({{ user.id }}, true)" 
+                            class="text-green-600 hover:text-green-800 text-sm transition-smooth">
+                        <i data-lucide="user-plus" class="w-4 h-4"></i>
+                    </button>
+                    {% else %}
+                    <button onclick="toggleAdminStatus({{ user.id }}, false)" 
+                            class="text-orange-600 hover:text-orange-800 text-sm transition-smooth">
+                        <i data-lucide="user-minus" class="w-4 h-4"></i>
+                    </button>
+                    {% endif %}
+                    
+                    <button onclick="deleteUser({{ user.id }}, '{{ user.username }}')" 
+                            class="text-red-600 hover:text-red-800 text-sm transition-smooth">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Kullanıcı Bulunamadı Mesajı -->
+<div id="no-users-found" class="hidden text-center py-12">
+    <div class="w-16 h-16 bg-cream-200 rounded-full flex items-center justify-center mx-auto mb-4">
+        <i data-lucide="users" class="w-8 h-8 text-brown-400"></i>
+    </div>
+    <h3 class="text-lg font-semibold text-brown-900 mb-2">Kullanıcı bulunamadı</h3>
+    <p class="text-brown-600">Arama kriterlerinize uygun kullanıcı bulunmuyor.</p>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Arama ve filtreleme
+document.getElementById('search-users').addEventListener('input', filterUsers);
+document.getElementById('filter-role').addEventListener('change', filterUsers);
+document.getElementById('sort-users').addEventListener('change', sortUsers);
+
+function filterUsers() {
+    const searchTerm = document.getElementById('search-users').value.toLowerCase();
+    const roleFilter = document.getElementById('filter-role').value;
+    const userCards = document.querySelectorAll('.user-card');
+    const noUsersFound = document.getElementById('no-users-found');
+    let visibleCount = 0;
+
+    userCards.forEach(card => {
+        const username = card.dataset.username;
+        const email = card.dataset.email;
+        const role = card.dataset.role;
+        
+        const matchesSearch = username.includes(searchTerm) || email.includes(searchTerm);
+        const matchesRole = roleFilter === 'all' || role === roleFilter;
+        
+        if (matchesSearch && matchesRole) {
+            card.style.display = 'block';
+            visibleCount++;
+        } else {
+            card.style.display = 'none';
+        }
+    });
+    
+    if (visibleCount === 0) {
+        noUsersFound.classList.remove('hidden');
+    } else {
+        noUsersFound.classList.add('hidden');
+    }
+}
+
+function sortUsers() {
+    const sortBy = document.getElementById('sort-users').value;
+    const usersGrid = document.getElementById('users-grid');
+    const userCards = Array.from(document.querySelectorAll('.user-card'));
+    
+    userCards.sort((a, b) => {
+        switch (sortBy) {
+            case 'newest':
+                return parseFloat(b.dataset.created) - parseFloat(a.dataset.created);
+            case 'oldest':
+                return parseFloat(a.dataset.created) - parseFloat(b.dataset.created);
+            case 'name':
+                return a.dataset.username.localeCompare(b.dataset.username);
+            case 'name-desc':
+                return b.dataset.username.localeCompare(a.dataset.username);
+            default:
+                return 0;
+        }
+    });
+    
+    userCards.forEach(card => usersGrid.appendChild(card));
+}
+
+// Admin durumu değiştirme
+async function toggleAdminStatus(userId, makeAdmin) {
+    const action = makeAdmin ? 'admin yapmak' : 'admin yetkisini kaldırmak';
+    
+    if (confirm(`Bu kullanıcıyı ${action} istediğinizden emin misiniz?`)) {
+        try {
+            const response = await fetch(`/admin/users/${userId}/toggle-admin`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ is_admin: makeAdmin })
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('İşlem başarısız: ' + (result.error || 'Bilinmeyen hata'));
+            }
+        } catch (error) {
+            console.error('Toggle admin failed:', error);
+            alert('İşlem başarısız oldu');
+        }
+    }
+}
+
+// Kullanıcı silme
+async function deleteUser(userId, username) {
+    if (confirm(`${username} kullanıcısını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.`)) {
+        try {
+            const response = await fetch(`/admin/users/${userId}/delete`, {
+                method: 'POST'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                location.reload();
+            } else {
+                alert('Silme işlemi başarısız: ' + (result.error || 'Bilinmeyen hata'));
+            }
+        } catch (error) {
+            console.error('Delete user failed:', error);
+            alert('Silme işlemi başarısız oldu');
+        }
+    }
+}
+
+// İlk yükleme sıralaması
+document.addEventListener('DOMContentLoaded', function() {
+    sortUsers();
+});
+</script>
+{% endblock %}

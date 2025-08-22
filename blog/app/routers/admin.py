@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_admin_user
-from app.models.models import Post, Category, User, Settings, Page
+from app.models.models import Post, Category, User, Settings, Page, Comment, PostLike
 from app.utils.helpers import generate_slug, calculate_reading_time
 from app.utils.ai_content import ai_generator
 from app.utils.image_optimizer import optimize_uploaded_image
@@ -1174,3 +1174,95 @@ async def delete_avatar(avatar_id: int, admin_user: User = Depends(get_admin_use
     db.commit()
     
     return JSONResponse({"success": True})
+
+# User Management Routes
+@router.get("/users", response_class=HTMLResponse)
+async def admin_users(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    """Admin user management page"""
+    
+    # Get all users with their stats
+    users = db.query(User).order_by(User.created_at.desc()).all()
+    
+    # Calculate stats for each user
+    for user in users:
+        user.posts = db.query(Post).filter(Post.author_id == user.id).all()
+        user.comments = db.query(Comment).filter(Comment.user_id == user.id).all()
+    
+    # Calculate totals
+    total_users = len(users)
+    admin_count = len([u for u in users if u.is_admin])
+    user_count = total_users - admin_count
+    
+    return templates.TemplateResponse("admin/users.html", {
+        "request": request,
+        "admin_user": admin_user,
+        "users": users,
+        "total_users": total_users,
+        "admin_count": admin_count,
+        "user_count": user_count
+    })
+
+@router.post("/users/{user_id}/toggle-admin")
+async def toggle_user_admin_status(
+    user_id: int,
+    request: Request,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Toggle admin status for a user"""
+    
+    if user_id == admin_user.id:
+        return JSONResponse({"success": False, "error": "Cannot modify your own admin status"})
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return JSONResponse({"success": False, "error": "User not found"})
+    
+    try:
+        data = await request.json()
+        is_admin = data.get('is_admin', False)
+        
+        user.is_admin = is_admin
+        db.commit()
+        
+        action = "promoted to admin" if is_admin else "removed from admin"
+        return JSONResponse({"success": True, "message": f"User {user.username} {action}"})
+        
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)})
+
+@router.post("/users/{user_id}/delete")
+async def delete_user(
+    user_id: int,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Delete a user and their content"""
+    
+    if user_id == admin_user.id:
+        return JSONResponse({"success": False, "error": "Cannot delete your own account"})
+    
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        return JSONResponse({"success": False, "error": "User not found"})
+    
+    try:
+        # Delete user's likes
+        db.query(PostLike).filter(PostLike.user_id == user_id).delete()
+        
+        # Delete user's comments
+        db.query(Comment).filter(Comment.user_id == user_id).delete()
+        
+        # Update posts to have no author (or delete them - depending on preference)
+        user_posts = db.query(Post).filter(Post.author_id == user_id).all()
+        for post in user_posts:
+            post.author_id = None  # or delete the post: db.delete(post)
+        
+        # Delete the user
+        db.delete(user)
+        db.commit()
+        
+        return JSONResponse({"success": True, "message": f"User {user.username} deleted successfully"})
+        
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)})
