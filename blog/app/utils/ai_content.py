@@ -90,14 +90,16 @@ class AIContentGenerator:
                 - Stil: {type_guide.get(content_type, 'profesyonel ve güvenilir')}
                 - Türkçe dilbilgisi kurallarına uygun
                 - Web sayfası formatında (statik sayfa)
-                - SADECE DÜZ METİN kullan, HTML etiketleri kullanma
-                - Net paragraflar ve başlıklar düz metin olarak yaz
+                - HTML formatında yaz (h2, h3, p, ul, ol, li, strong, em etiketlerini kullan)
+                - Alt başlıkları <h2> ve <h3> etiketleriyle belirt
+                - Paragrafları <p> etiketleriyle sarma
+                - Önemli metinleri <strong> ile vurgula
                 - Kullanıcı deneyimi odaklı
                 
                 Lütfen yanıtını şu JSON formatında ver:
                 {{
                     "title": "Sayfa için uygun başlık",
-                    "content": "Düz metin formatında tam sayfa içeriği (HTML etiketleri olmadan)",
+                    "content": "HTML formatında tam sayfa içeriği (h2, h3, p, ul, li, strong, em etiketleriyle)",
                     "meta_description": "SEO için 150-160 karakterlik açıklama"
                 }}
                 """
@@ -195,14 +197,17 @@ class AIContentGenerator:
                 - Türkçe dilbilgisi kurallarına uygun
                 - SEO dostu yapıda
                 - Okuyucuyu meraklandıran giriş
-                - SADECE DÜZ METİN kullan, HTML etiketleri kullanma
-                - Net alt başlıklar düz metin olarak belirt
-                - Sonuç bölümü
+                - HTML formatında yaz (h2, h3, p, ul, ol, li, strong, em etiketlerini kullan)
+                - Alt başlıkları <h2> ve <h3> etiketleriyle belirt
+                - Paragrafları <p> etiketleriyle sarma
+                - Önemli metinleri <strong> ile vurgula
+                - Liste kullanacaksan <ul> veya <ol> kullan
+                - Sonuç bölümü ekle
                 
                 Lütfen yanıtını şu JSON formatında ver:
                 {{
                     "title": "Çekici ve SEO dostu başlık",
-                    "content": "Düz metin formatında tam blog içeriği (HTML etiketleri olmadan)",
+                    "content": "HTML formatında tam blog içeriği (h2, h3, p, ul, li, strong, em etiketleriyle)",
                     "excerpt": "150-200 kelimelik özet (düz metin)",
                     "meta_description": "SEO için 150-160 karakterlik açıklama",
                     "tags": ["etiket1", "etiket2", "etiket3"]
@@ -384,7 +389,6 @@ class AIContentGenerator:
         
         # Try to find title, content, etc. in the response
         title = topic
-        content = text
         excerpt = text[:200] + "..."
         meta_description = text[:150] + "..."
         
@@ -395,11 +399,32 @@ class AIContentGenerator:
                     title = lines[i + 1].strip()
                     break
         
+        # Convert plain text to basic HTML format
+        paragraphs = text.split('\n\n')
+        html_content = ""
+        
+        for i, paragraph in enumerate(paragraphs):
+            paragraph = paragraph.strip()
+            if not paragraph:
+                continue
+                
+            # Check if it looks like a heading
+            if i == 0 or (len(paragraph) < 100 and not paragraph.endswith('.')):
+                if i == 0:
+                    html_content += f"<h2>{paragraph}</h2>\n"
+                else:
+                    html_content += f"<h3>{paragraph}</h3>\n"
+            else:
+                html_content += f"<p>{paragraph}</p>\n"
+        
+        if not html_content:
+            html_content = f"<h2>{topic}</h2>\n<p>{text}</p>"
+        
         return {
             "success": True,
             "data": {
                 "title": title,
-                "content": f"<p>{content}</p>",
+                "content": html_content,
                 "excerpt": excerpt,
                 "meta_description": meta_description,
                 "tags": []
@@ -410,7 +435,22 @@ class AIContentGenerator:
         """Generate fallback content when AI fails"""
         fallback_data = {
             "title": f"{topic} Hakkında",
-            "content": f"<h2>{topic}</h2><p>Bu içerik AI tarafından oluşturulmuştur. Detaylar için lütfen manuel olarak düzenleyin.</p>",
+            "content": f"""<h2>{topic}</h2>
+<p>Bu içerik AI tarafından oluşturulmuştur. Aşağıdaki bölümleri kendinize göre düzenleyebilirsiniz.</p>
+
+<h3>Giriş</h3>
+<p><strong>{topic}</strong> hakkında temel bilgiler ve önemli noktalar burada yer alacaktır.</p>
+
+<h3>Detaylar</h3>
+<p>Konunun ayrıntılı açıklaması ve örnekler:</p>
+<ul>
+<li>Önemli nokta 1</li>
+<li>Önemli nokta 2</li>
+<li>Önemli nokta 3</li>
+</ul>
+
+<h3>Sonuç</h3>
+<p>Özet ve önemli çıkarımlar burada yer alacaktır.</p>""",
             "excerpt": f"{topic} hakkında AI tarafından oluşturulan içerik.",
             "meta_description": f"{topic} hakkında detaylı bilgi.",
             "tags": [topic.lower()]
@@ -434,7 +474,21 @@ class AIContentGenerator:
         """Generate fallback content for pages when AI fails"""
         fallback_data = {
             "title": f"{topic}",
-            "content": f"<h2>{topic}</h2><p>Bu sayfa içeriği AI tarafından oluşturulmuştur. Detaylar için lütfen manuel olarak düzenleyin.</p>",
+            "content": f"""<h2>{topic}</h2>
+<p>Bu sayfa içeriği AI tarafından oluşturulmuştur. Aşağıdaki bölümleri ihtiyaçlarınıza göre düzenleyebilirsiniz.</p>
+
+<h3>Genel Bilgiler</h3>
+<p><strong>{topic}</strong> ile ilgili temel bilgiler ve önemli noktalar burada yer alacaktır.</p>
+
+<h3>Özellikler</h3>
+<ul>
+<li>Önemli özellik 1</li>
+<li>Önemli özellik 2</li>
+<li>Önemli özellik 3</li>
+</ul>
+
+<h3>İletişim</h3>
+<p>Daha fazla bilgi için bizimle iletişime geçebilirsiniz.</p>""",
             "meta_description": f"{topic} hakkında detaylı bilgi."
         }
         

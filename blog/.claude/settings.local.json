@@ -5,7 +5,8 @@
       "Bash(pip install:*)",
       "Bash(curl:*)",
       "Bash(del:*)",
-      "Bash(rm:*)"
+      "Bash(rm:*)",
+      "Bash(/dev/null)"
     ],
     "deny": [],
     "ask": []

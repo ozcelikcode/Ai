@@ -173,7 +173,7 @@ async def create_post(
     title: str = Form(...),
     content: str = Form(...),
     excerpt: str = Form(""),
-    category_id: int = Form(None),
+    category_id_raw: str = Form("", alias="category_id"),
     action: str = Form("draft"),
     meta_title: str = Form(""),
     meta_description: str = Form(""),
@@ -184,6 +184,14 @@ async def create_post(
     db: Session = Depends(get_db)
 ):
     from app.models.models import Tag, PostTag
+    
+    # Safely parse category_id
+    category_id = None
+    if category_id_raw and category_id_raw.strip():
+        try:
+            category_id = int(category_id_raw.strip())
+        except ValueError:
+            category_id = None
     
     # Action'a göre publish durumunu belirle
     is_published = action == "publish"
@@ -251,7 +259,7 @@ async def update_post(
     title: str = Form(...),
     content: str = Form(...),
     excerpt: str = Form(""),
-    category_id: int = Form(None),
+    category_id_raw: str = Form("", alias="category_id"),
     action: str = Form("draft"),
     meta_title: str = Form(""),
     meta_description: str = Form(""),
@@ -261,6 +269,14 @@ async def update_post(
     db: Session = Depends(get_db)
 ):
     from app.models.models import Tag, PostTag
+    
+    # Safely parse category_id
+    category_id = None
+    if category_id_raw and category_id_raw.strip():
+        try:
+            category_id = int(category_id_raw.strip())
+        except ValueError:
+            category_id = None
     
     post = db.query(Post).filter(Post.id == post_id).first()
     if not post:
@@ -614,11 +630,12 @@ async def generate_ai_content(
                 "error": "Lütfen bir konu/başlık girin."
             })
         
-        # Check if this is a page content request based on content_type values
-        page_types = ["professional", "friendly", "formal"]
+        # Check referer to determine if this is from page or post form
+        referer = request.headers.get('referer', '')
+        is_page_request = '/pages/' in referer or '/page' in referer
         
-        if content_type in page_types:
-            # Use page content generator
+        if is_page_request and content_type in ["professional", "friendly", "formal"]:
+            # This is a page content request
             result = ai_generator.generate_page_content(
                 topic=topic.strip(),
                 content_length=content_length,
@@ -626,11 +643,21 @@ async def generate_ai_content(
                 custom_prompt=custom_prompt.strip() if custom_prompt.strip() else None
             )
         else:
-            # Use blog post generator
+            # This is a blog post request
+            # Map tone values for blog posts
+            tone_mapping = {
+                "professional": "informative",
+                "casual": "informative", 
+                "technical": "tutorial",
+                "educational": "informative"
+            }
+            
+            blog_content_type = tone_mapping.get(content_type, content_type)
+            
             result = ai_generator.generate_blog_post(
                 topic=topic.strip(),
                 content_length=content_length,
-                content_type=content_type,
+                content_type=blog_content_type,
                 custom_prompt=custom_prompt.strip() if custom_prompt.strip() else None
             )
         
@@ -844,6 +871,15 @@ async def save_customization(
     footer_column_2: str = Form(""),
     footer_column_3: str = Form(""),
     footer_column_order: str = Form("1,2,3"),
+    hero_enabled: bool = Form(False),
+    hero_title: str = Form(""),
+    hero_subtitle: str = Form(""),
+    hero_primary_button_text: str = Form(""),
+    hero_primary_button_link: str = Form(""),
+    hero_secondary_button_text: str = Form(""),
+    hero_secondary_button_link: str = Form(""),
+    hero_primary_button_enabled: bool = Form(False),
+    hero_secondary_button_enabled: bool = Form(False),
     logo_file: UploadFile = File(None),
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
@@ -905,6 +941,17 @@ async def save_customization(
     settings.footer_column_2 = footer_column_2.strip() if footer_column_2.strip() else None
     settings.footer_column_3 = footer_column_3.strip() if footer_column_3.strip() else None
     settings.footer_column_order = footer_column_order.strip() if footer_column_order.strip() else "1,2,3"
+    
+    # Hero section settings
+    settings.hero_enabled = hero_enabled
+    settings.hero_title = hero_title.strip() if hero_title.strip() else "AI Destekli Blog Platformu"
+    settings.hero_subtitle = hero_subtitle.strip() if hero_subtitle.strip() else "Yapay zeka ile güçlendirilmiş modern blog deneyimi. En güncel içerikler ve teknoloji haberleri."
+    settings.hero_primary_button_text = hero_primary_button_text.strip() if hero_primary_button_text.strip() else "Blog Yazılarını Keşfet"
+    settings.hero_primary_button_link = hero_primary_button_link.strip() if hero_primary_button_link.strip() else "#posts"
+    settings.hero_secondary_button_text = hero_secondary_button_text.strip() if hero_secondary_button_text.strip() else "Üye Ol"
+    settings.hero_secondary_button_link = hero_secondary_button_link.strip() if hero_secondary_button_link.strip() else "/register"
+    settings.hero_primary_button_enabled = hero_primary_button_enabled
+    settings.hero_secondary_button_enabled = hero_secondary_button_enabled
     
     db.commit()
     

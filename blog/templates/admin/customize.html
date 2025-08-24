@@ -147,6 +147,143 @@
             </div>
         </div>
 
+        <!-- Hero Section Özelleştirme -->
+        <div class="bg-white rounded-xl shadow-lg p-6">
+            <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
+                <i data-lucide="star" class="w-5 h-5 mr-2"></i>
+                Hero Section Özelleştirme
+            </h3>
+            
+            <div class="space-y-6">
+                <!-- Hero Enabled/Disabled -->
+                <div>
+                    <label class="flex items-center">
+                        <input type="checkbox" name="hero_enabled" 
+                               {% if settings and settings.hero_enabled %}checked{% endif %}
+                               class="w-4 h-4 text-brown-600 border-cream-300 rounded focus:ring-brown-500">
+                        <span class="ml-3 text-brown-700 font-medium">Hero Section Aktif</span>
+                    </label>
+                    <p class="text-sm text-brown-600 mt-1">Ana sayfada hero section bölümünü göster/gizle</p>
+                </div>
+                
+                <div id="hero-settings" class="space-y-4">
+                    <!-- Hero Title -->
+                    <div>
+                        <label class="block text-brown-700 font-medium mb-2">Ana Başlık</label>
+                        <input type="text" name="hero_title" 
+                               value="{% if settings and settings.hero_title %}{{ settings.hero_title }}{% else %}AI Destekli Blog Platformu{% endif %}"
+                               placeholder="Ana başlık metni"
+                               class="w-full px-3 py-3 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
+                    </div>
+                    
+                    <!-- Hero Subtitle -->
+                    <div>
+                        <label class="block text-brown-700 font-medium mb-2">Alt Başlık</label>
+                        <textarea name="hero_subtitle" rows="3" 
+                                  placeholder="Alt başlık metni"
+                                  class="w-full px-3 py-3 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">{% if settings and settings.hero_subtitle %}{{ settings.hero_subtitle }}{% else %}Yapay zeka ile güçlendirilmiş modern blog deneyimi. En güncel içerikler ve teknoloji haberleri.{% endif %}</textarea>
+                    </div>
+                    
+                    <!-- Primary Button Settings -->
+                    <div class="bg-cream-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-brown-800 mb-3 flex items-center">
+                            <i data-lucide="mouse-pointer" class="w-4 h-4 mr-2"></i>
+                            Birincil Buton Ayarları
+                        </h4>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="hero_primary_button_enabled" 
+                                           {% if not settings or settings.hero_primary_button_enabled %}checked{% endif %}
+                                           class="w-4 h-4 text-brown-600 border-cream-300 rounded focus:ring-brown-500">
+                                    <span class="ml-3 text-brown-700">Birincil butonu göster</span>
+                                </label>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-brown-700 text-sm font-medium mb-1">Buton Metni</label>
+                                    <input type="text" name="hero_primary_button_text" 
+                                           value="{% if settings and settings.hero_primary_button_text %}{{ settings.hero_primary_button_text }}{% else %}Blog Yazılarını Keşfet{% endif %}"
+                                           placeholder="Buton metni"
+                                           class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-brown-700 text-sm font-medium mb-1">Buton Linki</label>
+                                    <input type="text" name="hero_primary_button_link" 
+                                           value="{% if settings and settings.hero_primary_button_link %}{{ settings.hero_primary_button_link }}{% else %}#posts{% endif %}"
+                                           placeholder="/link veya #section"
+                                           class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Secondary Button Settings -->
+                    <div class="bg-cream-50 p-4 rounded-lg">
+                        <h4 class="font-semibold text-brown-800 mb-3 flex items-center">
+                            <i data-lucide="mouse-pointer-2" class="w-4 h-4 mr-2"></i>
+                            İkincil Buton Ayarları
+                        </h4>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="flex items-center">
+                                    <input type="checkbox" name="hero_secondary_button_enabled" 
+                                           {% if not settings or settings.hero_secondary_button_enabled %}checked{% endif %}
+                                           class="w-4 h-4 text-brown-600 border-cream-300 rounded focus:ring-brown-500">
+                                    <span class="ml-3 text-brown-700">İkincil butonu göster</span>
+                                </label>
+                            </div>
+                            
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-brown-700 text-sm font-medium mb-1">Buton Metni</label>
+                                    <input type="text" name="hero_secondary_button_text" 
+                                           value="{% if settings and settings.hero_secondary_button_text %}{{ settings.hero_secondary_button_text }}{% else %}Üye Ol{% endif %}"
+                                           placeholder="Buton metni"
+                                           class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-brown-700 text-sm font-medium mb-1">Buton Linki</label>
+                                    <input type="text" name="hero_secondary_button_link" 
+                                           value="{% if settings and settings.hero_secondary_button_link %}{{ settings.hero_secondary_button_link }}{% else %}/register{% endif %}"
+                                           placeholder="/link veya #section"
+                                           class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Hero Preview -->
+                <div class="border-t border-cream-200 pt-4">
+                    <label class="block text-brown-700 font-medium mb-2">Önizleme</label>
+                    <div class="bg-gradient-to-br from-cream-100 to-brown-100 p-6 rounded-lg">
+                        <div class="text-center">
+                            <h1 id="hero-preview-title" class="text-3xl font-bold text-brown-900 mb-4">
+                                {% if settings and settings.hero_title %}{{ settings.hero_title }}{% else %}AI Destekli Blog Platformu{% endif %}
+                            </h1>
+                            <p id="hero-preview-subtitle" class="text-brown-700 mb-6 max-w-2xl mx-auto">
+                                {% if settings and settings.hero_subtitle %}{{ settings.hero_subtitle }}{% else %}Yapay zeka ile güçlendirilmiş modern blog deneyimi. En güncel içerikler ve teknoloji haberleri.{% endif %}
+                            </p>
+                            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                                <button id="hero-preview-primary" class="bg-brown-600 text-white px-6 py-2 rounded-lg hover:bg-brown-700 transition-smooth">
+                                    {% if settings and settings.hero_primary_button_text %}{{ settings.hero_primary_button_text }}{% else %}Blog Yazılarını Keşfet{% endif %}
+                                </button>
+                                <button id="hero-preview-secondary" class="border-2 border-brown-600 text-brown-600 px-6 py-2 rounded-lg hover:bg-brown-600 hover:text-white transition-smooth">
+                                    {% if settings and settings.hero_secondary_button_text %}{{ settings.hero_secondary_button_text }}{% else %}Üye Ol{% endif %}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Navbar Özelleştirme -->
         <div class="bg-white rounded-xl shadow-lg p-6">
             <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
@@ -641,6 +778,9 @@ function initializeFooterEditor() {
     // Initialize form data generation before submit
     document.querySelector('form').addEventListener('submit', generateFooterData);
     
+    // Initialize hero section editor
+    initializeHeroEditor();
+    
     console.log('Footer Editor initialized successfully');
 }
 
@@ -1086,6 +1226,117 @@ function updateNavbarPreview() {
     if (typeof lucide !== 'undefined' && lucide.createIcons) {
         lucide.createIcons();
     }
+}
+
+// Hero Section Editor Functions
+function initializeHeroEditor() {
+    console.log('Initializing Hero Editor...');
+    
+    // Add listeners to hero inputs
+    addHeroListeners();
+    
+    // Handle hero enabled/disabled toggle
+    const heroEnabledCheckbox = document.querySelector('input[name="hero_enabled"]');
+    const heroSettings = document.getElementById('hero-settings');
+    
+    if (heroEnabledCheckbox && heroSettings) {
+        function toggleHeroSettings() {
+            if (heroEnabledCheckbox.checked) {
+                heroSettings.style.display = 'block';
+            } else {
+                heroSettings.style.display = 'none';
+            }
+        }
+        
+        heroEnabledCheckbox.addEventListener('change', toggleHeroSettings);
+        toggleHeroSettings(); // Initialize state
+    }
+    
+    // Handle button enabled/disabled toggles
+    const primaryButtonCheckbox = document.querySelector('input[name="hero_primary_button_enabled"]');
+    const secondaryButtonCheckbox = document.querySelector('input[name="hero_secondary_button_enabled"]');
+    
+    if (primaryButtonCheckbox) {
+        primaryButtonCheckbox.addEventListener('change', updateHeroPreview);
+    }
+    
+    if (secondaryButtonCheckbox) {
+        secondaryButtonCheckbox.addEventListener('change', updateHeroPreview);
+    }
+    
+    // Initialize preview
+    updateHeroPreview();
+    
+    console.log('Hero Editor initialized successfully');
+}
+
+function addHeroListeners() {
+    console.log('Adding hero listeners...');
+    
+    // Hero title
+    const heroTitle = document.querySelector('input[name="hero_title"]');
+    if (heroTitle) {
+        heroTitle.addEventListener('input', updateHeroPreview);
+    }
+    
+    // Hero subtitle
+    const heroSubtitle = document.querySelector('textarea[name="hero_subtitle"]');
+    if (heroSubtitle) {
+        heroSubtitle.addEventListener('input', updateHeroPreview);
+    }
+    
+    // Primary button text
+    const primaryButtonText = document.querySelector('input[name="hero_primary_button_text"]');
+    if (primaryButtonText) {
+        primaryButtonText.addEventListener('input', updateHeroPreview);
+    }
+    
+    // Secondary button text
+    const secondaryButtonText = document.querySelector('input[name="hero_secondary_button_text"]');
+    if (secondaryButtonText) {
+        secondaryButtonText.addEventListener('input', updateHeroPreview);
+    }
+    
+    console.log('Hero listeners added successfully');
+}
+
+function updateHeroPreview() {
+    console.log('Updating hero preview...');
+    
+    // Get values from form
+    const title = document.querySelector('input[name="hero_title"]').value || 'AI Destekli Blog Platformu';
+    const subtitle = document.querySelector('textarea[name="hero_subtitle"]').value || 'Yapay zeka ile güçlendirilmiş modern blog deneyimi. En güncel içerikler ve teknoloji haberleri.';
+    const primaryButtonText = document.querySelector('input[name="hero_primary_button_text"]').value || 'Blog Yazılarını Keşfet';
+    const secondaryButtonText = document.querySelector('input[name="hero_secondary_button_text"]').value || 'Üye Ol';
+    
+    const primaryButtonEnabled = document.querySelector('input[name="hero_primary_button_enabled"]').checked;
+    const secondaryButtonEnabled = document.querySelector('input[name="hero_secondary_button_enabled"]').checked;
+    
+    // Update preview elements
+    const titleElement = document.getElementById('hero-preview-title');
+    const subtitleElement = document.getElementById('hero-preview-subtitle');
+    const primaryButtonElement = document.getElementById('hero-preview-primary');
+    const secondaryButtonElement = document.getElementById('hero-preview-secondary');
+    
+    if (titleElement) {
+        titleElement.textContent = title;
+    }
+    
+    if (subtitleElement) {
+        subtitleElement.textContent = subtitle;
+    }
+    
+    if (primaryButtonElement) {
+        primaryButtonElement.textContent = primaryButtonText;
+        primaryButtonElement.style.display = primaryButtonEnabled ? 'inline-block' : 'none';
+    }
+    
+    if (secondaryButtonElement) {
+        secondaryButtonElement.textContent = secondaryButtonText;
+        secondaryButtonElement.style.display = secondaryButtonEnabled ? 'inline-block' : 'none';
+    }
+    
+    console.log('Hero preview updated');
 }
 </script>
 {% endblock %}

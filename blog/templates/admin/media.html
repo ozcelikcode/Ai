@@ -7,6 +7,8 @@
 <style>
     .drag-over { border-color: #944f37; background-color: #f7f3f0; }
     .media-selected { border-color: #944f37; box-shadow: 0 0 0 2px rgba(148, 79, 55, 0.3); }
+    .folder-item.media-selected { border-color: #944f37; box-shadow: 0 0 0 2px rgba(148, 79, 55, 0.3); }
+    .folder-item.media-selected .selection-checkbox { opacity: 1 !important; }
     .upload-progress { transition: width 0.3s ease; }
     .notification {
         position: fixed;
@@ -59,6 +61,19 @@
     .drop-zone-active {
         border: 2px dashed #059669;
         background: rgba(5, 150, 105, 0.1);
+    }
+    .breadcrumb-drop-zone {
+        transition: all 0.3s ease;
+    }
+    .breadcrumb-drop-active {
+        background: linear-gradient(135deg, #059669, #047857) !important;
+        color: white !important;
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+    }
+    .breadcrumb-drop-active .text-brown-600,
+    .breadcrumb-drop-active .text-brown-800 {
+        color: white !important;
     }
 </style>
 {% endblock %}
@@ -116,34 +131,48 @@
 <!-- Breadcrumb Navigation -->
 <div class="bg-white rounded-xl shadow-lg p-4 mb-6">
     <nav class="flex items-center space-x-2 text-sm">
-        <a href="/admin/media" class="flex items-center text-brown-600 hover:text-brown-800 transition-smooth">
-            <i data-lucide="hard-drive" class="w-4 h-4 mr-1"></i>
-            Medya
+        <a href="/admin/media" id="root-drop-zone" class="breadcrumb-drop-zone flex items-center px-3 py-2 rounded-lg transition-smooth cursor-pointer"
+             data-folder-id="" title="Dosyaları ana dizine taşımak için buraya sürükleyin">
+            <i data-lucide="hard-drive" class="w-4 h-4 mr-1 text-brown-600"></i>
+            <span class="text-brown-600 font-medium">Ana Dizin</span>
+            {% if not current_folder %}
+            <i data-lucide="check" class="w-4 h-4 ml-2 text-green-600"></i>
+            {% endif %}
         </a>
         
         {% if current_folder %}
             <i data-lucide="chevron-right" class="w-4 h-4 text-brown-400"></i>
-            <span class="text-brown-900 font-medium flex items-center">
+            <div class="flex items-center px-3 py-2 rounded-lg bg-brown-100 text-brown-800">
                 <i data-lucide="folder" class="w-4 h-4 mr-1" style="color: {{ current_folder.color }}"></i>
-                {{ current_folder.name }}
-            </span>
+                <span class="font-medium">{{ current_folder.name }}</span>
+            </div>
         {% endif %}
         
         <!-- Quick Folder Access -->
         <div class="flex-1"></div>
         <div class="flex items-center space-x-2">
+            <!-- Diğer klasörlere hızlı taşıma -->
+            <span class="text-xs text-brown-500 mr-2">Hızlı Taşıma:</span>
             {% for folder in all_folders %}
             {% if not current_folder or current_folder.id != folder.id %}
-            <a href="/admin/media?folder_id={{ folder.id }}" 
-               class="flex items-center px-2 py-1 rounded text-xs bg-gray-100 hover:bg-gray-200 transition-smooth" 
-               title="{{ folder.description or folder.name }}">
+            <a href="/admin/media?folder_id={{ folder.id }}" class="breadcrumb-folder-drop breadcrumb-drop-zone flex items-center px-2 py-1 rounded text-xs bg-gray-100 hover:bg-gray-200 transition-smooth cursor-pointer" 
+                 data-folder-id="{{ folder.id }}"
+                 title="Dosyaları '{{ folder.name }}' klasörüne taşımak için buraya sürükleyin">
                 <i data-lucide="folder" class="w-3 h-3 mr-1" style="color: {{ folder.color }}"></i>
-                {{ folder.name }}
+                <span>{{ folder.name }}</span>
             </a>
             {% endif %}
             {% endfor %}
         </div>
     </nav>
+    
+    <!-- Drop Zone Indicator -->
+    <div id="drop-indicator" class="hidden mt-2 p-2 bg-green-50 border border-green-200 rounded-lg text-center">
+        <div class="flex items-center justify-center text-green-700">
+            <i data-lucide="move" class="w-4 h-4 mr-2"></i>
+            <span id="drop-indicator-text">Dosyayı buraya bırakın</span>
+        </div>
+    </div>
 </div>
 
 <!-- Upload Area -->
@@ -407,6 +436,62 @@
     </div>
 </div>
 
+<!-- Context Menu -->
+<div id="context-menu" class="hidden fixed bg-white rounded-lg shadow-xl border border-gray-200 z-50 min-w-48">
+    <div class="py-1">
+        <!-- Media Actions -->
+        <div id="media-context-actions" class="hidden">
+            <button class="context-menu-item flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="previewFromContext()">
+                <i data-lucide="eye" class="w-4 h-4 mr-3"></i>
+                Önizle
+            </button>
+            <button class="context-menu-item flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="editFromContext()">
+                <i data-lucide="edit" class="w-4 h-4 mr-3"></i>
+                Düzenle
+            </button>
+            <button class="context-menu-item flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="copyUrlFromContext()">
+                <i data-lucide="copy" class="w-4 h-4 mr-3"></i>
+                URL'yi Kopyala
+            </button>
+            <div class="border-t border-gray-200 my-1"></div>
+            <button class="context-menu-item flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50" onclick="deleteFromContext()">
+                <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i>
+                Sil
+            </button>
+        </div>
+        
+        <!-- Folder Actions -->
+        <div id="folder-context-actions" class="hidden">
+            <button class="context-menu-item flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="openFolderFromContext()">
+                <i data-lucide="folder-open" class="w-4 h-4 mr-3"></i>
+                Aç
+            </button>
+            <button class="context-menu-item flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100" onclick="editFolderFromContext()">
+                <i data-lucide="edit" class="w-4 h-4 mr-3"></i>
+                Düzenle
+            </button>
+            <div class="border-t border-gray-200 my-1"></div>
+            <button class="context-menu-item flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50" onclick="deleteFolderFromContext()">
+                <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i>
+                Sil
+            </button>
+        </div>
+        
+        <!-- Selection Actions -->
+        <div id="selection-context-actions" class="hidden">
+            <div class="border-t border-gray-200 my-1"></div>
+            <button class="context-menu-item flex items-center w-full px-4 py-2 text-sm text-blue-600 hover:bg-blue-50" onclick="selectFromContext()">
+                <i data-lucide="check-square" class="w-4 h-4 mr-3"></i>
+                Seç
+            </button>
+            <button class="context-menu-item flex items-center w-full px-4 py-2 text-sm text-blue-600 hover:bg-blue-50" onclick="deselectFromContext()">
+                <i data-lucide="square" class="w-4 h-4 mr-3"></i>
+                Seçimi Kaldır
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- Media Grid -->
 <div id="media-grid" class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4" 
      data-current-folder="{{ folder_id or '' }}">
@@ -414,36 +499,51 @@
     <!-- Folders (only in root view) -->
     {% if not current_folder %}
         {% for folder in folders_in_current %}
-        <div class="folder-item bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg overflow-hidden hover-lift transition-smooth relative border-2 border-blue-200 hover:border-blue-300" 
+        <div class="folder-item bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl shadow-lg overflow-hidden hover-lift transition-smooth relative border-2 border-blue-200 hover:border-blue-300 selectable-item" 
              data-folder-id="{{ folder.id }}" 
              data-folder-name="{{ folder.name }}"
-             data-type="folder">
+             data-folder-description="{{ folder.description or '' }}"
+             data-folder-color="{{ folder.color }}"
+             data-type="folder"
+             data-id="folder-{{ folder.id }}"
+             draggable="false"
+             oncontextmenu="handleItemClick(event, this); return false;">
+            
+            <!-- Selection Checkbox -->
+            <div class="absolute top-2 left-2 z-10 opacity-0 hover:opacity-100 transition-opacity">
+                <div class="selection-checkbox w-6 h-6 border-2 border-white bg-black bg-opacity-50 rounded-full cursor-pointer flex items-center justify-center hover:bg-opacity-70 transition-all"
+                     onclick="event.stopPropagation(); toggleSelection(this.closest('.selectable-item'))">
+                    <i data-lucide="check" class="w-3 h-3 text-white hidden"></i>
+                </div>
+            </div>
             
             <!-- Folder Content -->
-            <div class="aspect-square bg-gradient-to-br p-4 flex flex-col items-center justify-center relative cursor-pointer"
-                 style="background: linear-gradient(135deg, {{ folder.color }}15, {{ folder.color }}25)"
-                 ondblclick="openFolder({{ folder.id }})">
+            <div class="aspect-square bg-gradient-to-br p-4 flex flex-col items-center justify-center relative"
+                 style="background: linear-gradient(135deg, {{ folder.color }}15, {{ folder.color }}25)">
+                
+                <!-- Folder Link Area -->
+                <a href="/admin/media?folder_id={{ folder.id }}" class="absolute inset-0 cursor-pointer"></a>
                 
                 <!-- Folder Icon -->
-                <div class="flex-1 flex items-center justify-center">
+                <div class="flex-1 flex items-center justify-center relative pointer-events-none">
                     <i data-lucide="folder" class="w-16 h-16" style="color: {{ folder.color }}"></i>
                 </div>
                 
                 <!-- Folder Stats -->
-                <div class="text-center">
+                <div class="text-center relative pointer-events-none">
                     <div class="text-xs text-gray-600 font-medium">
                         {{ folder.file_count }} dosya
                     </div>
                 </div>
                 
                 <!-- Folder Actions -->
-                <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity">
+                <div class="absolute top-2 right-2 opacity-0 hover:opacity-100 transition-opacity z-10">
                     <div class="flex space-x-1">
-                        <button onclick="event.stopPropagation(); editFolder({{ folder.id }}, '{{ folder.name }}', '{{ folder.description }}', '{{ folder.color }}')" 
+                        <button onclick="event.preventDefault(); event.stopPropagation(); editFolder({{ folder.id }}, '{{ folder.name }}', '{{ folder.description }}', '{{ folder.color }}')" 
                                 class="p-1 bg-white rounded-full shadow hover:bg-gray-50 transition-smooth">
                             <i data-lucide="edit-3" class="w-3 h-3 text-blue-600"></i>
                         </button>
-                        <button onclick="event.stopPropagation(); deleteFolder({{ folder.id }}, '{{ folder.name }}')" 
+                        <button onclick="event.preventDefault(); event.stopPropagation(); deleteFolder({{ folder.id }}, '{{ folder.name }}')" 
                                 class="p-1 bg-white rounded-full shadow hover:bg-gray-50 transition-smooth">
                             <i data-lucide="trash-2" class="w-3 h-3 text-red-600"></i>
                         </button>
@@ -469,12 +569,15 @@
     <!-- Media Files -->
     {% if media_files %}
         {% for media in media_files %}
-        <div class="media-item bg-white rounded-xl shadow-lg overflow-hidden hover-lift transition-smooth relative" 
+        <div class="media-item bg-white rounded-xl shadow-lg overflow-hidden hover-lift transition-smooth relative selectable-item" 
              data-id="{{ media.id }}" 
              data-filename="{{ media.filename }}"
              data-title="{{ media.title or '' }}"
              data-description="{{ media.description or '' }}"
              data-alt-text="{{ media.alt_text or '' }}"
+             data-type="media"
+             onclick="handleItemClick(event, this)"
+             oncontextmenu="handleItemClick(event, this); return false;"
              data-created="{{ media.created_at.strftime('%d.%m.%Y %H:%M') if media.created_at else '' }}"
              data-type="media"
              draggable="true">
@@ -570,9 +673,48 @@
 
 {% block extra_js %}
 <script>
+// Debug: Check if script loads
+console.log('Media gallery script loaded');
+
+// Global error handler
+window.addEventListener('error', function(e) {
+    console.error('JavaScript Error:', e.error);
+});
+
+// Check if elements exist
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM loaded');
+    
+    const uploadBtn = document.getElementById('upload-btn');
+    const createFolderBtn = document.getElementById('create-folder-btn');
+    const selectModeBtn = document.getElementById('select-mode-btn');
+    const uploadUrlBtn = document.getElementById('upload-url-btn');
+    
+    console.log('Upload btn:', uploadBtn);
+    console.log('Create folder btn:', createFolderBtn);
+    console.log('Select mode btn:', selectModeBtn);
+    console.log('Upload URL btn:', uploadUrlBtn);
+    
+    // Test click manually
+    if (uploadBtn) {
+        uploadBtn.addEventListener('click', function() {
+            console.log('Upload button manually clicked!');
+            alert('Upload button works!');
+        });
+    }
+    
+    if (createFolderBtn) {
+        createFolderBtn.addEventListener('click', function() {
+            console.log('Create folder button manually clicked!');
+            alert('Create folder button works!');
+        });
+    }
+});
 // Global variables
 let selectMode = false;
-let selectedMedia = new Set();
+let selectedItems = new Set(); // Changed from selectedMedia to selectedItems
+let selectedMediaIds = new Set(); // For media files
+let selectedFolderIds = new Set(); // For folders
 let lastSelectedIndex = -1;
 
 // Notification system
@@ -601,11 +743,12 @@ function showNotification(message, type = 'success') {
     }, 5000);
 }
 
-// Upload area toggle
-document.getElementById('upload-btn').addEventListener('click', function() {
-    const uploadArea = document.getElementById('upload-area');
-    uploadArea.classList.toggle('hidden');
-});
+// Upload area toggle - DISABLED for testing
+// document.getElementById('upload-btn').addEventListener('click', function() {
+//     console.log('Upload button clicked');
+//     const uploadArea = document.getElementById('upload-area');
+//     uploadArea.classList.toggle('hidden');
+// });
 
 // Selection mode toggle
 document.getElementById('select-mode-btn').addEventListener('click', function() {
@@ -683,7 +826,7 @@ function handleMediaSelection(e, isClick) {
                 const rangeMediaItem = checkboxes[i].closest('.media-item');
                 
                 checkboxes[i].checked = true;
-                selectedMedia.add(rangeMediaId);
+                selectedMediaIds.add(rangeMediaId);
                 rangeMediaItem.classList.add('media-selected');
             }
         }
@@ -699,11 +842,11 @@ function handleMediaSelection(e, isClick) {
         
         if (wasChecked) {
             checkbox.checked = false;
-            selectedMedia.delete(mediaId);
+            selectedMediaIds.delete(mediaId);
             mediaItem.classList.remove('media-selected');
         } else {
             checkbox.checked = true;
-            selectedMedia.add(mediaId);
+            selectedMediaIds.add(mediaId);
             mediaItem.classList.add('media-selected');
         }
         
@@ -712,10 +855,10 @@ function handleMediaSelection(e, isClick) {
     } else if (!isShift && !isCtrl) {
         // Normal selection
         if (checkbox.checked) {
-            selectedMedia.add(mediaId);
+            selectedMediaIds.add(mediaId);
             mediaItem.classList.add('media-selected');
         } else {
-            selectedMedia.delete(mediaId);
+            selectedMediaIds.delete(mediaId);
             mediaItem.classList.remove('media-selected');
         }
         lastSelectedIndex = currentIndex;
@@ -725,22 +868,91 @@ function handleMediaSelection(e, isClick) {
 }
 
 function clearAllSelections() {
-    selectedMedia.clear();
+    selectedItems.clear();
+    selectedMediaIds.clear();
+    selectedFolderIds.clear();
+    
+    // Clear media selections
     document.querySelectorAll('.media-select').forEach(cb => {
         cb.checked = false;
         cb.closest('.media-item').classList.remove('media-selected');
+    });
+    
+    // Clear folder selections
+    document.querySelectorAll('.folder-item').forEach(folder => {
+        folder.classList.remove('media-selected');
+        const checkbox = folder.querySelector('.selection-checkbox i');
+        if (checkbox) checkbox.classList.add('hidden');
     });
 }
 
 function updateBulkControls() {
     const bulkControls = document.getElementById('bulk-controls');
     const selectedCount = document.getElementById('selected-count');
+    const totalSelected = selectedMediaIds.size + selectedFolderIds.size;
     
-    if (selectedMedia.size > 0) {
+    if (totalSelected > 0) {
         bulkControls.style.display = 'flex';
-        selectedCount.textContent = `${selectedMedia.size} seçildi`;
+        let countText = '';
+        if (selectedMediaIds.size > 0 && selectedFolderIds.size > 0) {
+            countText = `${selectedMediaIds.size} dosya, ${selectedFolderIds.size} klasör seçildi`;
+        } else if (selectedMediaIds.size > 0) {
+            countText = `${selectedMediaIds.size} dosya seçildi`;
+        } else {
+            countText = `${selectedFolderIds.size} klasör seçildi`;
+        }
+        selectedCount.textContent = countText;
     } else {
         bulkControls.style.display = 'none';
+    }
+}
+
+// Item selection functions (works for both media and folders)
+function toggleSelection(item) {
+    const itemType = item.dataset.type;
+    const itemId = itemType === 'folder' ? item.dataset.folderId : item.dataset.id;
+    
+    if (itemType === 'folder') {
+        const checkbox = item.querySelector('.selection-checkbox i');
+        const isSelected = selectedFolderIds.has(itemId);
+        
+        if (isSelected) {
+            selectedFolderIds.delete(itemId);
+            item.classList.remove('media-selected');
+            checkbox.classList.add('hidden');
+        } else {
+            selectedFolderIds.add(itemId);
+            item.classList.add('media-selected');
+            checkbox.classList.remove('hidden');
+        }
+    } else {
+        // Media item selection (existing logic)
+        const checkbox = item.querySelector('.media-select');
+        if (checkbox) {
+            checkbox.checked = !checkbox.checked;
+            handleMediaSelection(checkbox);
+        }
+    }
+    
+    updateBulkControls();
+}
+
+function handleItemClick(event, item) {
+    // Sağ tık için context menü
+    if (event.button === 2 || event.type === 'contextmenu') {
+        event.preventDefault();
+        showContextMenu(event, item);
+        return;
+    }
+    
+    if (event.shiftKey || event.ctrlKey) {
+        event.preventDefault();
+        event.stopPropagation();
+        
+        if (event.ctrlKey) {
+            toggleSelection(item);
+        }
+        // TODO: Add shift selection for folders if needed
     }
 }
 
@@ -753,9 +965,9 @@ document.getElementById('deselect-all-btn').addEventListener('click', function()
 
 // Bulk delete
 document.getElementById('bulk-delete-btn').addEventListener('click', async function() {
-    if (selectedMedia.size === 0) return;
+    if (selectedMediaIds.size === 0) return;
     
-    if (confirm(`${selectedMedia.size} dosyayı silmek istediğinizden emin misiniz?`)) {
+    if (confirm(`${selectedMediaIds.size} dosyayı silmek istediğinizden emin misiniz?`)) {
         try {
             const response = await fetch('/admin/media/bulk-delete', {
                 method: 'POST',
@@ -763,7 +975,7 @@ document.getElementById('bulk-delete-btn').addEventListener('click', async funct
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    media_ids: Array.from(selectedMedia).map(id => parseInt(id))
+                    media_ids: Array.from(selectedMediaIds).map(id => parseInt(id))
                 })
             });
             
@@ -771,23 +983,20 @@ document.getElementById('bulk-delete-btn').addEventListener('click', async funct
             
             if (result.success) {
                 // Remove deleted items from DOM
-                selectedMedia.forEach(mediaId => {
+                selectedMediaIds.forEach(mediaId => {
                     const mediaItem = document.querySelector(`[data-id="${mediaId}"]`);
                     if (mediaItem) mediaItem.remove();
                 });
                 
-                selectedMedia.clear();
+                selectedMediaIds.clear();
                 updateBulkControls();
                 lastSelectedIndex = -1;
                 showNotification(`${result.deleted_count} dosya başarıyla silindi`);
             } else {
                 showNotification('Silme işlemi başarısız: ' + (result.error || 'Bilinmeyen hata'), 'error');
             }
-        } catch (error) {
-            console.error('Bulk delete failed:', error);
-            showNotification('Silme işlemi başarısız oldu', 'error');
-        }
     }
+});
 });
 
 // URL modal
@@ -1156,10 +1365,10 @@ async function deleteMedia(mediaId) {
     }
 }
 
-// Folder Management Functions
-document.getElementById('create-folder-btn').addEventListener('click', function() {
-    openFolderModal();
-});
+// Folder Management Functions - DISABLED for testing
+// document.getElementById('create-folder-btn').addEventListener('click', function() {
+//     openFolderModal();
+// });
 
 document.getElementById('close-folder-modal').addEventListener('click', function() {
     closeFolderModal();
@@ -1265,8 +1474,170 @@ async function deleteFolder(folderId, folderName) {
 }
 
 // Folder Navigation Functions
+function handleFolderClick(event, folderId) {
+    // Eğer buton, link veya diğer interaktif elemanlara tıklanmışsa klasörü açma
+    if (event.target.closest('button') || event.target.closest('a') || event.target.closest('.selection-checkbox')) {
+        return;
+    }
+    
+    console.log('Opening folder:', folderId);
+    openFolder(folderId);
+}
+
 function openFolder(folderId) {
     window.location.href = `/admin/media?folder_id=${folderId}`;
+}
+
+// Navigate to folder (for breadcrumb navigation)
+function navigateToFolder(folderId) {
+    if (folderId === null || folderId === '' || folderId === undefined) {
+        window.location.href = '/admin/media';
+    } else {
+        window.location.href = `/admin/media?folder_id=${folderId}`;
+    }
+}
+
+// Context Menu System
+let contextMenuItem = null;
+
+function showContextMenu(event, item) {
+    event.preventDefault();
+    contextMenuItem = item;
+    
+    const contextMenu = document.getElementById('context-menu');
+    const mediaActions = document.getElementById('media-context-actions');
+    const folderActions = document.getElementById('folder-context-actions');
+    const selectionActions = document.getElementById('selection-context-actions');
+    
+    // Hide all action groups
+    mediaActions.classList.add('hidden');
+    folderActions.classList.add('hidden');
+    selectionActions.classList.remove('hidden'); // Always show selection actions
+    
+    // Show appropriate actions based on item type
+    if (item.dataset.type === 'folder') {
+        folderActions.classList.remove('hidden');
+    } else if (item.dataset.type === 'media') {
+        mediaActions.classList.remove('hidden');
+    }
+    
+    // Position the menu
+    const rect = event.target.getBoundingClientRect();
+    const menuRect = contextMenu.getBoundingClientRect();
+    
+    let left = event.clientX;
+    let top = event.clientY;
+    
+    // Adjust position if menu would go off screen
+    if (left + 200 > window.innerWidth) {
+        left = window.innerWidth - 200;
+    }
+    if (top + 300 > window.innerHeight) {
+        top = window.innerHeight - 300;
+    }
+    
+    contextMenu.style.left = left + 'px';
+    contextMenu.style.top = top + 'px';
+    contextMenu.classList.remove('hidden');
+    
+    // Close menu when clicking elsewhere
+    setTimeout(() => {
+        document.addEventListener('click', hideContextMenu, { once: true });
+    }, 100);
+}
+
+function hideContextMenu() {
+    document.getElementById('context-menu').classList.add('hidden');
+    contextMenuItem = null;
+}
+
+// Context Menu Action Functions
+function previewFromContext() {
+    if (contextMenuItem && contextMenuItem.dataset.type === 'media') {
+        const previewButton = contextMenuItem.querySelector('[data-lucide="eye"]').closest('button');
+        previewMedia(previewButton);
+    }
+    hideContextMenu();
+}
+
+function editFromContext() {
+    if (contextMenuItem && contextMenuItem.dataset.type === 'media') {
+        const editButton = contextMenuItem.querySelector('[data-lucide="edit"]').closest('button');
+        editMediaFromData(editButton);
+    }
+    hideContextMenu();
+}
+
+function copyUrlFromContext() {
+    if (contextMenuItem && contextMenuItem.dataset.type === 'media') {
+        const filename = contextMenuItem.dataset.filename;
+        copyUrl(filename);
+    }
+    hideContextMenu();
+}
+
+function deleteFromContext() {
+    if (contextMenuItem) {
+        if (contextMenuItem.dataset.type === 'media') {
+            const mediaId = contextMenuItem.dataset.id;
+            deleteMedia(parseInt(mediaId));
+        } else if (contextMenuItem.dataset.type === 'folder') {
+            const folderId = contextMenuItem.dataset.folderId;
+            const folderName = contextMenuItem.dataset.folderName;
+            deleteFolder(folderId, folderName);
+        }
+    }
+    hideContextMenu();
+}
+
+function openFolderFromContext() {
+    if (contextMenuItem && contextMenuItem.dataset.type === 'folder') {
+        const folderId = contextMenuItem.dataset.folderId;
+        openFolder(folderId);
+    }
+    hideContextMenu();
+}
+
+function editFolderFromContext() {
+    if (contextMenuItem && contextMenuItem.dataset.type === 'folder') {
+        const folderId = contextMenuItem.dataset.folderId;
+        const folderName = contextMenuItem.dataset.folderName;
+        const folderDescription = contextMenuItem.dataset.folderDescription || '';
+        const folderColor = contextMenuItem.dataset.folderColor || '#944f37';
+        
+        editFolder(folderId, folderName, folderDescription, folderColor);
+    }
+    hideContextMenu();
+}
+
+function deleteFolderFromContext() {
+    if (contextMenuItem && contextMenuItem.dataset.type === 'folder') {
+        const folderId = contextMenuItem.dataset.folderId;
+        const folderName = contextMenuItem.dataset.folderName;
+        deleteFolder(folderId, folderName);
+    }
+    hideContextMenu();
+}
+
+function selectFromContext() {
+    if (contextMenuItem) {
+        toggleSelection(contextMenuItem);
+    }
+    hideContextMenu();
+}
+
+function deselectFromContext() {
+    if (contextMenuItem) {
+        const itemType = contextMenuItem.dataset.type;
+        const itemId = itemType === 'folder' ? contextMenuItem.dataset.folderId : contextMenuItem.dataset.id;
+        
+        if (itemType === 'folder' && selectedFolderIds.has(itemId)) {
+            toggleSelection(contextMenuItem);
+        } else if (itemType === 'media' && selectedMediaIds.has(itemId)) {
+            toggleSelection(contextMenuItem);
+        }
+    }
+    hideContextMenu();
 }
 
 // Drag & Drop Implementation
@@ -1292,10 +1663,32 @@ function initializeDragAndDrop() {
         folder.addEventListener('drop', handleDrop);
     });
     
+    // Make breadcrumb drop zones
+    initializeBreadcrumbDropZones();
+    
     // Make root area a drop zone (for removing from folders)
     const mediaGrid = document.getElementById('media-grid');
     mediaGrid.addEventListener('dragover', handleRootDragOver);
     mediaGrid.addEventListener('drop', handleRootDrop);
+}
+
+function initializeBreadcrumbDropZones() {
+    // Ana dizin drop zone
+    const rootDropZone = document.getElementById('root-drop-zone');
+    if (rootDropZone) {
+        rootDropZone.addEventListener('dragover', handleBreadcrumbDragOver);
+        rootDropZone.addEventListener('dragenter', handleBreadcrumbDragEnter);
+        rootDropZone.addEventListener('dragleave', handleBreadcrumbDragLeave);
+        rootDropZone.addEventListener('drop', handleBreadcrumbDrop);
+    }
+    
+    // Klasör drop zone'ları
+    document.querySelectorAll('.breadcrumb-folder-drop').forEach(dropZone => {
+        dropZone.addEventListener('dragover', handleBreadcrumbDragOver);
+        dropZone.addEventListener('dragenter', handleBreadcrumbDragEnter);
+        dropZone.addEventListener('dragleave', handleBreadcrumbDragLeave);
+        dropZone.addEventListener('drop', handleBreadcrumbDrop);
+    });
 }
 
 function handleDragStart(e) {
@@ -1303,16 +1696,34 @@ function handleDragStart(e) {
     this.classList.add('dragging');
     e.dataTransfer.effectAllowed = 'move';
     e.dataTransfer.setData('text/html', this.outerHTML);
+    
+    // Disable folder links during drag
+    document.querySelectorAll('.folder-item a').forEach(link => {
+        link.style.pointerEvents = 'none';
+    });
 }
 
 function handleDragEnd(e) {
     this.classList.remove('dragging');
     draggedElement = null;
     
+    // Re-enable folder links after drag
+    document.querySelectorAll('.folder-item a').forEach(link => {
+        link.style.pointerEvents = 'auto';
+    });
+    
     // Remove drag over styles from all folders
     document.querySelectorAll('.folder-item').forEach(folder => {
         folder.classList.remove('drag-over-folder');
     });
+    
+    // Remove breadcrumb drop styles
+    document.querySelectorAll('.breadcrumb-drop-zone').forEach(zone => {
+        zone.classList.remove('breadcrumb-drop-active');
+    });
+    
+    // Hide drop indicator
+    document.getElementById('drop-indicator').classList.add('hidden');
 }
 
 function handleDragOver(e) {
@@ -1373,6 +1784,66 @@ function handleRootDrop(e) {
     return false;
 }
 
+// Breadcrumb Drop Handlers
+function handleBreadcrumbDragOver(e) {
+    if (e.preventDefault) {
+        e.preventDefault();
+    }
+    e.dataTransfer.dropEffect = 'move';
+    return false;
+}
+
+function handleBreadcrumbDragEnter(e) {
+    if (draggedElement && draggedElement.dataset.type === 'media') {
+        this.classList.add('breadcrumb-drop-active');
+        
+        // Show drop indicator
+        const dropIndicator = document.getElementById('drop-indicator');
+        const dropText = document.getElementById('drop-indicator-text');
+        
+        if (this.dataset.folderId === '') {
+            dropText.textContent = 'Ana dizine taşımak için buraya bırakın';
+        } else {
+            const folderName = this.textContent.trim();
+            dropText.textContent = `"${folderName}" klasörüne taşımak için buraya bırakın`;
+        }
+        
+        dropIndicator.classList.remove('hidden');
+    }
+}
+
+function handleBreadcrumbDragLeave(e) {
+    // Only remove if we're actually leaving the breadcrumb area
+    if (!this.contains(e.relatedTarget)) {
+        this.classList.remove('breadcrumb-drop-active');
+        
+        // Hide drop indicator if no other breadcrumb is active
+        const hasActiveDropZone = document.querySelector('.breadcrumb-drop-active');
+        if (!hasActiveDropZone) {
+            document.getElementById('drop-indicator').classList.add('hidden');
+        }
+    }
+}
+
+function handleBreadcrumbDrop(e) {
+    if (e.stopPropagation) {
+        e.stopPropagation();
+    }
+    
+    // Clean up visual effects
+    this.classList.remove('breadcrumb-drop-active');
+    document.getElementById('drop-indicator').classList.add('hidden');
+    
+    if (draggedElement && draggedElement.dataset.type === 'media') {
+        const mediaId = draggedElement.dataset.id;
+        const folderId = this.dataset.folderId === '' ? null : this.dataset.folderId;
+        
+        moveMediaToFolder(mediaId, folderId);
+    }
+    
+    return false;
+}
+
 // Move media to folder function
 async function moveMediaToFolder(mediaId, folderId) {
     try {
@@ -1386,13 +1857,18 @@ async function moveMediaToFolder(mediaId, folderId) {
             })
         });
         
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
         const result = await response.json();
+        console.log('Move result:', result);
         
         if (result.success) {
             if (folderId) {
-                showNotification('Dosya klasöre taşındı');
+                showNotification('Dosya klasöre taşındı', 'success');
             } else {
-                showNotification('Dosya ana dizine taşındı');
+                showNotification('Dosya ana dizine taşındı', 'success');
             }
             
             // Remove the moved item from current view if we're in a folder
@@ -1404,6 +1880,7 @@ async function moveMediaToFolder(mediaId, folderId) {
                 setTimeout(() => location.reload(), 1000);
             }
         } else {
+            console.error('Move failed with result:', result);
             showNotification('Dosya taşıma başarısız: ' + (result.error || 'Bilinmeyen hata'), 'error');
         }
     } catch (error) {

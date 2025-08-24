@@ -92,12 +92,37 @@ async def post_detail(request: Request, slug: str, db: Session = Depends(get_db)
 
 @router.get("/categories", response_class=HTMLResponse)
 async def categories_list(request: Request, db: Session = Depends(get_db)):
-    categories = db.query(Category).all()
-    current_user = get_current_user_optional(request, db)
-    
-    context = get_template_context(request, db, current_user)
-    context["categories"] = categories
-    return templates.TemplateResponse("blog/categories.html", context)
+    try:
+        # Get categories with post counts
+        categories = db.query(Category).all()
+        
+        # Safely add post count to each category
+        categories_data = []
+        for category in categories:
+            post_count = db.query(Post).filter(
+                Post.category_id == category.id,
+                Post.is_published == True
+            ).count()
+            
+            categories_data.append({
+                'id': category.id,
+                'name': category.name,
+                'slug': category.slug,
+                'description': category.description,
+                'post_count': post_count
+            })
+        
+        current_user = get_current_user_optional(request, db)
+        context = get_template_context(request, db, current_user)
+        context["categories"] = categories_data
+        
+        return templates.TemplateResponse("blog/categories.html", context)
+        
+    except Exception as e:
+        print(f"Categories page error: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail="Internal server error")
 
 @router.get("/category/{slug}", response_class=HTMLResponse)
 async def category_posts(request: Request, slug: str, db: Session = Depends(get_db)):
@@ -110,6 +135,14 @@ async def category_posts(request: Request, slug: str, db: Session = Depends(get_
             Post.category_id == category.id,
             Post.is_published == True
         ).order_by(Post.created_at.desc()).all()
+        
+        # Clean HTML from excerpts in backend
+        from app.utils.helpers import strip_html_tags
+        for post in posts:
+            if post.excerpt:
+                post.clean_excerpt = strip_html_tags(post.excerpt)[:150] + ("..." if len(strip_html_tags(post.excerpt)) > 150 else "")
+            else:
+                post.clean_excerpt = ""
         
         current_user = get_current_user_optional(request, db)
         

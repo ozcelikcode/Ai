@@ -173,6 +173,16 @@ class Settings(Base):
     ai_prompt = Column(Text, default="Write a blog post about the given topic")
     ai_content_length = Column(String(50), default="medium")
     ai_content_type = Column(String(50), default="informative")
+    # Hero section settings
+    hero_enabled = Column(Boolean, default=True)
+    hero_title = Column(String(500), default="AI Destekli Blog Platformu")
+    hero_subtitle = Column(Text, default="Yapay zeka ile güçlendirilmiş modern blog deneyimi. En güncel içerikler ve teknoloji haberleri.")
+    hero_primary_button_text = Column(String(100), default="Blog Yazılarını Keşfet")
+    hero_primary_button_link = Column(String(200), default="#posts")
+    hero_secondary_button_text = Column(String(100), default="Üye Ol")
+    hero_secondary_button_link = Column(String(200), default="/register")
+    hero_primary_button_enabled = Column(Boolean, default=True)
+    hero_secondary_button_enabled = Column(Boolean, default=True)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
 class Avatar(Base):

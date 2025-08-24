@@ -106,6 +106,232 @@
         .main-scrollbar::-webkit-scrollbar-thumb:hover {
             background: rgba(180, 83, 9, 0.5);
         }
+        
+        /* Excerpt content styling */
+        .excerpt-content {
+            overflow: hidden;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            line-height: 1.5;
+        }
+        
+        .excerpt-content h1, .excerpt-content h2, .excerpt-content h3, 
+        .excerpt-content h4, .excerpt-content h5, .excerpt-content h6 {
+            font-size: inherit;
+            font-weight: 600;
+            margin: 0;
+            display: inline;
+        }
+        
+        .excerpt-content p {
+            display: inline;
+            margin: 0;
+        }
+        
+        .excerpt-content ul, .excerpt-content ol {
+            display: inline;
+            list-style: none;
+            margin: 0;
+            padding: 0;
+        }
+        
+        .excerpt-content li {
+            display: inline;
+        }
+        
+        .excerpt-content strong {
+            font-weight: 600;
+        }
+        
+        .excerpt-content em {
+            font-style: italic;
+        }
+        
+        /* Prose styles for post content */
+        .prose {
+            color: #64342b;
+            max-width: 65ch;
+            line-height: 1.75;
+        }
+        
+        .prose h1, .prose h2, .prose h3, .prose h4 {
+            color: #2c1810;
+            font-weight: 700;
+            line-height: 1.25;
+            margin-top: 2em;
+            margin-bottom: 1em;
+        }
+        
+        .prose h1 {
+            font-size: 2.5rem;
+            margin-top: 0;
+        }
+        
+        .prose h2 {
+            font-size: 2rem;
+            margin-top: 2em;
+            border-bottom: 1px solid #dbc5b7;
+            padding-bottom: 0.5rem;
+        }
+        
+        .prose h3 {
+            font-size: 1.5rem;
+            margin-top: 1.75em;
+        }
+        
+        .prose h4 {
+            font-size: 1.25rem;
+            margin-top: 1.5em;
+        }
+        
+        .prose p {
+            margin-top: 1.5em;
+            margin-bottom: 1.5em;
+        }
+        
+        .prose ul, .prose ol {
+            margin-top: 1.5em;
+            margin-bottom: 1.5em;
+            padding-left: 1.75em;
+        }
+        
+        .prose li {
+            margin-top: 0.5em;
+            margin-bottom: 0.5em;
+        }
+        
+        .prose ul > li {
+            position: relative;
+            padding-left: 0.5em;
+        }
+        
+        .prose ul > li::before {
+            content: "";
+            position: absolute;
+            background-color: #7b4030;
+            border-radius: 50%;
+            width: 0.375em;
+            height: 0.375em;
+            top: calc(0.875em - 0.1875em);
+            left: -0.5em;
+        }
+        
+        .prose ol > li {
+            position: relative;
+            padding-left: 0.5em;
+        }
+        
+        .prose strong {
+            color: #2c1810;
+            font-weight: 600;
+        }
+        
+        .prose em {
+            color: #522c26;
+            font-style: italic;
+        }
+        
+        .prose blockquote {
+            font-weight: 500;
+            font-style: italic;
+            color: #522c26;
+            border-left: 0.25rem solid #dbc5b7;
+            quotes: "\201C""\201D""\2018""\2019";
+            margin-top: 1.6em;
+            margin-bottom: 1.6em;
+            padding-left: 1em;
+        }
+        
+        .prose code {
+            color: #522c26;
+            font-weight: 600;
+            background-color: #fdf8f0;
+            padding: 0.25em 0.375em;
+            border-radius: 0.25rem;
+            font-size: 0.875em;
+        }
+        
+        .prose pre {
+            color: #f7f3f0;
+            background-color: #522c26;
+            overflow-x: auto;
+            font-weight: 400;
+            font-size: 0.875em;
+            line-height: 1.7142857;
+            margin-top: 1.7142857em;
+            margin-bottom: 1.7142857em;
+            border-radius: 0.375rem;
+            padding: 1em;
+        }
+        
+        .prose pre code {
+            background-color: transparent;
+            border-width: 0;
+            border-radius: 0;
+            padding: 0;
+            font-weight: inherit;
+            color: inherit;
+            font-size: inherit;
+        }
+        
+        .prose hr {
+            border-color: #dbc5b7;
+            border-top-width: 1px;
+            margin-top: 3em;
+            margin-bottom: 3em;
+        }
+        
+        .prose a {
+            color: #7b4030;
+            text-decoration: underline;
+            font-weight: 500;
+        }
+        
+        .prose a:hover {
+            color: #522c26;
+        }
+        
+        .prose-lg {
+            font-size: 1.125rem;
+            line-height: 1.7777778;
+        }
+        
+        .prose-lg h1 {
+            font-size: 2.6666667rem;
+            margin-top: 0;
+            margin-bottom: 1.3333333em;
+            line-height: 1;
+        }
+        
+        .prose-lg h2 {
+            font-size: 2rem;
+            margin-top: 1.7777778em;
+            margin-bottom: 1.1111111em;
+            line-height: 1.3333333;
+        }
+        
+        .prose-lg h3 {
+            font-size: 1.5rem;
+            margin-top: 1.6666667em;
+            margin-bottom: 0.6666667em;
+            line-height: 1.3333333;
+        }
+        
+        .prose-lg h4 {
+            margin-top: 1.7777778em;
+            margin-bottom: 0.4444444em;
+            line-height: 1.5555556;
+        }
+        
+        .prose-lg p {
+            margin-top: 1.3333333em;
+            margin-bottom: 1.3333333em;
+        }
+        
+        .max-w-none {
+            max-width: none;
+        }
     </style>
 </head>
 <body class="bg-cream-50 text-brown-900 min-h-screen main-scrollbar">
@@ -134,9 +360,22 @@
                 </div>
                 
                 <div class="hidden md:flex items-center space-x-1">
-                    {% if false %}
-                        <!-- Navbar config disabled for now -->
+                    <!-- Temporarily disable dynamic navbar to fix the issue -->
+                    {% set use_dynamic_navbar = false %}
+                    {% if use_dynamic_navbar and site_settings and site_settings.navbar_config %}
+                        {% set navbar_items = site_settings.navbar_config | from_json %}
+                        {% for item in navbar_items %}
+                            {% if item.text and item.link %}
+                            <a href="{{ item.link }}" class="px-4 py-2 text-brown-700 hover:text-brown-900 hover:bg-brown-50 rounded-lg transition-smooth flex items-center space-x-2">
+                                {% if item.icon %}
+                                <i data-lucide="{{ item.icon }}" class="w-4 h-4"></i>
+                                {% endif %}
+                                <span>{{ item.text }}</span>
+                            </a>
+                            {% endif %}
+                        {% endfor %}
                     {% else %}
+                        <!-- Default navbar items -->
                         <a href="/" class="px-4 py-2 text-brown-700 hover:text-brown-900 hover:bg-brown-50 rounded-lg transition-smooth flex items-center space-x-2">
                             <i data-lucide="home" class="w-4 h-4"></i>
                             <span>Ana Sayfa</span>

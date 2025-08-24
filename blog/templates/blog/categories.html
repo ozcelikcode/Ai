@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Kategoriler - AI Blog{% endblock %}
+{% block title %}Kategoriler - {{ site_settings.site_title if site_settings else 'AI Blog' }}{% endblock %}
 
 {% block content %}
 <section class="py-16">
@@ -30,7 +30,7 @@
                     
                     <div class="flex items-center justify-between">
                         <span class="text-sm text-brown-600">
-                            {{ category.posts|length }} yazı
+                            {{ category.post_count }} yazı
                         </span>
                         <a href="/category/{{ category.slug }}" 
                            class="bg-brown-600 text-white px-4 py-2 rounded-lg hover:bg-brown-700 transition-smooth">
