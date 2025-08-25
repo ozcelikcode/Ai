@@ -15,7 +15,7 @@
                         
                         <!-- Kategoriler -->
                         <div>
-                            <h3 class="text-xl font-semibold text-brown-800 mb-4 flex items-center">
+                            <h3 class="text-xl font-semibold text-brown-800 mb-4 flex items-center font-heading">
                                 <i data-lucide="folder" class="w-5 h-5 mr-3 text-brown-600"></i>
                                 Kategoriler
                             </h3>
@@ -34,7 +34,7 @@
                         
                         <!-- Popüler Yazılar -->
                         <div>
-                            <h3 class="text-xl font-semibold text-brown-800 mb-4 flex items-center">
+                            <h3 class="text-xl font-semibold text-brown-800 mb-4 flex items-center font-heading">
                                 <i data-lucide="trending-up" class="w-5 h-5 mr-3 text-brown-600"></i>
                                 Popüler Yazılar
                             </h3>
@@ -88,7 +88,7 @@
             </div>
             {% endif %}
             
-            <h1 class="text-4xl font-bold text-brown-900 mb-4">{{ post.title }}</h1>
+            <h1 class="text-4xl font-bold text-brown-900 mb-4 font-heading post-title">{{ post.title }}</h1>
             
             <div class="flex items-center gap-6 text-brown-600 text-sm">
                 <div class="flex items-center gap-2">
@@ -128,7 +128,7 @@
         {% endif %}
         
         <!-- Post Content -->
-        <div class="prose prose-lg prose-brown max-w-none mb-12">
+        <div class="prose prose-lg prose-brown max-w-none mb-12 post-content font-content">
             {{ post.content | safe }}
         </div>
         
@@ -172,7 +172,7 @@
         
         <!-- Comments Section -->
         <section id="comments" class="mb-12">
-            <h3 class="text-2xl font-bold text-brown-900 mb-6">Yorumlar</h3>
+            <h3 class="text-2xl font-bold text-brown-900 mb-6 font-heading">Yorumlar</h3>
             
             <!-- Comment Form -->
             {% if current_user %}

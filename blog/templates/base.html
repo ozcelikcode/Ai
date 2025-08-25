@@ -14,6 +14,11 @@
     <meta name="keywords" content="{{ site_settings.meta_keywords }}">
     {% endif %}
     
+    <!-- Modern Serif Font Family -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Domine:wght@400;500;600;700&family=Source+Serif+4:ital,opsz,wght@0,8..60,200..900;1,8..60,200..900&family=Lora:ital,wght@0,400..700;1,400..700&display=swap" rel="stylesheet">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
     
@@ -21,6 +26,12 @@
         tailwind.config = {
             theme: {
                 extend: {
+                    fontFamily: {
+                        'heading': ['Domine', 'Times New Roman', 'serif'],
+                        'content': ['Source Serif 4', 'Times New Roman', 'serif'], 
+                        'elegant': ['Lora', 'Georgia', 'serif'],
+                        'sans': ['system-ui', '-apple-system', 'sans-serif'],
+                    },
                     colors: {
                         cream: {
                             50: '#fefdfb',
@@ -53,6 +64,87 @@
     </script>
     
     <style>
+        /* Global font settings - Modern serif system */
+        body {
+            font-family: 'Source Serif 4', 'Times New Roman', serif;
+            font-optical-sizing: auto;
+            font-weight: 400;
+            font-style: normal;
+            font-variation-settings: "opsz" 12;
+        }
+        
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Domine', 'Times New Roman', serif;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+        
+        .font-elegant {
+            font-family: 'Lora', Georgia, serif;
+        }
+        
+        /* Navigation and UI elements styling */
+        nav .nav-logo {
+            font-family: 'Domine', serif;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        
+        nav .nav-link {
+            font-family: 'Source Serif 4', serif;
+            font-weight: 500;
+            letter-spacing: -0.01em;
+        }
+        
+        .nav-item, .btn, button, input, select, textarea {
+            font-family: system-ui, -apple-system, sans-serif;
+        }
+        
+        /* Content typography refinements */
+        .prose {
+            font-family: 'Source Serif 4', 'Times New Roman', serif;
+        }
+        
+        .prose h1, .prose h2, .prose h3, .prose h4 {
+            font-family: 'Domine', 'Times New Roman', serif;
+            font-weight: 600;
+            letter-spacing: -0.015em;
+        }
+        
+        .post-title {
+            font-family: 'Domine', 'Times New Roman', serif;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        
+        .post-content {
+            font-family: 'Source Serif 4', 'Times New Roman', serif;
+            font-weight: 400;
+            line-height: 1.7;
+        }
+        
+        .excerpt-text {
+            font-family: 'Source Serif 4', 'Times New Roman', serif;
+            line-height: 1.6;
+        }
+        
+        /* Footer styling */
+        footer h3, footer h4, footer h5 {
+            font-family: 'Domine', serif;
+            font-weight: 600;
+            letter-spacing: -0.01em;
+        }
+        
+        footer p, footer li, footer a {
+            font-family: 'Source Serif 4', serif;
+            font-weight: 400;
+        }
+        
+        footer a:hover {
+            color: #f5e6c8;
+            transition: color 0.3s ease;
+        }
+        
         .transition-smooth {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
@@ -153,6 +245,7 @@
             color: #64342b;
             max-width: 65ch;
             line-height: 1.75;
+            font-family: 'Source Serif 4', 'Times New Roman', serif;
         }
         
         .prose h1, .prose h2, .prose h3, .prose h4 {
@@ -161,6 +254,8 @@
             line-height: 1.25;
             margin-top: 2em;
             margin-bottom: 1em;
+            font-family: 'Domine', 'Times New Roman', serif;
+            letter-spacing: -0.015em;
         }
         
         .prose h1 {
@@ -339,7 +434,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between items-center h-16">
                 <div class="flex items-center">
-                    <a href="/" class="flex items-center text-2xl font-bold text-brown-800 hover:text-brown-600 transition-smooth">
+                    <a href="/" class="flex items-center text-2xl font-bold text-brown-800 hover:text-brown-600 transition-smooth nav-logo">
                         {% if site_settings and site_settings.logo_type %}
                             {% if site_settings.logo_type == 'text' %}
                                 <span>{{ site_settings.site_title or 'AI Blog' }}</span>
@@ -376,15 +471,15 @@
                         {% endfor %}
                     {% else %}
                         <!-- Default navbar items -->
-                        <a href="/" class="px-4 py-2 text-brown-700 hover:text-brown-900 hover:bg-brown-50 rounded-lg transition-smooth flex items-center space-x-2">
+                        <a href="/" class="px-4 py-2 text-brown-700 hover:text-brown-900 hover:bg-brown-50 rounded-lg transition-smooth flex items-center space-x-2 nav-link">
                             <i data-lucide="home" class="w-4 h-4"></i>
                             <span>Ana Sayfa</span>
                         </a>
-                        <a href="/categories" class="px-4 py-2 text-brown-700 hover:text-brown-900 hover:bg-brown-50 rounded-lg transition-smooth flex items-center space-x-2">
+                        <a href="/categories" class="px-4 py-2 text-brown-700 hover:text-brown-900 hover:bg-brown-50 rounded-lg transition-smooth flex items-center space-x-2 nav-link">
                             <i data-lucide="folder" class="w-4 h-4"></i>
                             <span>Kategoriler</span>
                         </a>
-                        <a href="/about" class="px-4 py-2 text-brown-700 hover:text-brown-900 hover:bg-brown-50 rounded-lg transition-smooth flex items-center space-x-2">
+                        <a href="/about" class="px-4 py-2 text-brown-700 hover:text-brown-900 hover:bg-brown-50 rounded-lg transition-smooth flex items-center space-x-2 nav-link">
                             <i data-lucide="info" class="w-4 h-4"></i>
                             <span>Hakkında</span>
                         </a>
@@ -496,7 +591,7 @@
         {% block content %}{% endblock %}
     </main>
 
-    <footer class="bg-brown-800 text-cream-100 mt-16">
+    <footer class="bg-brown-800 text-cream-100 mt-16 font-content">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
             {% if site_settings and (site_settings.footer_column_1 or site_settings.footer_column_2 or site_settings.footer_column_3) %}
                 <!-- Custom Footer Columns -->
@@ -520,7 +615,7 @@
                 <!-- Default Footer Content -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div>
-                        <h4 class="font-semibold mb-4">Hızlı Linkler</h4>
+                        <h4 class="font-semibold mb-4 font-heading">Hızlı Linkler</h4>
                         <ul class="space-y-2">
                             <li><a href="/" class="text-cream-300 hover:text-white transition-smooth">Ana Sayfa</a></li>
                             <li><a href="/categories" class="text-cream-300 hover:text-white transition-smooth">Kategoriler</a></li>
@@ -528,7 +623,7 @@
                         </ul>
                     </div>
                     <div>
-                        <h4 class="font-semibold mb-4">İletişim</h4>
+                        <h4 class="font-semibold mb-4 font-heading">İletişim</h4>
                         <ul class="space-y-2">
                             <li><a href="/contact" class="text-cream-300 hover:text-white transition-smooth">İletişim</a></li>
                             <li><a href="/privacy" class="text-cream-300 hover:text-white transition-smooth">Gizlilik</a></li>
@@ -536,7 +631,7 @@
                         </ul>
                     </div>
                     <div>
-                        <h4 class="font-semibold mb-4">Sosyal Medya</h4>
+                        <h4 class="font-semibold mb-4 font-heading">Sosyal Medya</h4>
                         <div class="flex space-x-3">
                             <a href="#" class="text-cream-300 hover:text-white transition-smooth">
                                 <i data-lucide="twitter" class="w-5 h-5"></i>
