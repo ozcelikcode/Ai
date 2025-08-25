@@ -111,6 +111,72 @@
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 40;
         }
+        
+        /* Dropdown menüler için stil */
+        .dropdown-menu {
+            max-height: 0;
+            overflow: hidden;
+            position: relative;
+            background-color: rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+            margin-top: 4px;
+            margin-left: 8px;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .dropdown-menu.open {
+            max-height: 500px;
+            opacity: 1;
+            transform: translateY(0);
+            padding: 4px 0;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-4px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .dropdown-toggle {
+            position: relative;
+        }
+        
+        .dropdown-toggle::after {
+            content: '';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-left: 4px solid transparent;
+            border-right: 4px solid transparent;
+            border-top: 4px solid currentColor;
+            transition: transform 0.3s ease;
+            pointer-events: none;
+        }
+        
+        .dropdown-toggle.open::after {
+            transform: translateY(-50%) rotate(180deg);
+        }
+        
+        /* Button specific styling */
+        button.dropdown-toggle {
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        
+        button.dropdown-toggle:focus {
+            outline: none;
+        }
     </style>
     
     {% block extra_head %}{% endblock %}
@@ -136,60 +202,147 @@
                         Dashboard
                     </a>
                     
-                    <a href="/admin/posts" data-menu="posts" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
-                        <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
-                        İçerik Yönetimi
-                    </a>
+                    <!-- İçerik Yönetimi Dropdown -->
+                    <div class="menu-group">
+                        <button type="button" data-menu="posts" class="w-full flex items-center px-4 py-3 rounded-lg transition-smooth dropdown-toggle text-left text-cream-200 hover:bg-brown-700 hover:text-white" onclick="toggleDropdown(event, 'posts-dropdown')">
+                            <i data-lucide="file-text" class="w-5 h-5 mr-3"></i>
+                            İçerik Yönetimi
+                        </button>
+                        <div id="posts-dropdown" class="dropdown-menu">
+                            <a href="/admin/posts" data-menu="posts-list" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="list" class="w-4 h-4 mr-3"></i>
+                                Tüm Yazılar
+                            </a>
+                            <a href="/admin/posts/new" data-menu="posts-new" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="plus" class="w-4 h-4 mr-3"></i>
+                                Yeni Yazı
+                            </a>
+                            <a href="/admin/posts?status=published" data-menu="posts-published" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="check-circle" class="w-4 h-4 mr-3"></i>
+                                Yayınlanan
+                            </a>
+                            <a href="/admin/posts?status=draft" data-menu="posts-draft" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="edit" class="w-4 h-4 mr-3"></i>
+                                Taslaklar
+                            </a>
+                            <a href="/admin/posts?featured=1" data-menu="posts-featured" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="star" class="w-4 h-4 mr-3"></i>
+                                Öne Çıkan Yazılar
+                            </a>
+                        </div>
+                    </div>
                     
-                    <a href="/admin/posts/new" data-menu="posts-new" class="flex items-center px-3 py-2 ml-6 rounded-lg transition-smooth text-sm">
-                        <i data-lucide="plus" class="w-4 h-4 mr-3"></i>
-                        Yeni Yazı
-                    </a>
+                    <!-- Sayfa Yönetimi Dropdown -->
+                    <div class="menu-group">
+                        <button type="button" data-menu="pages" class="w-full flex items-center px-4 py-3 rounded-lg transition-smooth dropdown-toggle text-left text-cream-200 hover:bg-brown-700 hover:text-white" onclick="toggleDropdown(event, 'pages-dropdown')">
+                            <i data-lucide="file" class="w-5 h-5 mr-3"></i>
+                            Sayfa Yönetimi
+                        </button>
+                        <div id="pages-dropdown" class="dropdown-menu">
+                            <a href="/admin/pages" data-menu="pages-list" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="list" class="w-4 h-4 mr-3"></i>
+                                Tüm Sayfalar
+                            </a>
+                            <a href="/admin/pages/new" data-menu="pages-new" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="plus" class="w-4 h-4 mr-3"></i>
+                                Yeni Sayfa
+                            </a>
+                            <a href="/admin/pages?type=about" data-menu="pages-about" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="info" class="w-4 h-4 mr-3"></i>
+                                Hakkımızda
+                            </a>
+                            <a href="/admin/pages?type=contact" data-menu="pages-contact" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="phone" class="w-4 h-4 mr-3"></i>
+                                İletişim
+                            </a>
+                        </div>
+                    </div>
                     
-                    <a href="/admin/pages" data-menu="pages" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
-                        <i data-lucide="file" class="w-5 h-5 mr-3"></i>
-                        Sayfa Yönetimi
-                    </a>
+                    <!-- Kategoriler ve Etiketler Dropdown -->
+                    <div class="menu-group">
+                        <button type="button" data-menu="taxonomy" class="w-full flex items-center px-4 py-3 rounded-lg transition-smooth dropdown-toggle text-left text-cream-200 hover:bg-brown-700 hover:text-white" onclick="toggleDropdown(event, 'taxonomy-dropdown')">
+                            <i data-lucide="folder" class="w-5 h-5 mr-3"></i>
+                            Taksonomi
+                        </button>
+                        <div id="taxonomy-dropdown" class="dropdown-menu">
+                            <a href="/admin/categories" data-menu="categories" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="folder" class="w-4 h-4 mr-3"></i>
+                                Kategoriler
+                            </a>
+                            <a href="/admin/tags" data-menu="tags" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="tag" class="w-4 h-4 mr-3"></i>
+                                Etiketler
+                            </a>
+                        </div>
+                    </div>
                     
-                    <a href="/admin/categories" data-menu="categories" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
-                        <i data-lucide="folder" class="w-5 h-5 mr-3"></i>
-                        Kategoriler
-                    </a>
-                    
-                    <a href="/admin/tags" data-menu="tags" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
-                        <i data-lucide="tag" class="w-5 h-5 mr-3"></i>
-                        Etiketler
-                    </a>
-                    
+                    <!-- Medya Galerisi -->
                     <a href="/admin/media" data-menu="media" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
                         <i data-lucide="image" class="w-5 h-5 mr-3"></i>
                         Medya Galerisi
                     </a>
                     
+                    <!-- Yorumlar -->
                     <a href="/admin/comments" data-menu="comments" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
                         <i data-lucide="message-circle" class="w-5 h-5 mr-3"></i>
                         Yorumlar
                     </a>
                     
+                    <!-- Kullanıcılar -->
                     <a href="/admin/users" data-menu="users" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
                         <i data-lucide="users" class="w-5 h-5 mr-3"></i>
                         Kullanıcılar
                     </a>
                     
-                    <a href="/admin/deleted" data-menu="deleted" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
-                        <i data-lucide="trash-2" class="w-5 h-5 mr-3"></i>
-                        Silinenler
+                    <!-- AI Yardımı Merkezi -->
+                    <a href="/admin/ai-assistant" data-menu="ai-assistant" class="flex items-center px-4 py-3 rounded-lg transition-smooth bg-purple-100 text-purple-800 hover:bg-purple-200">
+                        <i data-lucide="sparkles" class="w-5 h-5 mr-3"></i>
+                        AI Yardımcı
                     </a>
                     
-                    <a href="/admin/settings" data-menu="settings" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
-                        <i data-lucide="settings" class="w-5 h-5 mr-3"></i>
-                        Genel Ayarlar
-                    </a>
+                    <!-- Araçlar Dropdown -->
+                    <div class="menu-group">
+                        <button type="button" data-menu="tools" class="w-full flex items-center px-4 py-3 rounded-lg transition-smooth dropdown-toggle text-left text-cream-200 hover:bg-brown-700 hover:text-white" onclick="toggleDropdown(event, 'tools-dropdown')">
+                            <i data-lucide="wrench" class="w-5 h-5 mr-3"></i>
+                            Araçlar
+                        </button>
+                        <div id="tools-dropdown" class="dropdown-menu">
+                            <a href="/admin/deleted" data-menu="deleted" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="trash-2" class="w-4 h-4 mr-3"></i>
+                                Silinenler
+                            </a>
+                            <a href="/admin/backup" data-menu="backup" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="database" class="w-4 h-4 mr-3"></i>
+                                Yedekleme
+                            </a>
+                            <a href="/admin/analytics" data-menu="analytics" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="bar-chart" class="w-4 h-4 mr-3"></i>
+                                İstatistikler
+                            </a>
+                        </div>
+                    </div>
                     
-                    <a href="/admin/customize" data-menu="customize" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
-                        <i data-lucide="palette" class="w-5 h-5 mr-3"></i>
-                        Site Özelleştirme
-                    </a>
+                    <!-- Ayarlar Dropdown -->
+                    <div class="menu-group">
+                        <button type="button" data-menu="settings-group" class="w-full flex items-center px-4 py-3 rounded-lg transition-smooth dropdown-toggle text-left text-cream-200 hover:bg-brown-700 hover:text-white" onclick="toggleDropdown(event, 'settings-dropdown')">
+                            <i data-lucide="settings" class="w-5 h-5 mr-3"></i>
+                            Ayarlar
+                        </button>
+                        <div id="settings-dropdown" class="dropdown-menu">
+                            <a href="/admin/settings" data-menu="settings" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="settings" class="w-4 h-4 mr-3"></i>
+                                Genel Ayarlar
+                            </a>
+                            <a href="/admin/customize" data-menu="customize" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="palette" class="w-4 h-4 mr-3"></i>
+                                Site Özelleştirme
+                            </a>
+                            <a href="/admin/seo" data-menu="seo-settings" class="flex items-center px-3 py-2 rounded-lg transition-smooth text-sm">
+                                <i data-lucide="search" class="w-4 h-4 mr-3"></i>
+                                SEO Ayarları
+                            </a>
+                        </div>
+                    </div>
                     
                     <div class="border-t border-brown-700 pt-4 mt-4">
                         <a href="/admin/profile" data-menu="profile" class="flex items-center px-4 py-3 rounded-lg transition-smooth">
@@ -243,7 +396,50 @@
     </div>
 
     <script src="/static/js/admin-menu.js"></script>
+    
+    <!-- Inline dropdown functionality as backup -->
     <script>
+        // Global toggle function inline
+        function toggleDropdown(event, dropdownId) {
+            console.log('Inline toggleDropdown called:', dropdownId);
+            
+            event.preventDefault();
+            event.stopPropagation();
+            
+            const dropdown = document.getElementById(dropdownId);
+            if (!dropdown) {
+                console.error('Dropdown not found:', dropdownId);
+                return;
+            }
+            
+            // Close all other dropdowns
+            document.querySelectorAll('.dropdown-menu').forEach(dd => {
+                if (dd !== dropdown) {
+                    dd.classList.remove('open');
+                }
+            });
+            
+            document.querySelectorAll('.dropdown-toggle').forEach(dt => {
+                if (dt !== event.currentTarget) {
+                    dt.classList.remove('open');
+                }
+            });
+            
+            // Toggle current dropdown
+            dropdown.classList.toggle('open');
+            event.currentTarget.classList.toggle('open');
+            
+            console.log('Dropdown toggled, open:', dropdown.classList.contains('open'));
+        }
+        
+        // Close dropdowns when clicking outside
+        document.addEventListener('click', function(event) {
+            if (!event.target.closest('.dropdown-toggle') && !event.target.closest('.dropdown-menu')) {
+                document.querySelectorAll('.dropdown-menu').forEach(dd => dd.classList.remove('open'));
+                document.querySelectorAll('.dropdown-toggle').forEach(dt => dt.classList.remove('open'));
+            }
+        });
+        
         lucide.createIcons();
     </script>
     

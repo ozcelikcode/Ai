@@ -4,7 +4,7 @@ from fastapi.templating import Jinja2Templates
 from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_admin_user
-from app.models.models import Post, Category, User, Settings, Page, Comment, PostLike
+from app.models.models import Post, Category, User, Settings, Page, Comment, PostLike, AIUsage, AIPreferences
 from app.utils.helpers import generate_slug, calculate_reading_time
 from app.utils.ai_content import ai_generator
 from app.utils.image_optimizer import optimize_uploaded_image
@@ -12,10 +12,43 @@ from datetime import datetime, timedelta
 from typing import Optional, List
 import os
 import uuid
+import time
 from pathlib import Path
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 templates = Jinja2Templates(directory="templates")
+
+# AI kullanım kaydı için yardımcı fonksiyon
+async def log_ai_usage(
+    db: Session, 
+    user_id: int, 
+    usage_type: str, 
+    content_type: str = None,
+    topic: str = None,
+    prompt_length: int = 0,
+    response_length: int = 0,
+    success: bool = True,
+    error_message: str = None,
+    processing_time: float = None
+):
+    """AI kullanım verilerini kaydet"""
+    try:
+        ai_usage = AIUsage(
+            user_id=user_id,
+            usage_type=usage_type,
+            content_type=content_type,
+            topic=topic[:500] if topic else None,  # Topic uzunluğunu sınırla
+            prompt_length=prompt_length,
+            response_length=response_length,
+            success=success,
+            error_message=error_message,
+            processing_time=processing_time
+        )
+        db.add(ai_usage)
+        db.commit()
+    except Exception as e:
+        print(f"AI usage logging error: {e}")
+        db.rollback()
 
 @router.get("/", response_class=HTMLResponse)
 @router.get("", response_class=HTMLResponse)
@@ -619,12 +652,20 @@ async def generate_ai_content(
     content_length: str = Form("medium"),
     content_type: str = Form("informative"),
     custom_prompt: str = Form(""),
-    admin_user: User = Depends(get_admin_user)
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
 ):
     """Generate AI content for a blog post or page"""
+    start_time = time.time()
+    
     try:
         # Check if topic is provided and not empty
         if not topic or not topic.strip():
+            await log_ai_usage(
+                db, admin_user.id, "content", None, topic,
+                len(topic) if topic else 0, 0, False,
+                "Boş konu girişi", time.time() - start_time
+            )
             return JSONResponse({
                 "success": False,
                 "error": "Lütfen bir konu/başlık girin."
@@ -633,6 +674,7 @@ async def generate_ai_content(
         # Check referer to determine if this is from page or post form
         referer = request.headers.get('referer', '')
         is_page_request = '/pages/' in referer or '/page' in referer
+        content_category = "page" if is_page_request else "blog_post"
         
         if is_page_request and content_type in ["professional", "friendly", "formal"]:
             # This is a page content request
@@ -660,6 +702,19 @@ async def generate_ai_content(
                 content_type=blog_content_type,
                 custom_prompt=custom_prompt.strip() if custom_prompt.strip() else None
             )
+        
+        # Log successful usage
+        response_length = 0
+        if result.get("success") and result.get("data"):
+            content = result["data"].get("content", "")
+            title = result["data"].get("title", "")
+            response_length = len(content) + len(title)
+            
+        await log_ai_usage(
+            db, admin_user.id, "content", content_category, topic.strip(),
+            len(topic) + len(custom_prompt), response_length, 
+            result.get("success", False), None, time.time() - start_time
+        )
         
         return JSONResponse(result)
         
@@ -761,6 +816,181 @@ async def generate_ai_seo(
         return JSONResponse({
             "success": False,
             "error": "AI servisi şu anda kullanılamıyor. Lütfen daha sonra tekrar deneyin."
+        })
+
+# AI Assistant Routes
+@router.get("/ai-assistant", response_class=HTMLResponse)
+async def ai_assistant_dashboard(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
+    """Merkezi AI yardımı sayfası - Tüm AI özelliklerini tek yerden yönetme"""
+    site_settings = db.query(Settings).first()
+    
+    # Gerçek AI kullanım istatistikleri
+    total_usage = db.query(AIUsage).filter(AIUsage.user_id == admin_user.id).count()
+    content_usage = db.query(AIUsage).filter(
+        AIUsage.user_id == admin_user.id,
+        AIUsage.usage_type == "content"
+    ).count()
+    seo_usage = db.query(AIUsage).filter(
+        AIUsage.user_id == admin_user.id,
+        AIUsage.usage_type == "seo"
+    ).count()
+    title_usage = db.query(AIUsage).filter(
+        AIUsage.user_id == admin_user.id,
+        AIUsage.usage_type == "title"
+    ).count()
+    
+    # Son kullanım
+    last_usage_record = db.query(AIUsage).filter(
+        AIUsage.user_id == admin_user.id
+    ).order_by(AIUsage.created_at.desc()).first()
+    
+    last_usage = None
+    if last_usage_record:
+        last_usage = last_usage_record.created_at.strftime('%d.%m.%Y %H:%M')
+    
+    ai_stats = {
+        "total_content_generated": content_usage,
+        "total_seo_generated": seo_usage,
+        "total_titles_generated": title_usage,
+        "last_usage": last_usage
+    }
+    
+    # Son oluşturulan içerikler (varsa)
+    recent_posts = db.query(Post).order_by(Post.created_at.desc()).limit(5).all()
+    
+    return templates.TemplateResponse("admin/ai_assistant.html", {
+        "request": request,
+        "admin_user": admin_user,
+        "site_settings": site_settings,
+        "ai_stats": ai_stats,
+        "recent_posts": recent_posts
+    })
+
+@router.post("/ai-assistant/generate-bulk-content")
+async def generate_bulk_ai_content(
+    request: Request,
+    topics: str = Form(...),  # Virgülle ayrılmış konular
+    content_type: str = Form("blog_post"),  # blog_post, page, seo
+    length: str = Form("medium"),
+    tone: str = Form("professional"),
+    generate_seo: bool = Form(False),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Toplu içerik üretimi için endpoint"""
+    try:
+        topic_list = [topic.strip() for topic in topics.split(',') if topic.strip()]
+        if not topic_list:
+            return JSONResponse({
+                "success": False,
+                "error": "En az bir konu girilmelidir"
+            })
+            
+        results = []
+        
+        for topic in topic_list:
+            try:
+                if content_type == "blog_post":
+                    result = ai_generator.generate_blog_post(
+                        topic=topic,
+                        content_length=length,
+                        content_type=tone
+                    )
+                elif content_type == "page":
+                    result = ai_generator.generate_page_content(
+                        topic=topic,
+                        content_length=length,
+                        content_type=tone
+                    )
+                else:
+                    result = {"title": topic, "content": f"{topic} hakkında içerik"}
+                
+                if generate_seo and result.get("title") and result.get("content"):
+                    seo_result = ai_generator.generate_seo_data(
+                        result["title"], 
+                        result["content"]
+                    )
+                    result.update(seo_result)
+                
+                results.append({
+                    "topic": topic,
+                    "success": True,
+                    "data": result
+                })
+                
+            except Exception as e:
+                results.append({
+                    "topic": topic,
+                    "success": False,
+                    "error": str(e)
+                })
+        
+        return JSONResponse({
+            "success": True,
+            "results": results
+        })
+        
+    except Exception as e:
+        print(f"Bulk AI content generation error: {e}")
+        return JSONResponse({
+            "success": False,
+            "error": "Toplu içerik üretimi başarısız oldu"
+        })
+
+@router.post("/ai-assistant/save-preferences")
+async def save_ai_preferences(
+    request: Request,
+    default_length: str = Form("medium"),
+    default_tone: str = Form("professional"),
+    auto_seo: bool = Form(False),
+    auto_tags: bool = Form(False),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """AI tercihleri kaydetme"""
+    try:
+        # Mevcut tercihleri kontrol et
+        existing_prefs = db.query(AIPreferences).filter(
+            AIPreferences.user_id == admin_user.id
+        ).first()
+        
+        if existing_prefs:
+            # Mevcut tercihleri güncelle
+            existing_prefs.default_length = default_length
+            existing_prefs.default_tone = default_tone
+            existing_prefs.auto_seo = auto_seo
+            existing_prefs.auto_tags = auto_tags
+            existing_prefs.updated_at = datetime.utcnow()
+        else:
+            # Yeni tercihler oluştur
+            new_prefs = AIPreferences(
+                user_id=admin_user.id,
+                default_length=default_length,
+                default_tone=default_tone,
+                auto_seo=auto_seo,
+                auto_tags=auto_tags
+            )
+            db.add(new_prefs)
+        
+        db.commit()
+        
+        return JSONResponse({
+            "success": True,
+            "message": "AI tercihleri kaydedildi",
+            "preferences": {
+                "default_length": default_length,
+                "default_tone": default_tone,
+                "auto_seo": auto_seo,
+                "auto_tags": auto_tags
+            }
+        })
+        
+    except Exception as e:
+        print(f"AI preferences save error: {e}")
+        db.rollback()
+        return JSONResponse({
+            "success": False,
+            "error": "Tercihler kaydedilemedi"
         })
 
 # Profile Routes

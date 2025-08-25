@@ -193,3 +193,56 @@ class Avatar(Base):
     url = Column(String(300), nullable=False)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+class AIUsage(Base):
+    """AI kullanım verilerini saklamak için model"""
+    __tablename__ = "ai_usage"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    usage_type = Column(String(50), nullable=False)  # content, seo, title, bulk
+    content_type = Column(String(50), nullable=True)  # blog_post, page, etc.
+    topic = Column(String(500), nullable=True)
+    prompt_length = Column(Integer, default=0)
+    response_length = Column(Integer, default=0)
+    success = Column(Boolean, default=True)
+    error_message = Column(Text, nullable=True)
+    processing_time = Column(Float, nullable=True)  # seconds
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    
+    # İlişki
+    user = relationship("User", backref="ai_usage_history")
+
+class AIPreferences(Base):
+    """Kullanıcı AI tercihlerini saklamak için model"""
+    __tablename__ = "ai_preferences"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), unique=True, nullable=False)
+    default_length = Column(String(20), default="medium")  # short, medium, long
+    default_tone = Column(String(20), default="professional")  # professional, casual, technical, educational
+    auto_seo = Column(Boolean, default=False)
+    auto_tags = Column(Boolean, default=False)
+    preferred_language = Column(String(10), default="tr")
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # İlişki
+    user = relationship("User", backref="ai_preferences", uselist=False)
+
+class AITemplate(Base):
+    """AI için önceden hazırlanmış şablonları saklamak için model"""
+    __tablename__ = "ai_templates"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), nullable=False)
+    template_type = Column(String(50), nullable=False)  # blog_post, page, seo
+    template_content = Column(Text, nullable=False)  # JSON format
+    is_active = Column(Boolean, default=True)
+    usage_count = Column(Integer, default=0)
+    created_by = Column(Integer, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # İlişki
+    creator = relationship("User", backref="ai_templates")

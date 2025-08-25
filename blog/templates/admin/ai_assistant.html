@@ -1,0 +1,683 @@
+{% extends "admin/base.html" %}
+
+{% block page_title %}AI Yardımcı{% endblock %}
+{% block page_description %}Yapay zeka ile içerik üretimi ve yönetimi{% endblock %}
+
+{% block extra_head %}
+<style>
+.ai-card {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.feature-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    border: 1px solid #dbc5b7;
+}
+
+.feature-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 25px -8px rgba(139, 69, 19, 0.3);
+}
+
+.ai-stats {
+    background: linear-gradient(135deg, #f7f3f0 0%, #ede4db 100%);
+}
+
+.bulk-generator {
+    background: linear-gradient(135deg, #fef7e0 0%, #fef3c7 100%);
+    border: 1px solid #f59e0b;
+}
+
+.preferences-section {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #0ea5e9;
+}
+
+.result-item {
+    border-left: 4px solid #10b981;
+    background: #f0fdf4;
+    padding: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+.result-item.error {
+    border-left-color: #ef4444;
+    background: #fef2f2;
+}
+
+.loading-spinner {
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #667eea;
+    border-radius: 50%;
+    width: 20px;
+    height: 20px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- AI Yardımcı Header -->
+    <div class="ai-card rounded-xl shadow-lg p-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-bold flex items-center">
+                    <i data-lucide="sparkles" class="w-6 h-6 mr-3"></i>
+                    AI Yardımcı Merkezi
+                </h2>
+                <p class="mt-2 opacity-90">
+                    Yapay zeka gücüyle içerik üretimi, SEO optimizasyonu ve yönetim araçları
+                </p>
+            </div>
+            <div class="text-right">
+                <div class="text-3xl font-bold">🤖</div>
+                <p class="text-sm opacity-80">AI Asistan Aktif</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI İstatistikleri -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <div class="ai-stats rounded-xl p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-brown-600 text-sm">Toplam İçerik</p>
+                    <p class="text-2xl font-bold text-brown-900">{{ ai_stats.total_content_generated }}</p>
+                </div>
+                <div class="w-12 h-12 bg-brown-100 rounded-lg flex items-center justify-center">
+                    <i data-lucide="file-text" class="w-6 h-6 text-brown-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ai-stats rounded-xl p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-brown-600 text-sm">SEO Üretimi</p>
+                    <p class="text-2xl font-bold text-brown-900">{{ ai_stats.total_seo_generated }}</p>
+                </div>
+                <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                    <i data-lucide="search" class="w-6 h-6 text-green-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ai-stats rounded-xl p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-brown-600 text-sm">Başlık Önerileri</p>
+                    <p class="text-2xl font-bold text-brown-900">{{ ai_stats.total_titles_generated }}</p>
+                </div>
+                <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <i data-lucide="lightbulb" class="w-6 h-6 text-purple-600"></i>
+                </div>
+            </div>
+        </div>
+        
+        <div class="ai-stats rounded-xl p-6">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-brown-600 text-sm">Son Kullanım</p>
+                    <p class="text-sm font-medium text-brown-900">
+                        {% if ai_stats.last_usage %}{{ ai_stats.last_usage }}{% else %}Henüz kullanım yok{% endif %}
+                    </p>
+                </div>
+                <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <i data-lucide="clock" class="w-6 h-6 text-blue-600"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ana İçerik Grid -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Hızlı İçerik Üreticiler -->
+        <div class="space-y-6">
+            <!-- Tekli İçerik Üretimi -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
+                    <i data-lucide="edit-3" class="w-5 h-5 mr-2"></i>
+                    Hızlı İçerik Üretimi
+                </h3>
+                
+                <form id="quick-content-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-brown-700 mb-2">Konu</label>
+                        <input type="text" id="quick-topic" 
+                               class="w-full px-4 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
+                               placeholder="Örn: Python programlama temelleri">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-brown-700 mb-2">Tür</label>
+                            <select id="quick-type" class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                <option value="blog_post">Blog Yazısı</option>
+                                <option value="page">Sayfa İçeriği</option>
+                                <option value="seo">SEO Metası</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-brown-700 mb-2">Uzunluk</label>
+                            <select id="quick-length" class="w-full px-3 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                <option value="short">Kısa</option>
+                                <option value="medium" selected>Orta</option>
+                                <option value="long">Uzun</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="button" onclick="generateQuickContent()" 
+                            class="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-smooth flex items-center justify-center">
+                        <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i>
+                        İçerik Üret
+                    </button>
+                </form>
+                
+                <div id="quick-result" class="hidden mt-4 p-4 bg-purple-50 rounded-lg border">
+                    <div class="flex items-center justify-between mb-2">
+                        <h4 class="font-medium text-brown-900">AI Önerisi:</h4>
+                        <button type="button" onclick="applyQuickContent()" class="text-purple-600 hover:text-purple-800 text-sm">
+                            Yazıya Aktar
+                        </button>
+                    </div>
+                    <div id="quick-content" class="text-brown-700 prose prose-sm max-w-none"></div>
+                </div>
+                
+                <div id="quick-loading" class="hidden mt-4 text-center">
+                    <div class="inline-flex items-center">
+                        <div class="loading-spinner mr-3"></div>
+                        <span class="text-brown-600">AI içerik oluşturuyor...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Tercihleri -->
+            <div class="preferences-section rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
+                    <i data-lucide="settings" class="w-5 h-5 mr-2"></i>
+                    AI Tercihleri
+                </h3>
+                
+                <form id="preferences-form" class="space-y-4">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-brown-700 mb-2">Varsayılan Uzunluk</label>
+                            <select id="default-length" class="w-full px-3 py-2 border border-cream-300 rounded-lg">
+                                <option value="short">Kısa</option>
+                                <option value="medium" selected>Orta</option>
+                                <option value="long">Uzun</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-brown-700 mb-2">Varsayılan Ton</label>
+                            <select id="default-tone" class="w-full px-3 py-2 border border-cream-300 rounded-lg">
+                                <option value="professional" selected>Profesyonel</option>
+                                <option value="casual">Samimi</option>
+                                <option value="technical">Teknik</option>
+                                <option value="educational">Eğitici</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <label class="flex items-center">
+                            <input type="checkbox" id="auto-seo" class="rounded border-brown-300 text-purple-600 focus:ring-purple-500">
+                            <span class="ml-2 text-sm text-brown-700">Otomatik SEO üret</span>
+                        </label>
+                        
+                        <label class="flex items-center">
+                            <input type="checkbox" id="auto-tags" class="rounded border-brown-300 text-purple-600 focus:ring-purple-500">
+                            <span class="ml-2 text-sm text-brown-700">Otomatik etiket öner</span>
+                        </label>
+                    </div>
+                    
+                    <button type="button" onclick="savePreferences()" 
+                            class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-smooth">
+                        Tercihleri Kaydet
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Toplu İşlemler -->
+        <div class="space-y-6">
+            <!-- Toplu İçerik Üretimi -->
+            <div class="bulk-generator rounded-xl p-6">
+                <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
+                    <i data-lucide="layers" class="w-5 h-5 mr-2"></i>
+                    Toplu İçerik Üretimi
+                </h3>
+                
+                <form id="bulk-content-form" class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-brown-700 mb-2">
+                            Konular (virgülle ayırın)
+                        </label>
+                        <textarea id="bulk-topics" rows="3"
+                                  class="w-full px-4 py-2 border border-yellow-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500"
+                                  placeholder="Python temelleri, Web geliştirme, Veritabanı yönetimi"></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-brown-700 mb-2">İçerik Türü</label>
+                            <select id="bulk-type" class="w-full px-3 py-2 border border-yellow-300 rounded-lg">
+                                <option value="blog_post">Blog Yazıları</option>
+                                <option value="page">Sayfa İçerikleri</option>
+                            </select>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-brown-700 mb-2">Ton</label>
+                            <select id="bulk-tone" class="w-full px-3 py-2 border border-yellow-300 rounded-lg">
+                                <option value="professional">Profesyonel</option>
+                                <option value="casual">Samimi</option>
+                                <option value="technical">Teknik</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <label class="flex items-center">
+                        <input type="checkbox" id="bulk-seo" class="rounded border-yellow-400 text-yellow-600 focus:ring-yellow-500">
+                        <span class="ml-2 text-sm text-brown-700">SEO verilerini de üret</span>
+                    </label>
+                    
+                    <button type="button" onclick="generateBulkContent()" 
+                            class="w-full bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 transition-smooth flex items-center justify-center">
+                        <i data-lucide="zap" class="w-4 h-4 mr-2"></i>
+                        Toplu Üret
+                    </button>
+                </form>
+                
+                <div id="bulk-results" class="hidden mt-6">
+                    <h4 class="font-semibold text-brown-900 mb-3">Üretilen İçerikler:</h4>
+                    <div id="bulk-results-list" class="space-y-2 max-h-64 overflow-y-auto">
+                        <!-- Sonuçlar buraya eklenecek -->
+                    </div>
+                </div>
+                
+                <div id="bulk-loading" class="hidden mt-4 text-center">
+                    <div class="inline-flex items-center">
+                        <div class="loading-spinner mr-3"></div>
+                        <span class="text-brown-600">Toplu içerik üretiliyor...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Son İçerikler -->
+            <div class="bg-white rounded-xl shadow-lg p-6">
+                <h3 class="text-lg font-semibold text-brown-900 mb-4 flex items-center">
+                    <i data-lucide="clock" class="w-5 h-5 mr-2"></i>
+                    Son İçerikler
+                </h3>
+                
+                {% if recent_posts %}
+                <div class="space-y-3">
+                    {% for post in recent_posts %}
+                    <div class="flex items-center justify-between p-3 bg-cream-50 rounded-lg">
+                        <div>
+                            <p class="font-medium text-brown-900">{{ post.title }}</p>
+                            <p class="text-xs text-brown-600">
+                                {{ post.created_at.strftime('%d.%m.%Y %H:%M') }}
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-2">
+                            <a href="/admin/posts/{{ post.id }}/edit" 
+                               class="text-brown-600 hover:text-brown-800 text-sm">
+                                <i data-lucide="edit" class="w-4 h-4"></i>
+                            </a>
+                            <button type="button" onclick="useAsAITemplate({{ post.id }})" 
+                                    class="text-purple-600 hover:text-purple-800 text-sm" title="AI şablon olarak kullan">
+                                <i data-lucide="sparkles" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="text-brown-600 text-center py-4">Henüz içerik bulunmuyor</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Hızlı içerik üretimi
+async function generateQuickContent() {
+    const topic = document.getElementById('quick-topic').value.trim();
+    if (!topic) {
+        alert('Lütfen bir konu girin!');
+        return;
+    }
+    
+    const type = document.getElementById('quick-type').value;
+    const length = document.getElementById('quick-length').value;
+    
+    document.getElementById('quick-loading').classList.remove('hidden');
+    document.getElementById('quick-result').classList.add('hidden');
+    
+    try {
+        const formData = new FormData();
+        formData.append('topic', topic);
+        formData.append('content_length', length);
+        formData.append('content_type', 'professional');
+        
+        let endpoint = '/admin/ai/generate-content';
+        
+        const response = await fetch(endpoint, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.data) {
+            let content = '';
+            if (result.data.title) {
+                content += `<h3 class="font-semibold text-lg mb-2">Başlık:</h3><p class="mb-4">${result.data.title}</p>`;
+            }
+            if (result.data.content) {
+                content += `<h3 class="font-semibold text-lg mb-2">İçerik:</h3><div class="prose prose-sm">${formatTextContent(result.data.content)}</div>`;
+            }
+            if (result.data.meta_description) {
+                content += `<h3 class="font-semibold text-lg mb-2 mt-4">Meta Açıklama:</h3><p class="text-gray-600">${result.data.meta_description}</p>`;
+            }
+            
+            document.getElementById('quick-content').innerHTML = content;
+            document.getElementById('quick-result').classList.remove('hidden');
+            
+            // Store for later use
+            window.lastGeneratedContent = result.data;
+        } else {
+            alert('İçerik üretilemedi: ' + (result.error || 'Bilinmeyen hata'));
+        }
+    } catch (error) {
+        console.error('Quick generation error:', error);
+        alert('AI servisi şu anda kullanılamıyor.');
+    } finally {
+        document.getElementById('quick-loading').classList.add('hidden');
+    }
+}
+
+// Hızlı içeriği yazıya aktar
+function applyQuickContent() {
+    if (!window.lastGeneratedContent) {
+        showNotification('Önce içerik üretmelisiniz!', 'error');
+        return;
+    }
+    
+    try {
+        // Yeni yazı sayfasında aç
+        const params = new URLSearchParams();
+        
+        if (window.lastGeneratedContent.title) {
+            params.append('ai_title', window.lastGeneratedContent.title);
+        }
+        
+        if (window.lastGeneratedContent.content) {
+            // İçeriği temizle ve encode et
+            const cleanContent = window.lastGeneratedContent.content
+                .replace(/<[^>]*>/g, '') // HTML taglerini kaldır
+                .replace(/&nbsp;/g, ' ') // Non-breaking space'leri düzelt
+                .trim();
+            params.append('ai_content', cleanContent);
+        }
+        
+        if (window.lastGeneratedContent.meta_description) {
+            params.append('ai_meta', window.lastGeneratedContent.meta_description);
+        }
+        
+        if (window.lastGeneratedContent.tags && Array.isArray(window.lastGeneratedContent.tags)) {
+            params.append('ai_tags', window.lastGeneratedContent.tags.join(', '));
+        }
+        
+        const url = `/admin/posts/new?${params.toString()}`;
+        window.open(url, '_blank');
+        
+        showNotification('Yeni yazı sekmesi açıldı!', 'success');
+        
+    } catch (error) {
+        console.error('Content transfer error:', error);
+        showNotification('İçerik aktarımında hata oluştu!', 'error');
+    }
+}
+
+// Toplu içerik üretimi
+async function generateBulkContent() {
+    const topics = document.getElementById('bulk-topics').value.trim();
+    if (!topics) {
+        alert('Lütfen en az bir konu girin!');
+        return;
+    }
+    
+    const type = document.getElementById('bulk-type').value;
+    const tone = document.getElementById('bulk-tone').value;
+    const generateSEO = document.getElementById('bulk-seo').checked;
+    
+    document.getElementById('bulk-loading').classList.remove('hidden');
+    document.getElementById('bulk-results').classList.add('hidden');
+    
+    try {
+        const formData = new FormData();
+        formData.append('topics', topics);
+        formData.append('content_type', type);
+        formData.append('tone', tone);
+        formData.append('generate_seo', generateSEO);
+        
+        const response = await fetch('/admin/ai-assistant/generate-bulk-content', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success && result.results) {
+            displayBulkResults(result.results);
+            document.getElementById('bulk-results').classList.remove('hidden');
+        } else {
+            alert('Toplu içerik üretilemedi: ' + (result.error || 'Bilinmeyen hata'));
+        }
+    } catch (error) {
+        console.error('Bulk generation error:', error);
+        alert('Toplu üretim servisi şu anda kullanılamıyor.');
+    } finally {
+        document.getElementById('bulk-loading').classList.add('hidden');
+    }
+}
+
+// Toplu sonuçları göster
+function displayBulkResults(results) {
+    const container = document.getElementById('bulk-results-list');
+    container.innerHTML = '';
+    
+    results.forEach((result, index) => {
+        const div = document.createElement('div');
+        div.className = `result-item ${result.success ? '' : 'error'}`;
+        
+        if (result.success && result.data) {
+            div.innerHTML = `
+                <div class="flex items-center justify-between mb-2">
+                    <h5 class="font-medium">${result.topic}</h5>
+                    <div class="flex items-center space-x-2">
+                        <button onclick="exportBulkItem(${index})" class="text-green-600 hover:text-green-800 text-sm">
+                            <i data-lucide="download" class="w-4 h-4"></i>
+                        </button>
+                        <button onclick="createPostFromBulk(${index})" class="text-blue-600 hover:text-blue-800 text-sm">
+                            <i data-lucide="plus" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+                <p class="text-sm text-gray-700">${result.data.title || 'Başlık üretildi'}</p>
+                <p class="text-xs text-gray-600 mt-1">${(result.data.content || '').substring(0, 100)}...</p>
+            `;
+        } else {
+            div.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <h5 class="font-medium">${result.topic}</h5>
+                    <span class="text-red-600 text-sm">Hata</span>
+                </div>
+                <p class="text-sm text-red-700">${result.error || 'Bilinmeyen hata'}</p>
+            `;
+        }
+        
+        container.appendChild(div);
+    });
+    
+    // Store results for later use
+    window.bulkResults = results;
+    
+    // Re-create icons
+    lucide.createIcons();
+}
+
+// Tercih kaydetme
+async function savePreferences() {
+    const preferences = {
+        default_length: document.getElementById('default-length').value,
+        default_tone: document.getElementById('default-tone').value,
+        auto_seo: document.getElementById('auto-seo').checked,
+        auto_tags: document.getElementById('auto-tags').checked
+    };
+    
+    try {
+        const formData = new FormData();
+        Object.keys(preferences).forEach(key => {
+            formData.append(key, preferences[key]);
+        });
+        
+        const response = await fetch('/admin/ai-assistant/save-preferences', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification('Tercihler kaydedildi!', 'success');
+        } else {
+            showNotification('Tercihler kaydedilemedi!', 'error');
+        }
+    } catch (error) {
+        console.error('Preferences save error:', error);
+        showNotification('Tercihler kaydedilemedi!', 'error');
+    }
+}
+
+// Yardımcı fonksiyonlar
+function formatTextContent(text) {
+    if (!text) return '';
+    return text
+        .split('\n\n')
+        .filter(paragraph => paragraph.trim())
+        .map(paragraph => `<p class="mb-3">${paragraph.trim().replace(/\n/g, '<br>')}</p>`)
+        .join('');
+}
+
+function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-50 transition-smooth ${
+        type === 'success' ? 'bg-green-600' : 
+        type === 'error' ? 'bg-red-600' : 'bg-blue-600'
+    }`;
+    notification.textContent = message;
+    
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+function exportBulkItem(index) {
+    if (!window.bulkResults || !window.bulkResults[index]) return;
+    
+    const item = window.bulkResults[index];
+    if (!item.success || !item.data) return;
+    
+    // JSON olarak dışa aktar
+    const dataStr = JSON.stringify(item.data, null, 2);
+    const dataBlob = new Blob([dataStr], {type: 'application/json'});
+    
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(dataBlob);
+    link.download = `ai-content-${item.topic.replace(/[^a-z0-9]/gi, '-')}.json`;
+    link.click();
+}
+
+function createPostFromBulk(index) {
+    if (!window.bulkResults || !window.bulkResults[index]) {
+        showNotification('Geçersiz içerik indeksi!', 'error');
+        return;
+    }
+    
+    const item = window.bulkResults[index];
+    if (!item.success || !item.data) {
+        showNotification('Bu içerik başarısız üretilmiş!', 'error');
+        return;
+    }
+    
+    try {
+        // Yeni yazı sayfasında aç
+        const params = new URLSearchParams();
+        
+        if (item.data.title) {
+            params.append('ai_title', item.data.title);
+        }
+        
+        if (item.data.content) {
+            // İçeriği temizle
+            const cleanContent = item.data.content
+                .replace(/<[^>]*>/g, '') // HTML taglerini kaldır
+                .replace(/&nbsp;/g, ' ') // Non-breaking space'leri düzelt
+                .trim();
+            params.append('ai_content', cleanContent);
+        }
+        
+        if (item.data.meta_description) {
+            params.append('ai_meta', item.data.meta_description);
+        }
+        
+        if (item.data.tags) {
+            const tagsStr = Array.isArray(item.data.tags) ? 
+                item.data.tags.join(', ') : 
+                item.data.tags.toString();
+            params.append('ai_tags', tagsStr);
+        }
+        
+        const url = `/admin/posts/new?${params.toString()}`;
+        window.open(url, '_blank');
+        
+        showNotification('Yeni yazı sekmesi açıldı!', 'success');
+        
+    } catch (error) {
+        console.error('Bulk content transfer error:', error);
+        showNotification('İçerik aktarımında hata oluştu!', 'error');
+    }
+}
+
+function useAsAITemplate(postId) {
+    // Bu fonksiyon mevcut bir yazıyı AI şablon olarak kullanmak için
+    // Basit implementasyon: yazıyı düzenleme sayfasına yönlendir
+    window.open(`/admin/posts/${postId}/edit`, '_blank');
+}
+
+// Sayfa yüklendiğinde
+document.addEventListener('DOMContentLoaded', function() {
+    // Tercihler varsa yükle (localStorage'dan veya API'den)
+    // loadSavedPreferences();
+});
+</script>
+{% endblock %}

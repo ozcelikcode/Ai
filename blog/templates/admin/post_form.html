@@ -70,9 +70,15 @@
             
             <div class="flex items-center space-x-3">
                 <!-- AI Yardım Butonu -->
-                <button type="button" id="ai-help-btn" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-smooth flex items-center">
+                <a href="/admin/ai-assistant" target="_blank" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-smooth flex items-center">
                     <i data-lucide="sparkles" class="w-4 h-4 mr-2"></i>
-                    AI Yardımı
+                    AI Yardımcı
+                </a>
+                
+                <!-- Hızlı AI Yardım -->
+                <button type="button" id="ai-help-btn" class="bg-purple-100 text-purple-700 px-4 py-2 rounded-lg hover:bg-purple-200 transition-smooth flex items-center">
+                    <i data-lucide="zap" class="w-4 h-4 mr-2"></i>
+                    Hızlı AI
                 </button>
                 
                 <!-- Taslak Kaydet -->
@@ -793,6 +799,10 @@ function showNotification(message, type = 'info') {
 document.addEventListener('DOMContentLoaded', function() {
     // Sayfa yüklemesinde kategori slug'ı güncelle
     updateCategorySlug();
+    
+    // URL'den AI verilerini yükle (Editor'den önce)
+    loadAIDataFromURL();
+    
     // Jodit Editor'ü yükle
     const script = document.createElement('script');
     script.src = 'https://unpkg.com/jodit@3.24.5/build/jodit.min.js';
@@ -935,5 +945,72 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     document.head.appendChild(script);
 });
+
+// URL parametrelerinden AI verilerini yükle
+function loadAIDataFromURL() {
+    const urlParams = new URLSearchParams(window.location.search);
+    console.log('Loading AI data from URL...', urlParams.toString());
+    
+    // AI title varsa
+    const aiTitle = urlParams.get('ai_title');
+    console.log('AI Title:', aiTitle);
+    if (aiTitle) {
+        const titleField = document.getElementById('title');
+        if (titleField && !titleField.value.trim()) {
+            titleField.value = decodeURIComponent(aiTitle);
+            titleField.dispatchEvent(new Event('input')); // Slug'ı tetikle
+            console.log('Title loaded:', titleField.value);
+        }
+    }
+    
+    // AI content varsa
+    const aiContent = urlParams.get('ai_content');
+    console.log('AI Content:', aiContent ? aiContent.substring(0, 100) + '...' : 'null');
+    if (aiContent) {
+        // Decode the content
+        const decodedContent = decodeURIComponent(aiContent);
+        console.log('Decoded content:', decodedContent.substring(0, 200) + '...');
+        
+        // Set the textarea value - Jodit Editor will pick this up when it initializes
+        const contentTextarea = document.getElementById('content');
+        if (contentTextarea && !contentTextarea.value.trim()) {
+            // Convert to HTML format for better display
+            const htmlContent = convertPlainTextToHTML(decodedContent);
+            contentTextarea.value = htmlContent;
+            console.log('Textarea HTML value set:', contentTextarea.value.length);
+            
+            // Trigger input event to notify any listeners
+            contentTextarea.dispatchEvent(new Event('input'));
+        }
+    }
+    
+    // AI meta description varsa
+    const aiMeta = urlParams.get('ai_meta');
+    console.log('AI Meta:', aiMeta);
+    if (aiMeta) {
+        const metaField = document.querySelector('textarea[name="meta_description"]');
+        if (metaField && !metaField.value.trim()) {
+            metaField.value = decodeURIComponent(aiMeta);
+            console.log('Meta loaded:', metaField.value);
+        }
+    }
+    
+    // AI tags varsa
+    const aiTags = urlParams.get('ai_tags');
+    console.log('AI Tags:', aiTags);
+    if (aiTags) {
+        const tagsField = document.getElementById('tags');
+        if (tagsField && !tagsField.value.trim()) {
+            tagsField.value = decodeURIComponent(aiTags);
+            console.log('Tags loaded:', tagsField.value);
+        }
+    }
+    
+    // URL'yi temizle (parametreleri kaldır)
+    if (aiTitle || aiContent || aiMeta || aiTags) {
+        const newUrl = window.location.pathname;
+        window.history.replaceState({}, document.title, newUrl);
+    }
+}
 </script>
 {% endblock %}
