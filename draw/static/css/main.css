@@ -1,0 +1,42 @@
+:root {
+  --primary-from: #7c8cfb;
+  --primary-to: #b388ff;
+  --glow: 0 0 18px rgba(124, 140, 251, 0.45);
+}
+
+html, body { height: 100%; }
+body { font-family: Inter, ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji"; }
+
+/* Parıltı ve yumuşak yanıp sönme animasyonları */
+@keyframes subtlePulse {
+  0%, 100% { filter: drop-shadow(0 0 0 rgba(124,140,251,0.0)); }
+  50% { filter: drop-shadow(0 0 8px rgba(124,140,251,0.35)); }
+}
+@keyframes gentleBlink {
+  0%, 90%, 100% { opacity: 1; }
+  95% { opacity: 0.92; }
+}
+
+.btn-animated { transition: background-color 200ms ease, box-shadow 200ms ease, transform 200ms ease; animation: gentleBlink 4s ease-in-out infinite; }
+.btn-animated:hover { box-shadow: 0 8px 30px rgba(124, 140, 251, 0.25); }
+.toolbar { animation: subtlePulse 6s ease-in-out infinite; }
+.floating-card { backdrop-filter: blur(10px); }
+
+/* Tuval: görüntüleme alanının tamamını kapla */
+#boardWrapper { position: fixed; inset: 0; z-index: 1 !important; }
+
+/* Canvas en altta (UI altında), sayfa arka planının üstünde */
+#board { z-index: 1 !important; }
+
+/* Araç çubuğu güvenli görünürlük */
+.toolbar { position: fixed; top: 24px; z-index: 1000; pointer-events: auto; animation: none !important; opacity: 1 !important; }
+
+header { z-index: 2100; pointer-events: auto; }
+
+/* Header içindeki butonlar için pointer-events garantisi */
+header button { pointer-events: auto; }
+
+/* Lucide ikon boyutları */
+.tool > svg, .tool i[data-lucide] { width: 18px; height: 18px; }
+
+
