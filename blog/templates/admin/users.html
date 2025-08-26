@@ -115,7 +115,10 @@
                 <div class="user-avatar w-16 h-16 bg-brown-200 rounded-full flex items-center justify-center">
                     {% if user.profile_image %}
                     <img src="{{ user.profile_image }}" alt="{{ user.username }}" 
-                         class="w-16 h-16 rounded-full object-cover">
+                         class="w-16 h-16 rounded-full object-cover"
+                         loading="lazy"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                    <i data-lucide="user" class="w-8 h-8 text-brown-600 hidden"></i>
                     {% else %}
                     <i data-lucide="user" class="w-8 h-8 text-brown-600"></i>
                     {% endif %}
@@ -323,7 +326,15 @@ async function deleteUser(userId, username) {
 
 // İlk yükleme sıralaması
 document.addEventListener('DOMContentLoaded', function() {
-    sortUsers();
+    // Initialize icons first
+    if (typeof lucide !== 'undefined') {
+        lucide.createIcons();
+    }
+    
+    // Then sort users
+    setTimeout(() => {
+        sortUsers();
+    }, 100);
 });
 </script>
 {% endblock %}

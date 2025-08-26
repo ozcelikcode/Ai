@@ -1,0 +1,208 @@
+/* Admin Panel CSS - AI Blog Platform */
+
+.transition-smooth { 
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); 
+}
+
+.hover-lift:hover { 
+    transform: translateY(-2px); 
+    box-shadow: 0 8px 25px -8px rgba(0, 0, 0, 0.2); 
+}
+
+.stat-card { 
+    background: linear-gradient(135deg, #f7f3f0 0%, #ede4db 100%); 
+}
+
+/* Custom scrollbar styles */
+.admin-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139, 69, 19, 0.3) transparent;
+}
+
+.admin-scrollbar::-webkit-scrollbar {
+    width: 6px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-track {
+    background: rgba(139, 69, 19, 0.1);
+    border-radius: 3px;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(139, 69, 19, 0.3);
+    border-radius: 3px;
+    transition: background 0.3s ease;
+}
+
+.admin-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 69, 19, 0.5);
+}
+
+/* Content area scrollbar */
+.content-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(180, 83, 9, 0.3) transparent;
+}
+
+.content-scrollbar::-webkit-scrollbar {
+    width: 8px;
+}
+
+.content-scrollbar::-webkit-scrollbar-track {
+    background: rgba(180, 83, 9, 0.1);
+    border-radius: 4px;
+}
+
+.content-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(180, 83, 9, 0.3);
+    border-radius: 4px;
+    transition: background 0.3s ease;
+}
+
+.content-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(180, 83, 9, 0.5);
+}
+
+/* Responsive sidebar */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100vw;
+        position: fixed;
+        left: -100vw;
+        z-index: 50;
+        transition: left 0.3s ease;
+    }
+    
+    .sidebar.open {
+        left: 0;
+    }
+    
+    .main-content {
+        width: 100vw;
+    }
+}
+
+/* Mobile menu toggle */
+.mobile-menu-backdrop {
+    position: fixed;
+    inset: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 40;
+}
+
+/* Dropdown menüler için stil */
+.dropdown-menu {
+    max-height: 0;
+    overflow: hidden;
+    position: relative;
+    background-color: rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    margin-top: 4px;
+    margin-left: 8px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.dropdown-menu.open {
+    max-height: 500px;
+    opacity: 1;
+    transform: translateY(0);
+    padding: 4px 0;
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.dropdown-toggle {
+    position: relative;
+}
+
+.dropdown-toggle::after {
+    content: '';
+    position: absolute;
+    right: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 0;
+    height: 0;
+    border-left: 4px solid transparent;
+    border-right: 4px solid transparent;
+    border-top: 4px solid currentColor;
+    transition: transform 0.3s ease;
+    pointer-events: none;
+}
+
+.dropdown-toggle.open::after {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+/* Button specific styling */
+button.dropdown-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+}
+
+button.dropdown-toggle:focus {
+    outline: none;
+}
+
+/* Lucide Icon fallbacks and styling */
+[data-lucide] {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    stroke-width: 2;
+    stroke: currentColor;
+    fill: none;
+    vertical-align: middle;
+}
+
+/* Icon fallbacks - show text if icons don't load */
+[data-lucide="layout-dashboard"]:empty::before { content: "📊"; }
+[data-lucide="file-text"]:empty::before { content: "📄"; }
+[data-lucide="list"]:empty::before { content: "📋"; }
+[data-lucide="plus"]:empty::before { content: "➕"; }
+[data-lucide="check-circle"]:empty::before { content: "✅"; }
+[data-lucide="edit"]:empty::before { content: "✏️"; }
+[data-lucide="star"]:empty::before { content: "⭐"; }
+[data-lucide="file"]:empty::before { content: "📃"; }
+[data-lucide="info"]:empty::before { content: "ℹ️"; }
+[data-lucide="phone"]:empty::before { content: "📞"; }
+[data-lucide="folder"]:empty::before { content: "📁"; }
+[data-lucide="tag"]:empty::before { content: "🏷️"; }
+[data-lucide="image"]:empty::before { content: "🖼️"; }
+[data-lucide="message-circle"]:empty::before { content: "💬"; }
+[data-lucide="users"]:empty::before { content: "👥"; }
+[data-lucide="sparkles"]:empty::before { content: "✨"; }
+[data-lucide="wrench"]:empty::before { content: "🔧"; }
+[data-lucide="trash-2"]:empty::before { content: "🗑️"; }
+[data-lucide="database"]:empty::before { content: "💾"; }
+[data-lucide="bar-chart"]:empty::before { content: "📊"; }
+[data-lucide="settings"]:empty::before { content: "⚙️"; }
+[data-lucide="palette"]:empty::before { content: "🎨"; }
+[data-lucide="search"]:empty::before { content: "🔍"; }
+[data-lucide="user-cog"]:empty::before { content: "👤"; }
+[data-lucide="external-link"]:empty::before { content: "🔗"; }
+[data-lucide="log-out"]:empty::before { content: "🚪"; }
+[data-lucide="user"]:empty::before { content: "👤"; }
+
+/* Ensure icons are properly sized */
+.sidebar [data-lucide] {
+    width: 1.25rem;
+    height: 1.25rem;
+}
+
+.dropdown-menu [data-lucide] {
+    width: 1rem;
+    height: 1rem;
+}
