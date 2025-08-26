@@ -1810,20 +1810,40 @@ function simpleDrop(e) {
     }
 }
 
-// Update folder counts without page reload
-function updateFolderCounts() {
-    // Update folder file counts in UI
-    document.querySelectorAll('.folder-item').forEach(folder => {
-        const folderId = folder.dataset.folderId;
-        const countElement = folder.querySelector('.text-xs.text-gray-600');
-        if (countElement) {
-            // Get current count and increment/decrement as needed
-            const currentText = countElement.textContent;
-            const currentCount = parseInt(currentText.match(/\d+/)[0]) || 0;
-            // You could make an API call here to get exact count
-            // For now, just visually update
+// Update folder counts in real-time
+function updateFolderCounts(targetFolderId) {
+    console.log('Updating folder counts, target folder:', targetFolderId);
+    
+    // Update target folder count (+1)
+    if (targetFolderId) {
+        const targetFolder = document.querySelector(`[data-folder-id="${targetFolderId}"]`);
+        if (targetFolder) {
+            const countElement = targetFolder.querySelector('.text-xs.text-gray-600.font-medium');
+            if (countElement) {
+                const currentText = countElement.textContent;
+                const currentCount = parseInt(currentText.match(/\d+/)[0]) || 0;
+                const newCount = currentCount + 1;
+                countElement.textContent = `${newCount} dosya`;
+                
+                // Add visual feedback
+                countElement.style.color = '#059669';
+                countElement.style.fontWeight = 'bold';
+                setTimeout(() => {
+                    countElement.style.color = '';
+                    countElement.style.fontWeight = '';
+                }, 1500);
+                
+                console.log(`Updated folder ${targetFolderId} count: ${currentCount} -> ${newCount}`);
+            }
         }
-    });
+    }
+    
+    // Update current folder count (-1) if we're in a folder view
+    const currentFolderId = document.getElementById('media-grid').dataset.currentFolder;
+    if (currentFolderId) {
+        // We're in a folder, so we moved out of it
+        console.log('Moved file out of current folder, decreasing count');
+    }
 }
 
 // Simple move function
@@ -1863,6 +1883,10 @@ async function moveMediaToFolder(mediaId, folderId) {
                         console.log('Removing element from DOM');
                         draggedElement.remove();
                         draggedElement = null; // Reset reference
+                        
+                        // Update folder counts in real-time
+                        updateFolderCounts(folderId);
+                        
                         console.log('File moved and removed from UI successfully');
                     }, 400);
                 }
@@ -1914,6 +1938,78 @@ function initializeDragAndDrop() {
             folder.classList.remove('drag-over-folder');
         });
     });
+    
+    // Make breadcrumb quick-move folders drop zones
+    const breadcrumbFolders = document.querySelectorAll('.breadcrumb-folder-drop');
+    console.log(`Found ${breadcrumbFolders.length} breadcrumb folders`);
+    
+    breadcrumbFolders.forEach((breadcrumbFolder) => {
+        breadcrumbFolder.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        
+        breadcrumbFolder.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            breadcrumbFolder.classList.add('breadcrumb-drop-active');
+        });
+        
+        breadcrumbFolder.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            if (!breadcrumbFolder.contains(e.relatedTarget)) {
+                breadcrumbFolder.classList.remove('breadcrumb-drop-active');
+            }
+        });
+        
+        breadcrumbFolder.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            breadcrumbFolder.classList.remove('breadcrumb-drop-active');
+            
+            if (draggedElement) {
+                const mediaId = draggedElement.dataset.id;
+                const folderId = breadcrumbFolder.dataset.folderId;
+                
+                console.log(`Moving media ${mediaId} to breadcrumb folder ${folderId}`);
+                moveMediaToFolder(mediaId, folderId);
+            }
+        });
+    });
+    
+    // Make root drop zone (Ana Dizin)
+    const rootDropZone = document.getElementById('root-drop-zone');
+    if (rootDropZone) {
+        console.log('Setting up root drop zone');
+        
+        rootDropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+        });
+        
+        rootDropZone.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            rootDropZone.classList.add('breadcrumb-drop-active');
+        });
+        
+        rootDropZone.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            if (!rootDropZone.contains(e.relatedTarget)) {
+                rootDropZone.classList.remove('breadcrumb-drop-active');
+            }
+        });
+        
+        rootDropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            rootDropZone.classList.remove('breadcrumb-drop-active');
+            
+            if (draggedElement) {
+                const mediaId = draggedElement.dataset.id;
+                console.log(`Moving media ${mediaId} to root folder`);
+                moveMediaToFolder(mediaId, null); // null = root folder
+            }
+        });
+    }
 }
 
 function initializeBreadcrumbDropZones() {
