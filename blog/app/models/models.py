@@ -149,6 +149,7 @@ class Media(Base):
     alt_text = Column(String(200), nullable=True)
     width = Column(Integer, nullable=True)  # Image width
     height = Column(Integer, nullable=True)  # Image height
+    file_hash = Column(String(64), nullable=True)  # SHA256 hash for duplicate detection
     folder_id = Column(Integer, ForeignKey("media_folders.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
@@ -182,6 +183,7 @@ class Settings(Base):
     hero_primary_button_text = Column(String(100), default="Blog Yazılarını Keşfet")
     hero_primary_button_link = Column(String(200), default="#posts")
     hero_secondary_button_text = Column(String(100), default="Üye Ol")
+    timezone = Column(String(50), default="Europe/Istanbul")  # Timezone setting
     hero_secondary_button_link = Column(String(200), default="/register")
     hero_primary_button_enabled = Column(Boolean, default=True)
     hero_secondary_button_enabled = Column(Boolean, default=True)

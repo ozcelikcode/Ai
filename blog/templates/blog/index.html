@@ -70,7 +70,7 @@
                     <div class="flex items-center gap-2 text-sm text-brown-600 mb-3">
                         <i data-lucide="calendar" class="w-4 h-4"></i>
                         {% if post.created_at %}
-                        <span>{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                        <span>{{ format_datetime(post.created_at, '%d.%m.%Y') }}</span>
                         {% else %}
                         <span></span>
                         {% endif %}

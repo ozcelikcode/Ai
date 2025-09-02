@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_admin_user
 from app.models.models import Post, Category, User, Settings, Page, Comment, PostLike, AIUsage, AIPreferences
-from app.utils.helpers import generate_slug, calculate_reading_time
+from app.utils.helpers import generate_slug, calculate_reading_time, format_datetime_for_site
 from app.utils.ai_content import ai_generator
 from app.utils.image_optimizer import optimize_uploaded_image
 from datetime import datetime, timedelta
@@ -17,6 +17,16 @@ from pathlib import Path
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 templates = Jinja2Templates(directory="templates")
+
+def get_admin_template_context(request: Request, admin_user: User, db: Session):
+    """Get common admin template context including timezone helper"""
+    site_settings = db.query(Settings).first()
+    return {
+        "request": request,
+        "admin_user": admin_user,
+        "site_settings": site_settings,
+        "format_datetime": lambda dt, fmt="%d.%m.%Y %H:%M": format_datetime_for_site(dt, db, fmt) if dt else ""
+    }
 
 # AI kullanım kaydı için yardımcı fonksiyon
 async def log_ai_usage(
@@ -72,11 +82,9 @@ async def admin_dashboard(request: Request, admin_user: User = Depends(get_admin
     if db.query(Comment).first():
         recent_comments = db.query(Comment).order_by(Comment.created_at.desc()).limit(5).all()
     
-    site_settings = db.query(Settings).first()
-    return templates.TemplateResponse("admin/dashboard.html", {
-        "request": request,
-        "admin_user": admin_user,
-        "site_settings": site_settings,
+    # Use admin template context helper
+    context = get_admin_template_context(request, admin_user, db)
+    context.update({
         "stats": {
             "total_posts": total_posts,
             "published_posts": published_posts,
@@ -89,6 +97,8 @@ async def admin_dashboard(request: Request, admin_user: User = Depends(get_admin
         "recent_posts": recent_posts,
         "recent_comments": recent_comments
     })
+    
+    return templates.TemplateResponse("admin/dashboard.html", context)
 
 @router.get("/posts", response_class=HTMLResponse)
 async def admin_posts(request: Request, admin_user: User = Depends(get_admin_user), db: Session = Depends(get_db)):
@@ -1045,6 +1055,7 @@ async def save_settings(
     favicon: str = Form(""),
     meta_description: str = Form(""),
     meta_keywords: str = Form(""),
+    timezone: str = Form("Europe/Istanbul"),
     comment_limit: int = Form(500),
     ai_prompt: str = Form(""),
     ai_content_length: str = Form("medium"),
@@ -1062,6 +1073,7 @@ async def save_settings(
     settings.favicon = favicon if favicon else None
     settings.meta_description = meta_description if meta_description else None
     settings.meta_keywords = meta_keywords if meta_keywords else None
+    settings.timezone = timezone if timezone else "Europe/Istanbul"
     settings.comment_limit = comment_limit
     settings.ai_prompt = ai_prompt if ai_prompt else "Write a blog post about the given topic"
     settings.ai_content_length = ai_content_length

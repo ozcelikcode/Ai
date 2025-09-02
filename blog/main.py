@@ -22,12 +22,13 @@ app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 templates = Jinja2Templates(directory="templates")
 
 # Jinja2 filter'ları ekle
-from app.utils.helpers import strip_html_tags, get_excerpt
+from app.utils.helpers import strip_html_tags, get_excerpt, format_datetime_for_site
 import json
 
 templates.env.filters['strip_html'] = strip_html_tags
 templates.env.filters['excerpt'] = get_excerpt
 templates.env.filters['from_json'] = lambda x: json.loads(x) if x else []
+# Timezone filter - requires database session, will be handled in templates
 
 # Global template context processor - simplified
 @app.middleware("http")

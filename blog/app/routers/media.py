@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.core.database import get_db
 from app.core.auth import get_admin_user
 from app.models.models import Media, User, MediaFolder
-from app.utils.helpers import format_file_size
+from app.utils.helpers import format_file_size, format_datetime_for_site, calculate_file_hash, check_duplicate_media
 from app.utils.image_optimizer import optimize_uploaded_image, PRESETS
 import os
 import uuid
@@ -95,6 +95,7 @@ async def media_gallery(request: Request, folder_id: int = None, admin_user: Use
         "all_folders": all_folders,
         "current_folder": current_folder,
         "folder_id": folder_id,
+        "format_datetime": lambda dt, fmt="%d.%m.%Y %H:%M": format_datetime_for_site(dt, db, fmt) if dt else "",
         "stats": {
             "total_files": total_files,
             "total_size": total_size_formatted,
@@ -103,11 +104,54 @@ async def media_gallery(request: Request, folder_id: int = None, admin_user: Use
         }
     })
 
+@router.post("/media/check-duplicate")
+async def check_duplicate(
+    request: Request,
+    file: UploadFile = File(...),
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Check if uploaded file is a duplicate"""
+    try:
+        # Read file content
+        file_content = await file.read()
+        
+        # Calculate hash
+        file_hash = calculate_file_hash(file_content)
+        file_size = len(file_content)
+        
+        # Check for duplicate
+        duplicate = check_duplicate_media(file_hash, file_size, db)
+        
+        if duplicate:
+            return JSONResponse({
+                "is_duplicate": True,
+                "duplicate_file": {
+                    "id": duplicate.id,
+                    "filename": duplicate.filename,
+                    "original_name": duplicate.original_name,
+                    "title": duplicate.title or duplicate.original_name,
+                    "file_size": format_file_size(duplicate.file_size),
+                    "url": f"/uploads/media/{duplicate.filename}",
+                    "created_at": duplicate.created_at.strftime('%d.%m.%Y %H:%M') if duplicate.created_at else ""
+                }
+            })
+        else:
+            return JSONResponse({
+                "is_duplicate": False,
+                "file_hash": file_hash,
+                "file_size": file_size
+            })
+            
+    except Exception as e:
+        return JSONResponse({"success": False, "error": str(e)})
+
 @router.post("/media/upload")
 async def upload_media(
     request: Request,
     files: List[UploadFile] = File(...),
     folder_id: int = Form(None),
+    force_upload: bool = Form(False),  # Force upload even if duplicate
     admin_user: User = Depends(get_admin_user),
     db: Session = Depends(get_db)
 ):
@@ -145,6 +189,16 @@ async def upload_media(
                     
             # Generate title from filename
             auto_title = Path(file.filename).stem.replace('-', ' ').replace('_', ' ').title()
+            
+            # Calculate file hash for duplicate detection
+            file_hash = calculate_file_hash(file_content)
+            
+            # Check for duplicate if not force upload
+            if not force_upload:
+                duplicate = check_duplicate_media(file_hash, len(file_content), db)
+                if duplicate:
+                    # Skip duplicate file
+                    continue
             
             # Resim optimizasyonu (sadece resimler için)
             processed_content = file_content
@@ -187,6 +241,9 @@ async def upload_media(
             with open(file_path, "wb") as buffer:
                 buffer.write(processed_content)
             
+            # Recalculate hash for processed content (in case image was optimized)
+            final_file_hash = calculate_file_hash(processed_content)
+            
             # Save to database
             media = Media(
                 filename=unique_filename,
@@ -197,6 +254,7 @@ async def upload_media(
                 mime_type=mime_type,
                 width=image_width,
                 height=image_height,
+                file_hash=final_file_hash,
                 folder_id=folder_id if folder_id else None
             )
             
@@ -338,6 +396,9 @@ async def upload_from_url(
         
         file_size = len(processed_content)
         
+        # Calculate hash for processed content
+        final_file_hash = calculate_file_hash(processed_content)
+        
         # Save to database
         original_name = Path(parsed_url.path).name or "downloaded_file"
         media = Media(
@@ -349,6 +410,7 @@ async def upload_from_url(
             mime_type=mime_type,
             width=image_width,
             height=image_height,
+            file_hash=final_file_hash,
             alt_text=alt_text
         )
         
@@ -445,6 +507,183 @@ async def bulk_delete_media(
         
     except Exception as e:
         return JSONResponse({"success": False, "error": str(e)})
+
+@router.get("/media/search")
+async def search_media(
+    request: Request,
+    q: str = "",
+    folder_id: int = None,
+    page: int = 1,
+    per_page: int = 20,
+    admin_user: User = Depends(get_admin_user),
+    db: Session = Depends(get_db)
+):
+    """Search media files and folders by title, filename, description, alt_text, folder name"""
+    try:
+        print(f"Search request - q: '{q}', folder_id: '{folder_id}', page: {page}, per_page: {per_page}")
+        from sqlalchemy import or_, and_
+        
+        # If no search query, return current folder contents
+        if not q or not q.strip():
+            # Base query for media files
+            query = db.query(Media)
+            
+            # Apply folder filter if specified
+            if folder_id is not None:
+                query = query.filter(Media.folder_id == folder_id)
+            else:
+                query = query.filter(Media.folder_id == None)
+            
+            # Get folders in current location (for empty search)
+            if folder_id is None:
+                folders_in_current = db.query(MediaFolder).order_by(MediaFolder.name).all()
+            else:
+                folders_in_current = []  # Nested folders not implemented yet
+            
+            # Apply pagination and ordering for media files
+            offset = (page - 1) * per_page
+            all_media_files = query.order_by(Media.created_at.desc()).offset(offset).limit(per_page).all()
+            
+            # Filter out media files that don't exist on filesystem
+            media_files = []
+            for media in all_media_files:
+                if os.path.exists(media.file_path):
+                    media_files.append(media)
+                    
+            return JSONResponse({
+                "media": [{
+                    "id": media.id,
+                    "filename": media.filename,
+                    "original_name": media.original_name,
+                    "title": media.title or "",
+                    "description": media.description or "",
+                    "url": f"/uploads/media/{media.filename}",
+                    "file_size": format_file_size(media.file_size),
+                    "alt_text": media.alt_text or "",
+                    "mime_type": media.mime_type,
+                    "width": media.width or 0,
+                    "height": media.height or 0,
+                    "created_at": format_datetime_for_site(media.created_at, db) if media.created_at else "",
+                    "type": "media"
+                } for media in media_files],
+                "folders": [{
+                    "id": folder.id,
+                    "name": folder.name,
+                    "description": folder.description or "",
+                    "color": folder.color,
+                    "file_count": db.query(Media).filter(Media.folder_id == folder.id).count(),
+                    "created_at": format_datetime_for_site(folder.created_at, db) if folder.created_at else "",
+                    "type": "folder"
+                } for folder in folders_in_current],
+                "total": len(media_files) + len(folders_in_current),
+                "page": page,
+                "per_page": per_page,
+                "has_more": len(media_files) == per_page
+            })
+        
+        # Search both media files and folders when query is provided
+        search_term = f"%{q.strip()}%"
+        
+        # Search media files
+        media_query = db.query(Media)
+        if folder_id is not None:
+            media_query = media_query.filter(Media.folder_id == folder_id)
+        
+        media_query = media_query.filter(
+            or_(
+                Media.title.ilike(search_term),
+                Media.original_name.ilike(search_term),
+                Media.description.ilike(search_term),
+                Media.alt_text.ilike(search_term),
+                Media.mime_type.ilike(search_term)
+            )
+        )
+        
+        # Search folders (only if not inside a specific folder or search across all)
+        folders_query = db.query(MediaFolder)
+        if not folder_id:  # Search all folders when in root
+            folders_query = folders_query.filter(
+                or_(
+                    MediaFolder.name.ilike(search_term),
+                    MediaFolder.description.ilike(search_term)
+                )
+            )
+        else:
+            # When inside a folder, don't show other folders in search results
+            folders_query = folders_query.filter(MediaFolder.id == -1)  # No results
+        
+        # Get results
+        all_media_files = media_query.order_by(Media.created_at.desc()).all()
+        matching_folders = folders_query.order_by(MediaFolder.name).all()
+        
+        # Filter out media files that don't exist on filesystem
+        media_files = []
+        for media in all_media_files:
+            if os.path.exists(media.file_path):
+                media_files.append(media)
+        
+        # Calculate folder statistics
+        for folder in matching_folders:
+            folder.file_count = db.query(Media).filter(Media.folder_id == folder.id).count()
+        
+        print(f"Search found {len(media_files)} media files, {len(matching_folders)} folders")
+        
+        # Combine results
+        all_results = []
+        
+        # Add folders first
+        for folder in matching_folders:
+            all_results.append({
+                "id": folder.id,
+                "name": folder.name,
+                "description": folder.description or "",
+                "color": folder.color,
+                "file_count": folder.file_count,
+                "created_at": format_datetime_for_site(folder.created_at, db) if folder.created_at else "",
+                "type": "folder"
+            })
+        
+        # Add media files
+        for media in media_files:
+            all_results.append({
+                "id": media.id,
+                "filename": media.filename,
+                "original_name": media.original_name,
+                "title": media.title or "",
+                "description": media.description or "",
+                "url": f"/uploads/media/{media.filename}",
+                "file_size": format_file_size(media.file_size),
+                "alt_text": media.alt_text or "",
+                "mime_type": media.mime_type,
+                "width": media.width or 0,
+                "height": media.height or 0,
+                "created_at": format_datetime_for_site(media.created_at, db) if media.created_at else "",
+                "type": "media"
+            })
+        
+        # Apply pagination to combined results
+        offset = (page - 1) * per_page
+        paginated_results = all_results[offset:offset + per_page]
+        
+        return JSONResponse({
+            "results": paginated_results,
+            "total": len(all_results),
+            "page": page,
+            "per_page": per_page,
+            "has_more": len(all_results) > (page * per_page)
+        })
+        
+    except Exception as e:
+        print(f"Search error: {e}")
+        return JSONResponse({
+            "success": False,
+            "error": str(e),
+            "media": [],
+            "total": 0,
+            "page": 1,
+            "per_page": per_page,
+            "has_more": False
+        })
 
 @router.get("/media/api")
 async def get_media_api(

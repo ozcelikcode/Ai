@@ -202,6 +202,22 @@
         </div>
     </div>
     <div class="flex items-center space-x-3">
+        <!-- Search Input -->
+        <div class="relative">
+            <input type="text" 
+                   id="media-search" 
+                   placeholder="Medya ara..." 
+                   class="pl-10 pr-10 py-2 border border-cream-300 rounded-lg focus:ring-2 focus:ring-brown-500 focus:border-transparent transition-smooth w-64">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-brown-400"></i>
+            <button id="clear-search" class="absolute right-3 top-1/2 transform -translate-y-1/2 text-brown-400 hover:text-brown-600 transition-smooth hidden">
+                <i data-lucide="x" class="w-4 h-4"></i>
+            </button>
+            <!-- Search Loading Indicator -->
+            <div id="search-loading" class="absolute right-3 top-1/2 transform -translate-y-1/2 hidden">
+                <div class="animate-spin rounded-full h-4 w-4 border-2 border-brown-500 border-t-transparent"></div>
+            </div>
+        </div>
+        
         <button id="create-folder-btn" class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-smooth flex items-center">
             <i data-lucide="folder-plus" class="w-4 h-4 mr-2"></i>
             Klasör Oluştur
@@ -332,6 +348,54 @@
                 </button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- Duplicate Detection Modal -->
+<div id="duplicate-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div class="bg-white rounded-xl p-6 w-full max-w-2xl mx-4">
+        <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-semibold text-brown-900 flex items-center">
+                <i data-lucide="alert-triangle" class="w-6 h-6 text-amber-500 mr-2"></i>
+                Dosya Zaten Mevcut
+            </h3>
+            <button id="close-duplicate-modal" class="text-brown-600 hover:text-brown-800">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        
+        <div class="mb-6">
+            <p class="text-brown-700 mb-4">Yüklemeye çalıştığınız dosya medya galerisinde zaten mevcut:</p>
+            
+            <!-- Duplicate file preview -->
+            <div id="duplicate-preview" class="bg-cream-50 border border-cream-200 rounded-lg p-4">
+                <div class="flex items-start space-x-4">
+                    <img id="duplicate-image" src="" alt="" class="w-20 h-20 object-cover rounded-lg">
+                    <div class="flex-1">
+                        <h4 id="duplicate-title" class="font-medium text-brown-900 mb-1"></h4>
+                        <p id="duplicate-filename" class="text-sm text-brown-600 mb-1"></p>
+                        <p id="duplicate-info" class="text-xs text-brown-500"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flex justify-end space-x-3">
+            <button type="button" id="use-existing-btn" 
+                    class="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 transition-smooth flex items-center">
+                <i data-lucide="check" class="w-4 h-4 mr-2"></i>
+                Mevcut Dosyayı Kullan
+            </button>
+            <button type="button" id="upload-anyway-btn"
+                    class="bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 transition-smooth flex items-center">
+                <i data-lucide="upload" class="w-4 h-4 mr-2"></i>
+                Yine de Yükle
+            </button>
+            <button type="button" id="cancel-upload-btn" 
+                    class="px-4 py-2 text-brown-600 hover:text-brown-800 transition-smooth">
+                İptal
+            </button>
+        </div>
     </div>
 </div>
 
@@ -693,7 +757,7 @@
              data-type="media"
              onclick="handleItemClick(event, this)"
              oncontextmenu="handleItemClick(event, this); return false;"
-             data-created="{{ media.created_at.strftime('%d.%m.%Y %H:%M') if media.created_at else '' }}"
+             data-created="{{ format_datetime(media.created_at) }}"
              data-type="media"
              draggable="true"
              style="cursor: grab;">
@@ -800,6 +864,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Initialize drag and drop
     initializeDragAndDrop();
+    
+    // Initialize search functionality
+    initializeMediaSearch();
     
     console.log('Media gallery initialized');
 });
@@ -2105,10 +2172,16 @@ function previewMedia(button) {
     const title = mediaItem.dataset.title || '';
     const description = mediaItem.dataset.description || '';
     const altText = mediaItem.dataset.altText || '';
+    const width = parseInt(mediaItem.dataset.width) || 0;
+    const height = parseInt(mediaItem.dataset.height) || 0;
+    const fileSize = parseInt(mediaItem.dataset.fileSize) || 0;
+    const mimeType = mediaItem.dataset.mimeType || '';
+    const createdDate = mediaItem.dataset.created || 'Bilinmiyor';
     
     // Set preview image
     const previewImage = document.getElementById('preview-image');
     const fileUrl = `/uploads/media/${filename}`;
+    const fullUrl = window.location.origin + fileUrl;
     
     if (previewImage) {
         previewImage.src = fileUrl;
@@ -2121,7 +2194,10 @@ function previewMedia(button) {
         'preview-title': title || 'Başlık belirtilmemiş',
         'preview-description': description || 'Açıklama belirtilmemiş',
         'preview-alt-text': altText || 'Alt metni belirtilmemiş',
-        'preview-url': window.location.origin + fileUrl
+        'preview-file-size': formatFileSizeJS(fileSize),
+        'preview-type': mimeType ? (mimeType.split('/')[0].toUpperCase() + ' (' + filename.split('.').pop().toUpperCase() + ')') : (filename.split('.').pop().toUpperCase()),
+        'preview-date': createdDate,
+        'preview-url': fullUrl
     };
     
     Object.entries(elements).forEach(([id, value]) => {
@@ -2134,6 +2210,16 @@ function previewMedia(button) {
             }
         }
     });
+    
+    // Show/hide image dimensions
+    const dimensionsSection = document.getElementById('image-dimensions-section');
+    if (mimeType.startsWith('image/') && width > 0 && height > 0) {
+        document.getElementById('preview-width').textContent = width + ' px';
+        document.getElementById('preview-height').textContent = height + ' px';
+        dimensionsSection.style.display = 'block';
+    } else {
+        dimensionsSection.style.display = 'none';
+    }
     
     // Store media ID for actions
     const previewModal = document.getElementById('preview-modal');
@@ -2215,6 +2301,380 @@ function openFolderModal(folderId = null, name = '', description = '', color = '
     }
     
     document.getElementById('folder-modal').classList.remove('hidden');
+}
+
+// Media Search Functionality
+function initializeMediaSearch() {
+    const searchInput = document.getElementById('media-search');
+    const clearButton = document.getElementById('clear-search');
+    const searchLoading = document.getElementById('search-loading');
+    
+    if (!searchInput) return;
+    
+    let searchTimeout;
+    
+    // Debounced search function
+    function debounceSearch(query) {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            performSearch(query);
+        }, 300);
+    }
+    
+    // Perform search
+    async function performSearch(query) {
+        // Show/hide loading and clear button
+        if (query.trim()) {
+            searchLoading.classList.remove('hidden');
+            clearButton.classList.remove('hidden');
+        } else {
+            searchLoading.classList.add('hidden');
+            clearButton.classList.add('hidden');
+        }
+        
+        try {
+            const currentFolder = new URLSearchParams(window.location.search).get('folder_id');
+            let url = `/admin/media/search?q=${encodeURIComponent(query)}`;
+            if (currentFolder) {
+                url += `&folder_id=${currentFolder}`;
+            }
+            
+            console.log('Search URL:', url);
+            
+            const response = await fetch(url);
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            const data = await response.json();
+            console.log('Search response:', data);
+            
+            // Check for API error
+            if (data.success === false) {
+                throw new Error(data.error || 'API error');
+            }
+            
+            // Update media grid with both media files and folders
+            updateMediaGrid(data, query.trim() !== '');
+            
+            // Hide loading
+            searchLoading.classList.add('hidden');
+            
+        } catch (error) {
+            console.error('Search failed:', error);
+            searchLoading.classList.add('hidden');
+            showNotification(`Arama hatası: ${error.message}`, 'error');
+        }
+    }
+    
+    // Update media grid with search results
+    function updateMediaGrid(data, isSearchResults) {
+        const mediaContainer = document.getElementById('media-grid');
+        if (!mediaContainer) {
+            console.error('Media grid container not found');
+            return;
+        }
+        
+        if (isSearchResults) {
+            // Clear all existing items and show only search results
+            mediaContainer.innerHTML = '';
+            
+            // Handle different response formats
+            let items = [];
+            if (data.results) {
+                // Search results with both folders and media
+                items = data.results;
+            } else if (data.media || data.folders) {
+                // Empty search or folder listing
+                items = [...(data.folders || []), ...(data.media || [])];
+            }
+            
+            items.forEach(item => {
+                let element;
+                if (item.type === 'folder') {
+                    element = createFolderElement(item);
+                } else {
+                    element = createMediaElement(item);
+                }
+                mediaContainer.appendChild(element);
+            });
+            
+            if (items.length === 0) {
+                showNoResultsMessage(mediaContainer);
+            }
+        } else {
+            // Reload the page to show all items
+            window.location.reload();
+        }
+        
+        // Reinitialize Lucide icons
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    }
+    
+    // Create media element (simplified version)
+    function createMediaElement(media) {
+        const div = document.createElement('div');
+        div.className = 'media-item bg-white rounded-2xl overflow-hidden transition-smooth relative selectable-item';
+        div.setAttribute('data-id', media.id);
+        div.setAttribute('data-filename', media.filename);
+        div.setAttribute('data-title', media.title);
+        div.setAttribute('data-description', media.description);
+        div.setAttribute('data-alt-text', media.alt_text);
+        div.setAttribute('data-width', media.width || 0);
+        div.setAttribute('data-height', media.height || 0);
+        div.setAttribute('data-file-size', media.file_size);
+        div.setAttribute('data-mime-type', media.mime_type);
+        div.setAttribute('data-created', media.created_at);
+        div.setAttribute('data-type', 'media');
+        div.setAttribute('onclick', 'handleItemClick(event, this)');
+        div.setAttribute('oncontextmenu', 'handleItemClick(event, this); return false;');
+        div.setAttribute('draggable', 'true');
+        div.style.cursor = 'grab';
+        
+        const isImage = media.mime_type.startsWith('image/');
+        
+        div.innerHTML = `
+            <div class="aspect-square bg-cream-100 relative overflow-hidden">
+                ${isImage ? 
+                    `<img src="${media.url}" alt="${media.alt_text || media.title}" class="w-full h-full object-cover">` :
+                    `<div class="w-full h-full flex items-center justify-center">
+                        <i data-lucide="file" class="w-12 h-12 text-brown-400"></i>
+                    </div>`
+                }
+                
+                <div class="media-overlay absolute inset-0 flex items-end">
+                    <div class="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full p-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-white text-sm font-medium truncate">${media.title || media.original_name}</p>
+                                <p class="text-white/80 text-xs">${media.file_size}</p>
+                            </div>
+                            
+                            <div class="flex space-x-1 ml-2">
+                                <button onclick="event.stopPropagation(); previewMedia(this)" 
+                                        class="w-7 h-7 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-smooth">
+                                    <i data-lucide="eye" class="w-3 h-3 text-white"></i>
+                                </button>
+                                <button onclick="event.stopPropagation(); editMedia(this)" 
+                                        class="w-7 h-7 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-smooth">
+                                    <i data-lucide="edit" class="w-3 h-3 text-white"></i>
+                                </button>
+                                <button onclick="event.stopPropagation(); deleteMedia(${media.id})" 
+                                        class="w-7 h-7 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center transition-smooth">
+                                    <i data-lucide="trash-2" class="w-3 h-3 text-white"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="selection-checkbox absolute top-2 left-2 w-5 h-5 bg-white border-2 border-brown-300 rounded opacity-0 transition-smooth flex items-center justify-center">
+                    <i data-lucide="check" class="w-3 h-3 text-brown-600"></i>
+                </div>
+            </div>
+        `;
+        
+        return div;
+    }
+    
+    // Create folder element for search results
+    function createFolderElement(folder) {
+        const div = document.createElement('div');
+        div.className = 'folder-item bg-white rounded-2xl overflow-hidden transition-smooth relative selectable-item cursor-pointer';
+        div.setAttribute('data-id', folder.id);
+        div.setAttribute('data-type', 'folder');
+        div.setAttribute('onclick', `window.location.href='/admin/media?folder_id=${folder.id}'`);
+        
+        div.innerHTML = `
+            <div class="aspect-square bg-cream-100 relative overflow-hidden flex items-center justify-center" style="background-color: ${folder.color}20;">
+                <div class="text-center">
+                    <i data-lucide="folder" class="w-16 h-16 mx-auto mb-2" style="color: ${folder.color};"></i>
+                    <h3 class="text-sm font-semibold text-brown-800 truncate px-2">${folder.name}</h3>
+                    <p class="text-xs text-brown-600 mt-1">${folder.file_count} dosya</p>
+                </div>
+                
+                <div class="folder-overlay absolute inset-0 flex items-end opacity-0 hover:opacity-100 transition-smooth">
+                    <div class="bg-gradient-to-t from-black/80 via-black/20 to-transparent w-full p-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-white text-sm font-medium truncate">${folder.name}</p>
+                                <p class="text-white/80 text-xs">${folder.description || 'Açıklama yok'}</p>
+                            </div>
+                            
+                            <div class="flex space-x-1 ml-2">
+                                <button onclick="event.stopPropagation(); editFolder(${folder.id})" 
+                                        class="w-7 h-7 bg-white/20 hover:bg-white/30 rounded-full flex items-center justify-center transition-smooth">
+                                    <i data-lucide="edit" class="w-3 h-3 text-white"></i>
+                                </button>
+                                <button onclick="event.stopPropagation(); deleteFolder(${folder.id})" 
+                                        class="w-7 h-7 bg-red-500/80 hover:bg-red-500 rounded-full flex items-center justify-center transition-smooth">
+                                    <i data-lucide="trash-2" class="w-3 h-3 text-white"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        return div;
+    }
+    
+    // Show no results message
+    function showNoResultsMessage(container) {
+        const noResults = document.createElement('div');
+        noResults.className = 'col-span-full text-center py-12';
+        noResults.innerHTML = `
+            <div class="text-brown-400">
+                <i data-lucide="search-x" class="w-16 h-16 mx-auto mb-4"></i>
+                <p class="text-xl font-medium mb-2">Sonuç bulunamadı</p>
+                <p class="text-brown-600">Arama kriterlerinizi değiştirmeyi deneyin</p>
+            </div>
+        `;
+        container.appendChild(noResults);
+    }
+    
+    // Event listeners
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value.trim();
+        debounceSearch(query);
+    });
+    
+    if (clearButton) {
+        clearButton.addEventListener('click', () => {
+            searchInput.value = '';
+            clearButton.classList.add('hidden');
+            debounceSearch('');
+        });
+    }
+    
+    searchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            searchInput.value = '';
+            if (clearButton) clearButton.classList.add('hidden');
+            debounceSearch('');
+        }
+    });
+}
+
+// Duplicate Detection Integration
+let pendingUploadFiles = [];
+
+// Enhanced upload function with duplicate detection
+async function performUploadWithDuplicateCheck(files, folderId = null) {
+    // Show loading
+    showNotification('Dosyalar kontrol ediliyor...', 'info');
+    
+    try {
+        // Check each file for duplicates
+        for (const file of files) {
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            const response = await fetch('/admin/media/check-duplicate', {
+                method: 'POST',
+                body: formData
+            });
+            
+            const result = await response.json();
+            
+            if (result.is_duplicate) {
+                // Show duplicate modal
+                showDuplicateModal(file, result.duplicate_file, folderId);
+                return; // Stop processing other files
+            }
+        }
+        
+        // No duplicates found, proceed with upload
+        await performRegularUpload(files, folderId);
+        
+    } catch (error) {
+        console.error('Duplicate check failed:', error);
+        showNotification('Dosya kontrolü sırasında hata oluştu', 'error');
+    }
+}
+
+// Show duplicate modal
+function showDuplicateModal(file, duplicateFile, folderId) {
+    const modal = document.getElementById('duplicate-modal');
+    
+    // Update modal content
+    document.getElementById('duplicate-title').textContent = duplicateFile.title || duplicateFile.original_name;
+    document.getElementById('duplicate-filename').textContent = duplicateFile.original_name;
+    document.getElementById('duplicate-info').textContent = `${duplicateFile.file_size} • ${duplicateFile.created_at}`;
+    
+    const duplicateImage = document.getElementById('duplicate-image');
+    if (duplicateFile.url) {
+        duplicateImage.src = duplicateFile.url;
+        duplicateImage.alt = duplicateFile.title || duplicateFile.original_name;
+    }
+    
+    // Store upload info for later use
+    pendingUploadFiles = [{file, folderId}];
+    
+    // Show modal
+    modal.classList.remove('hidden');
+    
+    // Set up event listeners
+    document.getElementById('use-existing-btn').onclick = () => {
+        modal.classList.add('hidden');
+        showNotification('Mevcut dosya kullanıldı');
+        pendingUploadFiles = [];
+    };
+    
+    document.getElementById('upload-anyway-btn').onclick = async () => {
+        modal.classList.add('hidden');
+        await performRegularUpload([file], folderId, true); // Force upload
+        pendingUploadFiles = [];
+    };
+    
+    document.getElementById('cancel-upload-btn').onclick = () => {
+        modal.classList.add('hidden');
+        pendingUploadFiles = [];
+    };
+    
+    document.getElementById('close-duplicate-modal').onclick = () => {
+        modal.classList.add('hidden');
+        pendingUploadFiles = [];
+    };
+}
+
+// Regular upload function
+async function performRegularUpload(files, folderId = null, forceUpload = false) {
+    const formData = new FormData();
+    files.forEach(file => {
+        formData.append('files', file);
+    });
+    
+    if (folderId) {
+        formData.append('folder_id', folderId);
+    }
+    
+    if (forceUpload) {
+        formData.append('force_upload', 'true');
+    }
+    
+    try {
+        const response = await fetch('/admin/media/upload', {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showNotification(`${result.files.length} dosya başarıyla yüklendi`);
+            window.location.reload(); // Refresh to show new files
+        } else {
+            showNotification('Yükleme hatası: ' + (result.error || 'Bilinmeyen hata'), 'error');
+        }
+    } catch (error) {
+        console.error('Upload failed:', error);
+        showNotification('Yükleme sırasında hata oluştu', 'error');
+    }
 }
 </script>
 {% endblock %}

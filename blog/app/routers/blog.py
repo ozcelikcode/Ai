@@ -6,6 +6,7 @@ from sqlalchemy import and_
 from app.core.database import get_db
 from app.core.auth import get_current_user_optional
 from app.models.models import Post, Category, Page, Tag, PostTag, Settings
+from app.utils.helpers import format_datetime_for_site
 from typing import Optional
 
 router = APIRouter()
@@ -16,7 +17,8 @@ def get_template_context(request: Request, db: Session, current_user=None):
     site_settings = db.query(Settings).first()
     context = {
         "request": request,
-        "site_settings": site_settings
+        "site_settings": site_settings,
+        "format_datetime": lambda dt, fmt="%d.%m.%Y %H:%M": format_datetime_for_site(dt, db, fmt) if dt else ""
     }
     if current_user is not None:
         context["current_user"] = current_user

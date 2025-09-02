@@ -100,7 +100,7 @@
                 
                 <div class="flex items-center gap-2">
                     <i data-lucide="calendar" class="w-4 h-4"></i>
-                    <span>{{ post.created_at.strftime('%d.%m.%Y') }}</span>
+                    <span>{{ format_datetime(post.created_at, '%d.%m.%Y') }}</span>
                 </div>
                 
                 {% if post.reading_time %}
@@ -113,7 +113,7 @@
                 {% if post.show_updated_date and post.updated_at %}
                 <div class="flex items-center gap-2">
                     <i data-lucide="edit" class="w-4 h-4"></i>
-                    <span>{{ post.updated_at.strftime('%d.%m.%Y') }} güncellendi</span>
+                    <span>{{ format_datetime(post.updated_at, '%d.%m.%Y') }} güncellendi</span>
                 </div>
                 {% endif %}
             </div>
