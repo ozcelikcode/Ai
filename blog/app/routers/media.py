@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import List
 import mimetypes
 import io
+from PIL import Image
 
 router = APIRouter(prefix="/admin", tags=["media"])
 templates = Jinja2Templates(directory="templates")
@@ -36,11 +37,21 @@ async def media_gallery(request: Request, folder_id: int = None, admin_user: Use
         # Get subfolders (if we implement nested folders later)
         folders_in_current = []
         # Get media files in current folder
-        media_files = db.query(Media).filter(Media.folder_id == folder_id).order_by(Media.created_at.desc()).all()
+        all_media_files = db.query(Media).filter(Media.folder_id == folder_id).order_by(Media.created_at.desc()).all()
     else:
         # Get root level folders and unassigned media files
         folders_in_current = db.query(MediaFolder).order_by(MediaFolder.name).all()
-        media_files = db.query(Media).filter(Media.folder_id == None).order_by(Media.created_at.desc()).all()
+        all_media_files = db.query(Media).filter(Media.folder_id == None).order_by(Media.created_at.desc()).all()
+    
+    # Filter out media files that don't exist on filesystem
+    media_files = []
+    for media in all_media_files:
+        if os.path.exists(media.file_path):
+            media_files.append(media)
+        else:
+            # File doesn't exist, optionally remove from database
+            # For now, we just skip showing it
+            continue
     
     # Get all folders for sidebar/operations
     all_folders = db.query(MediaFolder).order_by(MediaFolder.name).all()
@@ -122,6 +133,18 @@ async def upload_media(
             mime_type, _ = mimetypes.guess_type(file.filename)
             if not mime_type:
                 mime_type = "application/octet-stream"
+                
+            # Extract image metadata if it's an image
+            image_width, image_height = None, None
+            if mime_type.startswith('image/'):
+                try:
+                    with Image.open(io.BytesIO(file_content)) as img:
+                        image_width, image_height = img.size
+                except Exception:
+                    pass
+                    
+            # Generate title from filename
+            auto_title = Path(file.filename).stem.replace('-', ' ').replace('_', ' ').title()
             
             # Resim optimizasyonu (sadece resimler için)
             processed_content = file_content
@@ -168,9 +191,12 @@ async def upload_media(
             media = Media(
                 filename=unique_filename,
                 original_name=file.filename,
+                title=auto_title,
                 file_path=str(file_path),
                 file_size=len(processed_content),  # Processed size
                 mime_type=mime_type,
+                width=image_width,
+                height=image_height,
                 folder_id=folder_id if folder_id else None
             )
             
@@ -255,6 +281,20 @@ async def upload_from_url(
         mime_type, _ = mimetypes.guess_type(str(file_path))
         if not mime_type:
             mime_type = "application/octet-stream"
+            
+        # Extract image metadata if it's an image
+        image_width, image_height = None, None
+        if mime_type.startswith('image/'):
+            try:
+                with Image.open(io.BytesIO(file_content)) as img:
+                    image_width, image_height = img.size
+            except Exception:
+                pass
+                
+        # Generate title from URL filename
+        auto_title = Path(parsed_url.path).stem.replace('-', ' ').replace('_', ' ').title()
+        if not auto_title or auto_title == '':
+            auto_title = "Downloaded Image"
         
         # Resim optimizasyonu (sadece resimler için)
         processed_content = file_content
@@ -303,9 +343,12 @@ async def upload_from_url(
         media = Media(
             filename=unique_filename,
             original_name=original_name,
+            title=auto_title,
             file_path=str(file_path),
             file_size=file_size,
             mime_type=mime_type,
+            width=image_width,
+            height=image_height,
             alt_text=alt_text
         )
         

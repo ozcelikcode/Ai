@@ -425,13 +425,25 @@
                     
                     <div class="grid grid-cols-2 gap-3">
                         <div>
-                            <label class="text-xs font-medium text-brown-600 uppercase tracking-wide">Boyut</label>
-                            <p id="preview-size" class="text-sm text-brown-900 font-medium"></p>
+                            <label class="text-xs font-medium text-brown-600 uppercase tracking-wide">Dosya Boyutu</label>
+                            <p id="preview-file-size" class="text-sm text-brown-900 font-medium"></p>
                         </div>
                         
                         <div>
                             <label class="text-xs font-medium text-brown-600 uppercase tracking-wide">Tür</label>
                             <p id="preview-type" class="text-sm text-brown-900 font-medium"></p>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3" id="image-dimensions-section" style="display: none;">
+                        <div>
+                            <label class="text-xs font-medium text-brown-600 uppercase tracking-wide">Genişlik</label>
+                            <p id="preview-width" class="text-sm text-brown-900 font-medium"></p>
+                        </div>
+                        
+                        <div>
+                            <label class="text-xs font-medium text-brown-600 uppercase tracking-wide">Yükseklik</label>
+                            <p id="preview-height" class="text-sm text-brown-900 font-medium"></p>
                         </div>
                     </div>
                     
@@ -674,6 +686,10 @@
              data-title="{{ media.title or '' }}"
              data-description="{{ media.description or '' }}"
              data-alt-text="{{ media.alt_text or '' }}"
+             data-width="{{ media.width or 0 }}"
+             data-height="{{ media.height or 0 }}"
+             data-file-size="{{ media.file_size or 0 }}"
+             data-mime-type="{{ media.mime_type or '' }}"
              data-type="media"
              onclick="handleItemClick(event, this)"
              oncontextmenu="handleItemClick(event, this); return false;"
@@ -793,6 +809,15 @@ let selectedItems = new Set(); // Changed from selectedMedia to selectedItems
 let selectedMediaIds = new Set(); // For media files
 let selectedFolderIds = new Set(); // For folders
 let lastSelectedIndex = -1;
+
+// File size formatting function
+function formatFileSizeJS(bytes) {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+}
 
 // Notification system
 function showNotification(message, type = 'success') {
@@ -1376,13 +1401,28 @@ function previewMedia(button) {
     document.getElementById('preview-image').alt = altText || title || filename;
     
     // Set preview details
+    const width = parseInt(mediaItem.dataset.width) || 0;
+    const height = parseInt(mediaItem.dataset.height) || 0;
+    const fileSize = parseInt(mediaItem.dataset.fileSize) || 0;
+    const mimeType = mediaItem.dataset.mimeType || '';
+    
     document.getElementById('preview-filename').textContent = filename;
     document.getElementById('preview-title').textContent = title || 'Başlık belirtilmemiş';
     document.getElementById('preview-description').textContent = description || 'Açıklama belirtilmemiş';
     document.getElementById('preview-alt-text').textContent = altText || 'Alt metni belirtilmemiş';
-    document.getElementById('preview-size').textContent = sizeElement ? sizeElement.textContent : 'Bilinmiyor';
-    document.getElementById('preview-type').textContent = filename.split('.').pop().toUpperCase();
+    document.getElementById('preview-file-size').textContent = formatFileSizeJS(fileSize);
+    document.getElementById('preview-type').textContent = mimeType.split('/')[0].toUpperCase() + ' (' + filename.split('.').pop().toUpperCase() + ')';
     document.getElementById('preview-url').value = fullUrl;
+    
+    // Show/hide image dimensions
+    const dimensionsSection = document.getElementById('image-dimensions-section');
+    if (mimeType.startsWith('image/') && width > 0 && height > 0) {
+        document.getElementById('preview-width').textContent = width + ' px';
+        document.getElementById('preview-height').textContent = height + ' px';
+        dimensionsSection.style.display = 'block';
+    } else {
+        dimensionsSection.style.display = 'none';
+    }
     
     // Set creation date
     const createdDate = mediaItem.dataset.created || 'Bilinmiyor';

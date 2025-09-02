@@ -6,7 +6,8 @@
       "Bash(curl:*)",
       "Bash(del:*)",
       "Bash(rm:*)",
-      "Bash(/dev/null)"
+      "Bash(/dev/null)",
+      "Bash(mkdir:*)"
     ],
     "deny": [],
     "ask": []

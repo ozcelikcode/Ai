@@ -147,6 +147,8 @@ class Media(Base):
     file_size = Column(Integer, nullable=False)
     mime_type = Column(String(100), nullable=False)
     alt_text = Column(String(200), nullable=True)
+    width = Column(Integer, nullable=True)  # Image width
+    height = Column(Integer, nullable=True)  # Image height
     folder_id = Column(Integer, ForeignKey("media_folders.id"), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     
